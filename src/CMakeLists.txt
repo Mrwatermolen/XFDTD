@@ -1,0 +1,7 @@
+add_subdirectory(boundary)
+add_subdirectory(object)
+add_subdirectory(material)
+add_subdirectory(shape)
+add_subdirectory(simulation)
+add_subdirectory(waveform)
+add_subdirectory(additive_source)
