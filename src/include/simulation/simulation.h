@@ -7,6 +7,7 @@
 
 #include "additive_source/source.h"
 #include "boundary/boundary.h"
+#include "electromagnetic.h"
 #include "monitor/monitor.h"
 #include "object/object.h"
 #include "shape/cube.h"
@@ -19,21 +20,12 @@ class Simulation {
  public:
   inline static constexpr float DEFAULT_CFL{0.99};
   Simulation(double cell_size, ObjectArray objects, SourceArray sources,
-             BoundaryArray boundaries, float cfl = DEFAULT_CFL);
-
-  void setMonitor();
+             BoundaryArray boundaries = {}, MonitorArray _monitors = {},
+             float cfl = DEFAULT_CFL);
 
   void checkRun(size_t time_steps);
   void run(size_t time_steps);
   void output();
-
-  // For Debug
-  const EFTA& getEx() const;
-  const EFTA& getEy() const;
-  const EFTA& getEz() const;
-  const EFTA& getHx() const;
-  const EFTA& getHy() const;
-  const EFTA& getHz() const;
 
  private:
   // simulation parameter
@@ -43,9 +35,9 @@ class Simulation {
   float _cfl{DEFAULT_CFL};
 
   ObjectArray _objects;
-  MaterialArray _materials;
   SourceArray _sources;
   BoundaryArray _boundaries;
+  MonitorArray _monitors;
 
   SpatialIndex _nx;
   SpatialIndex _ny;
@@ -58,12 +50,12 @@ class Simulation {
   YeeCellArray _grid_space;
   std::unique_ptr<Cube> _simulation_box;
 
-  EFTA _ex;
-  EFTA _ey;
-  EFTA _ez;
-  EFTA _hx;
-  EFTA _hy;
-  EFTA _hz;
+  // EFTA _ex;
+  // EFTA _ey;
+  // EFTA _ez;
+  // EFTA _hx;
+  // EFTA _hy;
+  // EFTA _hz;
 
   EFTA _cexe;
   EFTA _cexhy;
@@ -110,10 +102,11 @@ class Simulation {
   void initSource();
   void initUpdateCoefficient();
   void initBondaryCondition();
-  void initOutputParameter();
+  void initMonitor();
 
   void caculateDomainSize();
   void gridSimualtionSpace();
+  void allocateArray();
   void caculateMaterialComponent();
 
   void updateAddtiveSource();
@@ -121,6 +114,7 @@ class Simulation {
   void updateBoundaryH();
   void updateE();
   void updateBoundaryE();
+  void updateMonitor();
 
   void handleHardPointSource(Source* source);
   void handlePMLBoundaryH(std::shared_ptr<Boundary>& boundary);

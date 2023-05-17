@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24.0)
 
 project(
-  xfdtd
+  XFdtd
   VERSION 0.0.0
   LANGUAGES CXX C)
 

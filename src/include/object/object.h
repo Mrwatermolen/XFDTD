@@ -16,9 +16,9 @@ class Object {
   Object(std::string_view name, std::unique_ptr<Shape> shape,
          Material material);
   Object(const Object& other);
-  Object(Object&& other) noexcept;
+  Object(Object&& other) noexcept = default;
   Object& operator=(const Object& other);
-  Object& operator=(Object&& other) noexcept;
+  Object& operator=(Object&& other) noexcept = default;
 
   explicit operator std::string() const;
 

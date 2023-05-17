@@ -18,9 +18,9 @@ end
 pic_index = 1;%记录图像编号
 filename={AllFile.name}'
 for i=1:size(AllFile,1)
-    data =  importdata(filename{i});
+    data = importdata(filename{i}).data;
     sizes = size(data);
-    plot(data(:,1), data(:,2));
+    plot(data(1,:));
     ylim([-0.5,0.5])
     title(num2str(i))
     %抓取当前的figure，保存为rgb图像后，再转化为索引图像

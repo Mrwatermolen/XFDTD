@@ -17,6 +17,21 @@ Object::Object(std::string_view name, std::unique_ptr<Shape> shape,
       _shape{std::move(shape)},
       _material{std::make_unique<Material>(std::move(material))} {}
 
+Object::Object(const Object& other) {
+  _name = other._name;
+  _shape = other._shape->clone();
+  _material = other._material->clone();
+}
+
+Object& Object::operator=(const Object& other) {
+  if (this != &other) {
+    _name = other._name;
+    _shape = other._shape->clone();
+    _material = other._material->clone();
+  }
+  return *this;
+}
+
 Object::operator std::string() const {
   return std::string("Object: ") + _name + "\n" +
          static_cast<std::string>(*_shape) + "\n" +

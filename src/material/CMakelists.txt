@@ -1,1 +1,2 @@
-add_library(material OBJECT material.cpp)
+add_library(xfdtd_material OBJECT material.cpp)
+set(ALL_OBJECT_FILES ${ALL_OBJECT_FILES} $<TARGET_OBJECTS:xfdtd_material> PARENT_SCOPE)

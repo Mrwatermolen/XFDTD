@@ -13,6 +13,8 @@ namespace xfdtd {
 class HardPonitSource : public Source {
  public:
   HardPonitSource(std::unique_ptr<Waveform> waveform, Eigen::Vector3d point);
+  HardPonitSource(const HardPonitSource& other) = delete;
+  HardPonitSource(HardPonitSource&& other) noexcept = default;
   ~HardPonitSource() override = default;
 
   void init(const std::vector<double>& time_array) override;

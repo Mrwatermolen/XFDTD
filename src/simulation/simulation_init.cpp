@@ -1,20 +1,18 @@
 #include <cmath>
+#include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <memory>
 
 #include "boundary/boundary.h"
 #include "boundary/perfect_match_layer.h"
-#include "util/constant.h"
+#include "electromagnetic.h"
+#include "monitor/field_monitor.h"
 #include "simulation/simulation.h"
 #include "simulation/yee_cell.h"
+#include "util/constant.h"
 #include "util/float_compare.h"
-
-#ifdef DEBUG
-
-#include <iostream>
-
-#endif  // DEBUG
+#include "util/type_define.h"
 
 namespace xfdtd {
 
@@ -32,19 +30,13 @@ void Simulation::init() {
   initSource();
   initUpdateCoefficient();
   initBondaryCondition();
-  initOutputParameter();
-
-  _ex.setZero();
-  _ey.setZero();
-  _ez.setZero();
-  _hx.setZero();
-  _hy.setZero();
-  _hz.setZero();
+  initMonitor();
 }
 
 void Simulation::initMaterialGrid() {
   caculateDomainSize();
   gridSimualtionSpace();
+  allocateArray();
   caculateMaterialComponent();
 }
 
@@ -142,7 +134,18 @@ void Simulation::initBondaryCondition() {
   }
 }
 
-void Simulation::initOutputParameter() {}
+void Simulation::initMonitor() {
+  for (auto&& e : _monitors) {
+    const auto& shape{e->getShape()};
+    YeeCellArray temp;
+    for (const auto& e : _grid_space) {
+      if (shape->isPointInside(e->getCenter())) {
+        temp.emplace_back(e);
+      }
+    }
+    e->setYeeCells(std::move(temp));
+  }
+}
 
 void Simulation::caculateDomainSize() {
   double min_x = std::numeric_limits<double>::max();
@@ -220,9 +223,6 @@ void Simulation::caculateDomainSize() {
   _simulation_box = std::make_unique<Cube>(
       Eigen::Vector3d{min_x, min_y, min_z},
       Eigen::Vector3d{max_x - min_x, max_y - min_y, max_z - min_z});
-}
-
-void Simulation::gridSimualtionSpace() {
   _nx = std::round(_simulation_box->getSize().x() / _dx);
   _ny = std::round(_simulation_box->getSize().y() / _dy);
   _nz = std::round(_simulation_box->getSize().z() / _dz);
@@ -235,57 +235,20 @@ void Simulation::gridSimualtionSpace() {
   if (_nz == 0) {
     _nz = 1;
   }
-  // check boundary
+}
 
+void Simulation::gridSimualtionSpace() {
   auto total_grid{_nx * _ny * _nz};
-
-  auto min_sigma{std::numeric_limits<double>::epsilon() / 1000.0};
-  _ex = EFTA(_nx, _ny + 1, _nz + 1);
-  _eps_x = EFTA(_nx, _ny + 1, _nz + 1);
-  _eps_x.setConstant(constant::EPS_0);
-  _sigma_e_x = EFTA(_nx, _ny + 1, _nz + 1);
-  _sigma_e_x.setConstant(min_sigma);
-
-  _hx = EFTA(_nx + 1, _ny, _nz);
-  _mu_x = EFTA(_nx + 1, _ny, _nz);
-  _mu_x.setConstant(constant::MU_0);
-  _sigma_m_x = EFTA(_nx + 1, _ny, _nz);
-  _sigma_m_x = _sigma_m_x.setConstant(min_sigma);
-
-  _ey = EFTA(_nx + 1, _ny, _nz + 1);
-  _eps_y = EFTA(_nx + 1, _ny, _nz + 1);
-  _eps_y.setConstant(constant::EPS_0);
-  _sigma_e_y = EFTA(_nx + 1, _ny, _nz + 1);
-  _sigma_e_y.setConstant(min_sigma);
-
-  _hy = EFTA(_nx, _ny + 1, _nz);
-  _mu_y = EFTA(_nx, _ny + 1, _nz);
-  _mu_y.setConstant(constant::MU_0);
-  _sigma_m_y = EFTA(_nx, _ny + 1, _nz);
-  _sigma_m_y.setConstant(min_sigma);
-
-  _ez = EFTA(_nx + 1, _ny + 1, _nz);
-  _eps_z = EFTA(_nx + 1, _ny + 1, _nz);
-  _eps_z.setConstant(constant::EPS_0);
-  _sigma_e_z = EFTA(_nx + 1, _ny + 1, _nz);
-  _sigma_e_z.setConstant(min_sigma);
-
-  _hz = EFTA(_nx, _ny, _nz + 1);
-  _mu_z = EFTA(_nx, _ny, _nz + 1);
-  _mu_z.setConstant(constant::MU_0);
-  _sigma_m_z = EFTA(_nx, _ny, _nz + 1);
-  _sigma_m_z.setConstant(min_sigma);
 
   auto min_x{_simulation_box->getXmin()};
   auto min_y{_simulation_box->getYmin()};
   auto min_z{_simulation_box->getZmin()};
-  // 1d
   if (_nx == 1 && _ny == 1) {
     for (SpatialIndex k{0}; k < _nz; ++k) {
       auto index{0 * _ny * _nz + 0 * _nz + k};
       _grid_space.emplace_back(std::make_shared<YeeCell>(
           Eigen::Vector3d{min_x, min_y, min_z + k * _dz},
-          Eigen::Vector3d{0, 0, _dz}, 0));
+          Eigen::Vector3d{0, 0, _dz}, -1, 0, 0, k));
     }
   } else {
     for (SpatialIndex i{0}; i < _nx; ++i) {
@@ -295,7 +258,7 @@ void Simulation::gridSimualtionSpace() {
           _grid_space.emplace_back(std::make_shared<YeeCell>(
               Eigen::Vector3d{min_x + i * _dx, min_y + j * _dy,
                               min_z + k * _dz},
-              Eigen::Vector3d{_dx, _dy, _dz}, -1));
+              Eigen::Vector3d{_dx, _dy, _dz}, -1, i, j, k));
         }
       }
     }
@@ -304,7 +267,7 @@ void Simulation::gridSimualtionSpace() {
   // 为每个格子设置材料
   // 允许材料覆盖
   for (auto&& c : _grid_space) {
-    // c->setMaterialIndex(0);
+    c->setMaterialIndex(0);
     int counter = 0;
 
     for (const auto& e : _objects) {
@@ -318,15 +281,48 @@ void Simulation::gridSimualtionSpace() {
   }
 }
 
+void Simulation::allocateArray() {
+  auto min_sigma{std::numeric_limits<double>::epsilon() / 1000.0};
+  allocateEx(_nx, _ny + 1, _nz + 1);
+  allocateEy(_nx + 1, _ny, _nz + 1);
+  allocateEz(_nx + 1, _ny + 1, _nz);
+  allocateHx(_nx + 1, _ny, _nz);
+  allocateHy(_nx, _ny + 1, _nz);
+  allocateHz(_nx, _ny, _nz + 1);
+
+  _eps_x = allocateDoubleArray3D(_nx, _ny + 1, _nz + 1, constant::EPSILON_0);
+  _sigma_e_x = allocateDoubleArray3D(_nx, _ny + 1, _nz + 1, min_sigma);
+
+  _mu_x = allocateDoubleArray3D(_nx + 1, _ny, _nz, constant::MU_0);
+  _sigma_m_x = allocateDoubleArray3D(_nx + 1, _ny, _nz, min_sigma);
+
+  _eps_y = allocateDoubleArray3D(_nx + 1, _ny, _nz + 1, constant::EPSILON_0);
+  _sigma_e_y = allocateDoubleArray3D(_nx + 1, _ny, _nz + 1, min_sigma);
+
+  _mu_y = allocateDoubleArray3D(_nx, _ny + 1, _nz, constant::MU_0);
+  _sigma_m_y = allocateDoubleArray3D(_nx, _ny + 1, _nz, min_sigma);
+
+  _eps_z = allocateDoubleArray3D(_nx + 1, _ny + 1, _nz, constant::EPSILON_0);
+  _sigma_e_z = allocateDoubleArray3D(_nx + 1, _ny + 1, _nz, min_sigma);
+
+  _mu_z = allocateDoubleArray3D(_nx, _ny, _nz + 1, constant::MU_0);
+  _sigma_m_z = allocateDoubleArray3D(_nx, _ny, _nz + 1, min_sigma);
+}
+
 void Simulation::caculateMaterialComponent() {
   auto min_sigma{std::numeric_limits<double>::epsilon() / 1000.0};
+
   for (SpatialIndex i{0}; i < _nx; ++i) {
     for (SpatialIndex j{0}; j < _ny; ++j) {
       for (SpatialIndex k{0}; k < _nz; ++k) {
+        auto material_index{
+            _grid_space[i * _ny * _nz + j * _nz + k]->getMaterialIndex()};
+        if (material_index == -1) {
+          std::cerr << "Error: material index is -1" << std::endl;
+          exit(-1);
+        }
         auto [eps, mu, sigma_e, sigma_m] =
-            _objects[_grid_space[i * _ny * _nz + j * _nz + k]
-                         ->getMaterialIndex()]
-                ->getElectromagneticProperties();
+            _objects[material_index]->getElectromagneticProperties();
         // std::cout << "eps: " << eps << " mu: " << mu << " sigma_e: " <<
         // sigma_e
         //           << " sigma_m: " << sigma_m << std::endl;

@@ -1,62 +1,42 @@
 #ifndef __MONITOR_H__
 #define __MONITOR_H__
 
+#include <filesystem>
 #include <memory>
 
 #include "shape/shape.h"
+#include "util/type_define.h"
 namespace xfdtd {
 
-template <typename T>
 class Monitor {
  public:
   Monitor() = default;
+  Monitor(std::unique_ptr<Shape> shape, std::filesystem::path output_dir_path,
+          std::string output_file_name);
+  Monitor(const Monitor& other) = delete;
+  Monitor(Monitor&& other) noexcept = default;
+  Monitor& operator=(const Monitor& other) = delete;
+  Monitor& operator=(Monitor&& other) noexcept = default;
   virtual ~Monitor() = default;
-  virtual void setData(const T& data);
-  virtual void setData(T&& data);
-  virtual std::shared_ptr<T> getData();
 
- protected:
-  std::shared_ptr<T> _data;
-};
+  virtual const std::unique_ptr<Shape>& getShape() const;
+  virtual const std::filesystem::path& getOutputPath() const;
+  virtual const std::string& getOutputFileName() const;
 
-template <typename T>
-void Monitor<T>::setData(const T& data) {
-  _data = std::make_shared<T>(data);
-}
+  virtual void setOutputDirPath(const std::string& output_dir_path);
+  virtual void setOutputFileName(const std::string& output_file_name);
 
-template <typename T>
-inline void Monitor<T>::setData(T&& data) {
-  _data = std::make_shared<T>(std::move(data));
-}
+  virtual void setYeeCells(const YeeCellArray& yee_cells) = 0;
+  virtual void setYeeCells(YeeCellArray&& yee_cells) = 0;
 
-template <typename T>
-inline std::shared_ptr<T> Monitor<T>::getData() {
-  return _data;
-}
-
-template <typename T>
-class FieldMonitor : public Monitor<T> {
- public:
-  enum class FieldComponent { Ex, Ey, Ez, Hx, Hy, Hz };
-
-  FieldMonitor(Shape shape, FieldComponent field_component);
-  virtual ~FieldMonitor() = default;
-
-  std::unique_ptr<Shape> getMonitoredArea() {
-    return std::make_unique<Shape>(*_area);
-  }
-
-  inline FieldComponent getComponent() { return _component; }
+  virtual void update(size_t current_time_step) = 0;
+  virtual void outputData() = 0;
 
  private:
-  std::unique_ptr<Shape> _area;  // monitored areas
-  FieldComponent _component;
+  std::unique_ptr<Shape> _shape;
+  std::filesystem::path _output_dir_path;
+  std::string _output_file_name;
 };
-
-template <typename T>
-FieldMonitor<T>::FieldMonitor(Shape shape, FieldComponent field_component)
-    : _area(std::make_unique<Shape>(std::move(shape))),
-      _component(field_component) {}
 
 }  // namespace xfdtd
 
