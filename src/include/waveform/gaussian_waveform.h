@@ -10,6 +10,7 @@ class GaussianWaveform : public Waveform {
   GaussianWaveform& operator=(GaussianWaveform&&) noexcept = default;
   ~GaussianWaveform() override = default;
 
+  double getValueByTime(double time) const override;
   void init(const std::vector<double>& time_array) override;
   std::unique_ptr<Waveform> clone() const override;
 

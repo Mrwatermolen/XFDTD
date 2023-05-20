@@ -12,6 +12,7 @@ class SinusoidalWaveform : public Waveform {
   SinusoidalWaveform& operator=(SinusoidalWaveform&&) noexcept = default;
   ~SinusoidalWaveform() override = default;
 
+  double getValueByTime(double time) const override;
   void init(const std::vector<double>& time_array) override;
   std::unique_ptr<Waveform> clone() const override;
 

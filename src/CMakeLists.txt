@@ -6,6 +6,7 @@ add_subdirectory(simulation)
 add_subdirectory(waveform)
 add_subdirectory(additive_source)
 add_subdirectory(monitor)
+add_subdirectory(tfsf)
 
 add_library(xfdtd STATIC ${ALL_OBJECT_FILES})
 

@@ -10,6 +10,7 @@
 #include "monitor/field_monitor.h"
 #include "simulation/simulation.h"
 #include "simulation/yee_cell.h"
+#include "tfsf/tfsf_1d.h"
 #include "util/constant.h"
 #include "util/float_compare.h"
 #include "util/type_define.h"
@@ -28,6 +29,7 @@ void Simulation::init() {
 
   initMaterialGrid();
   initSource();
+  initTFSF();
   initUpdateCoefficient();
   initBondaryCondition();
   initMonitor();
@@ -44,6 +46,15 @@ void Simulation::initSource() {
   for (const auto& e : _sources) {
     e->init(_time_array);
   }
+}
+
+void Simulation::initTFSF() {
+  if (_tfsf == nullptr) {
+    return;
+  }
+  auto [x, y, z]{_tfsf->getDistance()};
+  _tfsf->init(_simulation_box.get(), _dx, _dy, _dz, _dt,
+              {x, y, z, _nx - 2 * x, _ny - 2 * y, _nz - 2 * z});
 }
 
 void Simulation::initUpdateCoefficient() {
@@ -194,6 +205,9 @@ void Simulation::caculateDomainSize() {
   double size_x = nx * _dx;
   double size_y = ny * _dy;
   double size_z = nz * _dz;
+  max_x = min_x + size_x;
+  max_y = min_y + size_y;
+  max_z = min_z + size_z;
 
   for (auto& e : _boundaries) {
     auto ori{e->getOrientation()};

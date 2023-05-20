@@ -12,8 +12,12 @@ void GaussianWaveform::init(const std::vector<double> &time_array) {
     auto temp = (time_array[i] - _t_0) / _tau;
     auto temp1 = pow(temp, 2);
     auto temp2 = exp(-temp1);
-    _values[i] = exp(-pow((time_array[i] - _t_0) / _tau, 2)) * _amplitude;
+    _values[i] = getValueByTime(time_array[i]);
   }
+}
+
+double GaussianWaveform::getValueByTime(double time) const {
+  return exp(-pow((time - _t_0) / _tau, 2)) * _amplitude;
 }
 
 std::unique_ptr<Waveform> GaussianWaveform::clone() const {

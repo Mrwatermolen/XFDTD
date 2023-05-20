@@ -14,10 +14,12 @@ void SinusoidalWaveform::init(const std::vector<double>& time_array) {
   _size = time_array.size();
   _values = std::make_unique<double[]>(_size);
   for (size_t i{0}; i < _size; ++i) {
-    _values[i] =
-        _amplitude *
-        std::sin(2 * constant::PI * _frequency * time_array[i] + _phase);
+    _values[i] = getValueByTime(time_array[i]);
   }
+}
+
+double SinusoidalWaveform::getValueByTime(double time) const {
+  return _amplitude * std::sin(2 * constant::PI * _frequency * time + _phase);
 }
 
 std::unique_ptr<Waveform> SinusoidalWaveform::clone() const {

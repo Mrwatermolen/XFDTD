@@ -12,5 +12,5 @@ std::shared_ptr<double[]> Waveform::getValues(size_t start, size_t end) const {
   return values;
 }
 
-double Waveform::getValue(size_t time_step) { return _values[time_step]; }
+double Waveform::getValue(size_t time_step) const { return _values[time_step]; }
 }  // namespace xfdtd

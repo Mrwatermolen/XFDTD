@@ -14,6 +14,7 @@
 #include "object/object.h"
 #include "shape/cube.h"
 #include "simulation/simulation.h"
+#include "tfsf/tfsf_1d.h"
 #include "util/constant.h"
 #include "util/type_define.h"
 #include "waveform/gaussian_waveform.h"
@@ -25,7 +26,7 @@ void testBasic() {
   constexpr double dz{1e-3};
   constexpr double tau{nc * dz / (2 * c)};
   constexpr double t_0{4.5 * tau};
-  constexpr size_t total_time_steps{1200};
+  constexpr size_t total_time_steps{1000};
 
   auto objects{xfdtd::ObjectArray{}};
   auto sources{xfdtd::SourceArray{}};
@@ -43,15 +44,23 @@ void testBasic() {
       "objectA",
       std::make_unique<xfdtd::Cube>(Eigen::Vector3d(0, 0, 100 * dz),
                                     Eigen::Vector3d(0, 0, 150 * dz)),
-      std::make_unique<xfdtd::Material>("materialA", 5, 1.4, 0, 0, false)));
+      std::make_unique<xfdtd::Material>("materialA", 2.2, 1, 0, 0, false)));
 
   auto gaussian_waveform{xfdtd::GaussianWaveform{1, tau, t_0}};
-  auto gaussian_point_source{xfdtd::HardPonitSource{
-      std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform)),
-      Eigen::Vector3d(0, 0, 250 * dz)}};
+  auto sinusoidal_waveform{xfdtd::SinusoidalWaveform{1, 7e9, 0}};
 
-  sources.emplace_back(std::make_shared<xfdtd::HardPonitSource>(
-      std::move(gaussian_point_source)));
+  //   auto gaussian_point_source{xfdtd::HardPonitSource{
+  //       std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform)),
+  //       Eigen::Vector3d(0, 0, 250 * dz)}};
+  //   sources.emplace_back(std::make_shared<xfdtd::HardPonitSource>(
+  //       std::move(gaussian_point_source)));
+
+  auto tfsf{xfdtd::TFSF1D{
+      30, true, -1,
+      std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform))}};
+  //   auto tfsf{xfdtd::TFSF1D{30, false, 1,
+  //                           std::make_unique<xfdtd::SinusoidalWaveform>(
+  //                               std::move(sinusoidal_waveform))}};
 
   boundaries.emplace_back(
       std::make_shared<xfdtd::PML>(xfdtd::Orientation::ZN, 10));
@@ -62,31 +71,16 @@ void testBasic() {
       std::make_unique<xfdtd::Cube>(Eigen::Vector3d(0, 0, -10 * dz),
                                     Eigen::Vector3d(0, 0, 410 * dz)),
       xfdtd::PlaneType::ZX, xfdtd::EMComponent::EX,
-      std::filesystem::absolute("movie_monitor"), "ex.dat"}};
+      std::filesystem::absolute("movie_monitor"), ""}};
   auto movie_monitor{xfdtd::MovieMonitor{
       std::make_unique<xfdtd::TimeDomainFieldMonitor>(std::move(monitor)),
-      total_time_steps}};
+      total_time_steps, 20}};
   monitors.emplace_back(
       std::make_shared<xfdtd::MovieMonitor>(std::move(movie_monitor)));
-  //   monitors.push_back(
-  //       std::make_shared<xfdtd::MovieMonitor>(std::move(movie_monitor)));
-  //   xfdtd::MovieMonitor movie_monitor{
-  //       std::move(std::make_shared<xfdtd::TimeDomainFieldMonitor>(
-  //           std::make_unique<xfdtd::Cube>(Eigen::Vector3d(0, 0, 0),
-  //                                         Eigen::Vector3d(0, 0, 400 * dz)),
-  //           xfdtd::PlaneType::ZX, xfdtd::EMComponent::EX,
-  //           std::filesystem::absolute("movie_monitor"), "")),
-  //       total_time_steps};
 
-  //   monitors.emplace_back(std::move(movie_monitor));
-  //   monitors.emplace_back(std::make_shared<xfdtd::TimeDomainFieldMonitor>(
-  //       std::make_unique<xfdtd::Cube>(Eigen::Vector3d(0, 0, 0),
-  //                                     Eigen::Vector3d(0, 0, 400 * dz)),
-  //       xfdtd::PlaneType::ZX, xfdtd::EMComponent::EX,
-  //       std::filesystem::absolute("monitor"), "ex.dat"));
-
-  auto simulation{
-      xfdtd::Simulation(dz, objects, sources, boundaries, monitors)};
+  auto simulation{xfdtd::Simulation(
+      dz, objects, sources, std::make_unique<xfdtd::TFSF1D>(std::move(tfsf)),
+      boundaries, monitors)};
   simulation.run(total_time_steps);
   for (auto& m : monitors) {
     m->outputData();

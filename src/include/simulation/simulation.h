@@ -12,6 +12,7 @@
 #include "object/object.h"
 #include "shape/cube.h"
 #include "simulation/yee_cell.h"
+#include "tfsf/tfsf.h"
 #include "util/type_define.h"
 
 namespace xfdtd {
@@ -20,8 +21,8 @@ class Simulation {
  public:
   inline static constexpr float DEFAULT_CFL{0.99};
   Simulation(double cell_size, ObjectArray objects, SourceArray sources,
-             BoundaryArray boundaries = {}, MonitorArray _monitors = {},
-             float cfl = DEFAULT_CFL);
+             std::unique_ptr<TFSF> tfsf, BoundaryArray boundaries = {},
+             MonitorArray _monitors = {}, float cfl = DEFAULT_CFL);
 
   void checkRun(size_t time_steps);
   void run(size_t time_steps);
@@ -37,6 +38,7 @@ class Simulation {
   ObjectArray _objects;
   SourceArray _sources;
   BoundaryArray _boundaries;
+  std::unique_ptr<TFSF> _tfsf;
   MonitorArray _monitors;
 
   SpatialIndex _nx;
@@ -45,17 +47,10 @@ class Simulation {
   double _dt;
   size_t _time_steps;
   size_t _current_time_step;
-  std::vector<double> _time_array;
+  std::vector<double> _time_array;  // doubt that it is necessary
 
   YeeCellArray _grid_space;
   std::unique_ptr<Cube> _simulation_box;
-
-  // EFTA _ex;
-  // EFTA _ey;
-  // EFTA _ez;
-  // EFTA _hx;
-  // EFTA _hy;
-  // EFTA _hz;
 
   EFTA _cexe;
   EFTA _cexhy;
@@ -100,6 +95,7 @@ class Simulation {
   void init();
   void initMaterialGrid();
   void initSource();
+  void initTFSF();
   void initUpdateCoefficient();
   void initBondaryCondition();
   void initMonitor();
@@ -110,9 +106,12 @@ class Simulation {
   void caculateMaterialComponent();
 
   void updateAddtiveSource();
+  void updateTFSFIncidentField();
   void updateH();
+  void updateTFSFH();
   void updateBoundaryH();
   void updateE();
+  void updateTFSFE();
   void updateBoundaryE();
   void updateMonitor();
 

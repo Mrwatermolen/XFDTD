@@ -16,7 +16,8 @@ class Waveform {
 
   std::shared_ptr<double[]> getAllValues() const;
   std::shared_ptr<double[]> getValues(size_t start, size_t end) const;
-  double getValue(size_t time_step);
+  double getValue(size_t time_step) const;
+  virtual double getValueByTime(double time) const = 0;
 
   virtual void init(const std::vector<double>& time_array) = 0;
   virtual std::unique_ptr<Waveform> clone() const = 0;

@@ -77,27 +77,27 @@ inline EFTA& getHx() { return global_hx; }
 inline EFTA& getHy() { return global_hy; };
 inline EFTA& getHz() { return global_hz; };
 
-inline double getEx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+inline double& getEx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
   return global_ex(i, j, k);
 }
 
-inline double getEy(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+inline double& getEy(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
   return global_ey(i, j, k);
 }
 
-inline double getEz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+inline double& getEz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
   return global_ez(i, j, k);
 }
 
-inline double getHx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+inline double& getHx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
   return global_hx(i, j, k);
 }
 
-inline double getHy(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+inline double& getHy(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
   return global_hy(i, j, k);
 }
 
-inline double getHz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+inline double& getHz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
   return global_hz(i, j, k);
 }
 
@@ -118,8 +118,8 @@ inline EFTA& getEMComponent(EMComponent c) {
   }
 }
 
-inline double getEMComponent(EMComponent c, SpatialIndex i, SpatialIndex j,
-                             SpatialIndex k) {
+inline double& getEMComponent(EMComponent c, SpatialIndex i, SpatialIndex j,
+                              SpatialIndex k) {
   switch (c) {
     case EMComponent::EX:
       return getEx(i, j, k);

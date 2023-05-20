@@ -29,14 +29,16 @@
 
 namespace xfdtd {
 Simulation::Simulation(double cell_size, ObjectArray objects,
-                       SourceArray sources, BoundaryArray boundaries,
-                       MonitorArray monitors, float cfl)
+                       SourceArray sources, std::unique_ptr<TFSF> tfsf,
+                       BoundaryArray boundaries, MonitorArray monitors,
+                       float cfl)
     : _dx{cell_size},
       _dy{cell_size},
       _dz{cell_size},
       _cfl{cfl},
       _objects{std::move(objects)},
       _sources{std::move(sources)},
+      _tfsf{std::move(tfsf)},
       _boundaries{std::move(boundaries)},
       _monitors{std::move(monitors)} {}
 
@@ -55,9 +57,12 @@ void Simulation::run(size_t time_steps) {
               << "/" << _time_steps << std::flush;
     _current_time_step = i;
     updateAddtiveSource();
+    updateTFSFIncidentField();
     updateH();
+    updateTFSFH();
     updateBoundaryH();
     updateE();
+    updateTFSFE();
     updateBoundaryE();
     updateMonitor();
   }
@@ -83,6 +88,14 @@ void Simulation::handleHardPointSource(Source* source) {
 
   getEx()(0, 0, k) =
       getEx()(0, 0, k) + _cexje(0, 0, k) * point->getValue(_current_time_step);
+}
+
+void Simulation::updateTFSFIncidentField() {
+  if (_tfsf == nullptr) {
+    return;
+  }
+
+  _tfsf->updateIncidentField(_current_time_step);
 }
 
 void Simulation::updateH() {
@@ -118,6 +131,14 @@ void Simulation::updateH() {
       }
     }
   }
+}
+
+void Simulation::updateTFSFH() {
+  if (_tfsf == nullptr) {
+    return;
+  }
+
+  _tfsf->updateH();
 }
 
 void Simulation::updateBoundaryH() {
@@ -185,6 +206,14 @@ void Simulation::updateE() {
   }
 }
 
+void Simulation::updateTFSFE() {
+  if (_tfsf == nullptr) {
+    return;
+  }
+
+  _tfsf->updateE();
+}
+
 void Simulation::updateMonitor() {
   for (auto&& e : _monitors) {
     e->update(_current_time_step);
@@ -229,13 +258,6 @@ void Simulation::handlePMLBoundaryE(std::shared_ptr<Boundary>& boundary) {
   if (ori == Orientation::ZN || ori == Orientation::ZP) {
     cpml->updateE(getEx(), getEy(), getHx(), getHy());
   }
-  /* if (ori == Orientation::YN || ori == Orientation::YP) { */
-  /*   cpml->updateE(_ez, _ex, _hz, _hx); */
-  /*   return; */
-  /* } */
-  /* if (ori == Orientation::ZN || ori == Orientation::ZP) { */
-  /*   cpml->updateE(_ex, _ey, _hx, _hy); */
-  /* } */
 }
 
 }  // namespace xfdtd
