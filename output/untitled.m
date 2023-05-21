@@ -34,3 +34,6 @@ for i=1:size(AllFile,1)
     pause(0.1)
 end
 
+data = importdata(filename{1}).data;
+imagesc(data)
+colorbar

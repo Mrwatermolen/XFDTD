@@ -19,6 +19,7 @@
 #include "additive_source/source.h"
 #include "boundary/boundary.h"
 #include "boundary/perfect_match_layer.h"
+#include "electromagnetic.h"
 #include "shape/cube.h"
 #include "shape/shape.h"
 #include "util/constant.h"
@@ -83,11 +84,19 @@ void Simulation::handleHardPointSource(Source* source) {
   }
   auto p{point->getPoint()};
   // TODO(franzero):错误的计算
+  auto i{static_cast<SpatialIndex>(
+      std::round((p.x() - _simulation_box->getXmin()) / _dx))};
+  auto j{static_cast<SpatialIndex>(
+      std::round((p.y() - _simulation_box->getYmin()) / _dy))};
   auto k{static_cast<SpatialIndex>(
       std::round((p.z() - _simulation_box->getZmin()) / _dz))};
-
-  getEx()(0, 0, k) =
-      getEx()(0, 0, k) + _cexje(0, 0, k) * point->getValue(_current_time_step);
+  if (_nx == 1 && _ny == 1) {
+    getEx()(0, 0, k) = getEx()(0, 0, k) +
+                       _cexje(0, 0, k) * point->getValue(_current_time_step);
+  } else {
+    getEz()(i, j, k) = getEz()(i, j, k) +
+                       _cezje(i, j, k) * point->getValue(_current_time_step);
+  }
 }
 
 void Simulation::updateTFSFIncidentField() {
@@ -171,7 +180,16 @@ void Simulation::updateE() {
   }
 
   if (_nz == 1) {
-    // 2D
+    for (SpatialIndex i{1}; i < _nx; ++i) {
+      for (SpatialIndex j{1}; j < _ny; ++j) {
+        for (SpatialIndex k{0}; k < _nz; ++k) {
+          ez(i, j, k) =
+              _ceze(i, j, k) * ez(i, j, k) +
+              _cezhx(i, j, k) * (getHx()(i, j, k) - getHx()(i, j - 1, k)) +
+              _cezhy(i, j, k) * (hy(i, j, k) - hy(i - 1, j, k));
+        }
+      }
+    }
     return;
   }
 
@@ -199,7 +217,7 @@ void Simulation::updateE() {
       for (SpatialIndex k{0}; k < _nz; ++k) {
         ez(i, j, k) =
             _ceze(i, j, k) * ez(i, j, k) +
-            _cezhx(i, j, k) * (getHx()(i, j - 1, k) - getHx()(i, j, k)) +
+            _cezhx(i, j, k) * (getHx()(i, j, k) - getHx()(i, j - 1, k)) +
             _cezhy(i, j, k) * (hy(i, j, k) - hy(i - 1, j, k));
       }
     }

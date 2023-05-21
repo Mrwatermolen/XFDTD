@@ -47,7 +47,6 @@ void testBasic() {
       std::make_unique<xfdtd::Material>("materialA", 2.2, 1, 0, 0, false)));
 
   auto gaussian_waveform{xfdtd::GaussianWaveform{1, tau, t_0}};
-  auto sinusoidal_waveform{xfdtd::SinusoidalWaveform{1, 7e9, 0}};
 
   //   auto gaussian_point_source{xfdtd::HardPonitSource{
   //       std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform)),
@@ -56,11 +55,8 @@ void testBasic() {
   //       std::move(gaussian_point_source)));
 
   auto tfsf{xfdtd::TFSF1D{
-      30, true, -1,
+      30, xfdtd::constant::PI, -1,
       std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform))}};
-  //   auto tfsf{xfdtd::TFSF1D{30, false, 1,
-  //                           std::make_unique<xfdtd::SinusoidalWaveform>(
-  //                               std::move(sinusoidal_waveform))}};
 
   boundaries.emplace_back(
       std::make_shared<xfdtd::PML>(xfdtd::Orientation::ZN, 10));
@@ -71,7 +67,7 @@ void testBasic() {
       std::make_unique<xfdtd::Cube>(Eigen::Vector3d(0, 0, -10 * dz),
                                     Eigen::Vector3d(0, 0, 410 * dz)),
       xfdtd::PlaneType::ZX, xfdtd::EMComponent::EX,
-      std::filesystem::absolute("movie_monitor"), ""}};
+      std::filesystem::absolute("visualizing_data/1d_movie_monitor"), ""}};
   auto movie_monitor{xfdtd::MovieMonitor{
       std::make_unique<xfdtd::TimeDomainFieldMonitor>(std::move(monitor)),
       total_time_steps, 20}};

@@ -17,9 +17,6 @@ class ArhTFSF1D : public TFSF {
             SpatialIndex distance_z, double theta_inc, double phi_inc,
             double e_theta, double e_phi, std::unique_ptr<Waveform> waveform);
 
-  void init(const Cube *simulation_box, double dx, double dy, double dz,
-            double dt, TFSFBoundaryIndex tfsf_boundary_index) override;
-
   void updateIncidentField(size_t current_time_step) override;
   void updateH() override;
   void updateE() override;
@@ -106,7 +103,7 @@ class ArhTFSF1D : public TFSF {
 
   void allocateKDotR() override;
   void allocateEiHi() override;
-  void caculateKDotR() override;
+  void calculateKDotR() override;
   void caculateKDotRXN(double dx, double dy, double dz);
   void caculateKDotRXP(double dx, double dy, double dz);
   void caculateKDotRYN(double dx, double dy, double dz);

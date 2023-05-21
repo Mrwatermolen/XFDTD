@@ -42,6 +42,12 @@ class TFSF {
   inline double getDz() const { return _dz; }
   inline PointVector getKVector() const { return _k; }
   inline double getL0() const { return _l_0; }
+  inline double getExi0() { return _ex_i0; }
+  inline double getEyi0() { return _ey_i0; }
+  inline double getEzi0() { return _ez_i0; }
+  inline double getHxi0() { return _hx_i0; }
+  inline double getHyi0() { return _hy_i0; }
+  inline double getHzi0() { return _hz_i0; }
   inline SpatialIndex getStartIndexX() const {
     return _tfsf_boundary_index.start_x;
   }
@@ -70,19 +76,16 @@ class TFSF {
     return _tfsf_box.get();
   }
 
-  virtual void init(const Cube *simulation_box, double dx, double dy, double dz,
-                    double dt, TFSFBoundaryIndex tfsf_boundary_index) = 0;
+  void init(const Cube *simulation_box, double dx, double dy, double dz,
+            double dt, TFSFBoundaryIndex tfsf_boundary_index);
   virtual void updateIncidentField(size_t current_time_step) = 0;
   virtual void updateH() = 0;
   virtual void updateE() = 0;
 
  protected:
-  void initTFSF(const Cube *simulation_box, double dx, double dy, double dz,
-                double dt, TFSFBoundaryIndex tfsf_boundary_index);
-
   virtual void allocateKDotR() = 0;
   virtual void allocateEiHi() = 0;
-  virtual void caculateKDotR() = 0;
+  virtual void calculateKDotR() = 0;
 
  private:
   SpatialIndex _distance_x;
@@ -94,6 +97,12 @@ class TFSF {
   double _e_phi;
   PointVector _k;
   std::unique_ptr<Waveform> _waveform;
+  double _ex_i0;
+  double _ey_i0;
+  double _ez_i0;
+  double _hx_i0;
+  double _hy_i0;
+  double _hz_i0;
 
   double _dt;
   double _dx;
@@ -103,6 +112,9 @@ class TFSF {
   // Eigen::Matrix<double, 8, 3> _fdtd_domain_matrix;
   std::unique_ptr<Cube> _tfsf_box;
   double _l_0;
+
+  void initTFSF(const Cube *simulation_box, double dx, double dy, double dz,
+                double dt, TFSFBoundaryIndex tfsf_boundary_index);
 };
 }  // namespace xfdtd
 

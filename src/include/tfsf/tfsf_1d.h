@@ -5,25 +5,23 @@
 
 namespace xfdtd {
 
+/**
+ * @brief 1D TF/SF do not have any practical importance, but the nimplementation
+ * of it is helpful in understanding more complex 2D and 3D TF/SF.
+ *
+ */
 class TFSF1D : public TFSF {
  public:
-  TFSF1D(SpatialIndex distance_z, bool n, double e_i_0,
+  TFSF1D(SpatialIndex distance_z, double theta_inc, double e_i_0,
          std::unique_ptr<Waveform> waveform);
   TFSF1D(TFSF1D &&) = default;
   ~TFSF1D() override = default;
-
-  void init(const Cube *simulation_box, double dx, double dy, double dz,
-            double dt, TFSF::TFSFBoundaryIndex tfsf_boundary_index) override;
 
   void updateIncidentField(size_t current_time_step) override;
   void updateH() override;
   void updateE() override;
 
  private:
-  bool _n;
-  double _ex_i0;
-  double _hy_i0;
-
   double _exi_zn;
   double _hyi_zn;
   double _exi_zp;
@@ -36,7 +34,7 @@ class TFSF1D : public TFSF {
 
   void allocateKDotR() override;
   void allocateEiHi() override;
-  void caculateKDotR() override;
+  void calculateKDotR() override;
   void caculateKDotRZN();
   void caculateKDotRZP();
 };

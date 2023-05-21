@@ -3,6 +3,7 @@
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 
 #include "boundary/boundary.h"
 #include "boundary/perfect_match_layer.h"
@@ -166,6 +167,10 @@ void Simulation::caculateDomainSize() {
   double min_z = std::numeric_limits<double>::max();
   double max_z = std::numeric_limits<double>::min();
 
+  if (_objects.empty()) {
+    throw std::runtime_error("no object in simulation");
+  }
+
   for (const auto& e : _objects) {
     std::shared_ptr<Shape> tmep{std::move(e->getWrappedBox())};
     auto box{std::dynamic_pointer_cast<Cube>(tmep)};
@@ -263,6 +268,15 @@ void Simulation::gridSimualtionSpace() {
       _grid_space.emplace_back(std::make_shared<YeeCell>(
           Eigen::Vector3d{min_x, min_y, min_z + k * _dz},
           Eigen::Vector3d{0, 0, _dz}, -1, 0, 0, k));
+    }
+  } else if (_nz == 1) {
+    for (SpatialIndex i{0}; i < _nx; ++i) {
+      for (SpatialIndex j{0}; j < _ny; ++j) {
+        auto index{i * _ny + j};
+        _grid_space.emplace_back(std::make_shared<YeeCell>(
+            Eigen::Vector3d{min_x + i * _dx, min_y + j * _dy, 0},
+            Eigen::Vector3d{_dx, _dy, 0}, -1, i, j, 0));
+      }
     }
   } else {
     for (SpatialIndex i{0}; i < _nx; ++i) {

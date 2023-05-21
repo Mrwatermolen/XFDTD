@@ -31,18 +31,6 @@ ArhTFSF1D::ArhTFSF1D(SpatialIndex distance_x, SpatialIndex distance_y,
   _hz_i0 = sin(_theta_inc) * _e_phi / constant::ETA_0;
 }
 
-void ArhTFSF1D::init(const Cube* simulation_box, double dx, double dy,
-                     double dz, double dt,
-                     TFSFBoundaryIndex tfsf_boundary_index) {
-  if (simulation_box == nullptr) {
-    throw std::runtime_error("simulation_box is nullptr");
-  }
-
-  allocateKDotR();
-  allocateEiHi();
-  caculateKDotR();
-}
-
 void ArhTFSF1D::updateIncidentField(size_t current_time_step) {
   updateEi(current_time_step);
   updateHi(current_time_step);
@@ -271,7 +259,7 @@ void ArhTFSF1D::allocateEiHi() {
   _hyi_zp = std::move(allocateDoubleArray2D(getNx(), getNy() + 1));
 }
 
-void ArhTFSF1D::caculateKDotR() {
+void ArhTFSF1D::calculateKDotR() {
   auto dx{getDx()};
   auto dy{getDy()};
   auto dz{getDz()};
