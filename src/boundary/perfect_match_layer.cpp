@@ -452,7 +452,7 @@ void PML::updateH(EFTA& ea, EFTA& eb, EFTA& ha, EFTA& hb) {
           _psi_hb(i, j, k) = _cpml_b_m(j) * _psi_hb(i, j, k) +
                              _cpml_a_m(j) * (ea(i, _start_index + j + 1, k) -
                                              ea(i, _start_index + j, k));
-          hb(k, _start_index + j, i) = hb(k, _start_index + j, i) +
+          hb(i, _start_index + j, k) = hb(i, _start_index + j, k) +
                                        _c_psi_hb(i, j, k) * _psi_hb(i, j, k);
         }
       }
@@ -461,7 +461,7 @@ void PML::updateH(EFTA& ea, EFTA& eb, EFTA& ha, EFTA& hb) {
           _psi_ha(i, j, k) = _cpml_b_m(j) * _psi_ha(i, j, k) +
                              _cpml_a_m(j) * (eb(i, _start_index + j + 1, k) -
                                              eb(i, _start_index + j, k));
-          ha(k, _start_index + j, i) = ha(k, _start_index + j, i) +
+          ha(i, _start_index + j, k) = ha(i, _start_index + j, k) +
                                        _c_psi_ha(i, j, k) * _psi_ha(i, j, k);
         }
       }
