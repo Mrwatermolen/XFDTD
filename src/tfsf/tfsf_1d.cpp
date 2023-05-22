@@ -10,8 +10,57 @@ namespace xfdtd {
 TFSF1D::TFSF1D(SpatialIndex distance_z, double theta_inc, double e_i_0,
                std::unique_ptr<Waveform> waveform)
     : TFSF(0, 0, distance_z, theta_inc, 0, e_i_0, 0, std::move(waveform)) {
-  // _ex_i0 = cos(getIncidentTheta()) * getETehta();
-  // _hy_i0 = -(-getETehta()) / constant::ETA_0;
+  _ex_i0 = cos(theta_inc) * cos(0) * e_i_0;
+  _hy_i0 = -(-cos(0) * e_i_0) / constant::ETA_0;
+}
+
+void TFSF1D::init(const Cube* simulation_box, double dx, double dy, double dz,
+                  double dt, TFSFBoundaryIndex tfsf_boundary_index) {
+  if (simulation_box == nullptr) {
+    throw std::runtime_error("TFSF::initTFSF() simulation_box is nullptr");
+  }
+  defaultInitTFSF(simulation_box, dx, dy, dz, dt, tfsf_boundary_index);
+
+  Eigen::Matrix<double, 8, 3> fdtd_domain_matrix;
+  fdtd_domain_matrix(0, 0) = simulation_box->getXmin();
+  fdtd_domain_matrix(0, 1) = simulation_box->getYmin();
+  fdtd_domain_matrix(0, 2) = simulation_box->getZmin();
+
+  fdtd_domain_matrix(1, 0) = simulation_box->getXmin();
+  fdtd_domain_matrix(1, 1) = simulation_box->getYmin();
+  fdtd_domain_matrix(1, 2) = simulation_box->getZmax();
+
+  fdtd_domain_matrix(2, 0) = simulation_box->getXmin();
+  fdtd_domain_matrix(2, 1) = simulation_box->getYmax();
+  fdtd_domain_matrix(2, 2) = simulation_box->getZmin();
+
+  fdtd_domain_matrix(3, 0) = simulation_box->getXmin();
+  fdtd_domain_matrix(3, 1) = simulation_box->getYmax();
+  fdtd_domain_matrix(3, 2) = simulation_box->getZmax();
+
+  fdtd_domain_matrix(4, 0) = simulation_box->getXmax();
+  fdtd_domain_matrix(4, 1) = simulation_box->getYmin();
+  fdtd_domain_matrix(4, 2) = simulation_box->getZmin();
+
+  fdtd_domain_matrix(5, 0) = simulation_box->getXmax();
+  fdtd_domain_matrix(5, 1) = simulation_box->getYmin();
+  fdtd_domain_matrix(5, 2) = simulation_box->getZmax();
+
+  fdtd_domain_matrix(6, 0) = simulation_box->getXmax();
+  fdtd_domain_matrix(6, 1) = simulation_box->getYmax();
+  fdtd_domain_matrix(6, 2) = simulation_box->getZmin();
+
+  fdtd_domain_matrix(7, 0) = simulation_box->getXmax();
+  fdtd_domain_matrix(7, 1) = simulation_box->getYmax();
+  fdtd_domain_matrix(7, 2) = simulation_box->getZmax();
+
+  auto k_dot_r{fdtd_domain_matrix * getKVector()};
+  auto k_dot_r_min{k_dot_r.minCoeff()};
+  _l_0 = (k_dot_r_min) / constant::C_0;
+
+  allocateKDotR();
+  allocateEiHi();
+  calculateKDotR();
 }
 
 void TFSF1D::updateIncidentField(size_t current_time_step) {

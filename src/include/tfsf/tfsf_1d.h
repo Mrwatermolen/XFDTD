@@ -17,11 +17,20 @@ class TFSF1D : public TFSF {
   TFSF1D(TFSF1D &&) = default;
   ~TFSF1D() override = default;
 
+  void init(const Cube *simulation_box, double dx, double dy, double dz,
+            double dt, TFSFBoundaryIndex tfsf_boundary_index) override;
   void updateIncidentField(size_t current_time_step) override;
   void updateH() override;
   void updateE() override;
+  inline double getL0() { return _l_0; }
+  inline double getExi0() { return _ex_i0; }
+  inline double getHyi0() { return _hy_i0; }
 
  private:
+  double _l_0;
+  double _ex_i0;
+  double _hy_i0;
+
   double _exi_zn;
   double _hyi_zn;
   double _exi_zp;
@@ -32,9 +41,9 @@ class TFSF1D : public TFSF {
   double _k_dot_r0_ex_zp;
   double _k_dot_r0_hy_zp;
 
-  void allocateKDotR() override;
-  void allocateEiHi() override;
-  void calculateKDotR() override;
+  void allocateKDotR();
+  void allocateEiHi();
+  void calculateKDotR();
   void caculateKDotRZN();
   void caculateKDotRZP();
 };

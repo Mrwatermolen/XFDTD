@@ -23,7 +23,7 @@ void testBasic2D() {
   constexpr double dy{1e-3};
   constexpr double tau{nc * dx / (2 * c)};
   constexpr double t_0{4.5 * tau};
-  constexpr size_t total_time_steps{800};
+  constexpr size_t total_time_steps{1200};
 
   auto objects{xfdtd::ObjectArray{}};
   auto sources{xfdtd::SourceArray{}};
@@ -53,7 +53,7 @@ void testBasic2D() {
   //       std::make_shared<xfdtd::HardPonitSource>(std::move(hard_point_source)));
 
   auto tfsf{xfdtd::TFSF2D{
-      30, 30, xfdtd::constant::PI * 0.5, 1,
+      30, 30, xfdtd::constant::PI * 1.25, 1,
       std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform))}};
 
   boundaries.emplace_back(
@@ -72,7 +72,7 @@ void testBasic2D() {
       std::filesystem::absolute("visualizing_data/2d_movie_output"), ""}};
   auto movie_monitor{xfdtd::MovieMonitor{
       std::make_unique<xfdtd::TimeDomainFieldMonitor>(std::move(monitor)),
-      total_time_steps, 30}};
+      total_time_steps, 10}};
   monitors.emplace_back(
       std::make_shared<xfdtd::MovieMonitor>(std::move(movie_monitor)));
   auto simulation{xfdtd::Simulation{

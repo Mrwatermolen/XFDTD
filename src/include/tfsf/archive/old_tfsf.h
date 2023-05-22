@@ -1,5 +1,5 @@
-#ifndef _TFSF_H_
-#define _TFSF_H_
+#ifndef _OLD_TFSF_H_
+#define _OLD_TFSF_H_
 
 #include <memory>
 
@@ -7,15 +7,15 @@
 #include "util/type_define.h"
 #include "waveform/waveform.h"
 namespace xfdtd {
-class TFSF {
+class OldTFSF {
  public:
-  TFSF(SpatialIndex distance_x, SpatialIndex distance_y,
-       SpatialIndex distance_z, double theta_inc, double phi_inc,
-       double e_theta, double e_phi, std::unique_ptr<Waveform> waveform);
-  TFSF(TFSF &&ohter) = default;
-  virtual ~TFSF() = default;
+  OldTFSF(SpatialIndex distance_x, SpatialIndex distance_y,
+          SpatialIndex distance_z, double theta_inc, double phi_inc,
+          double e_theta, double e_phi, std::unique_ptr<Waveform> waveform);
+  OldTFSF(OldTFSF &&ohter) = default;
+  virtual ~OldTFSF() = default;
 
-  struct TFSFBoundaryIndex {
+  struct OldTFSFBoundaryIndex {
     SpatialIndex start_x;
     SpatialIndex start_y;
     SpatialIndex start_z;
@@ -40,33 +40,17 @@ class TFSF {
   inline double getDx() const { return _dx; }
   inline double getDy() const { return _dy; }
   inline double getDz() const { return _dz; }
-
-  /**
-   * @brief get the wave vector of the incident field
-   */
   inline PointVector getKVector() const { return _k; }
 
-  /**
-   * @brief Get the index of the TFSF boundary with normal vector xn
-   */
   inline SpatialIndex getStartIndexX() const {
     return _tfsf_boundary_index.start_x;
   }
-  /**
-   * @brief Get the index of the TFSF boundary with normal vector xp
-   */
   inline SpatialIndex getEndIndexX() const {
     return getStartIndexX() + getNx();
   }
-  /**
-   * @brief Get the index of the TFSF boundary with normal vector yn
-   */
   inline SpatialIndex getStartIndexY() const {
     return _tfsf_boundary_index.start_y;
   }
-  /**
-   * @brief Get the index of the TFSF boundary with normal vector yp
-   */
   inline SpatialIndex getEndIndexY() const {
     return getStartIndexX() + getNx();
   }
@@ -76,17 +60,8 @@ class TFSF {
   inline SpatialIndex getEndIndexZ() const {
     return getStartIndexZ() + getNz();
   }
-  /**
-   * @brief Get the number of cells in the x direction of the TFSF boundary
-   */
   inline SpatialIndex getNx() const { return _tfsf_boundary_index.nx; }
-  /**
-   * @brief Get the number of cells in the y direction of the TFSF boundary
-   */
   inline SpatialIndex getNy() const { return _tfsf_boundary_index.ny; }
-  /**
-   * @brief Get the number of cells in the z direction of the TFSF boundary
-   */
   inline SpatialIndex getNz() const { return _tfsf_boundary_index.nz; }
 
   inline const Cube *getTFSFCubeBox() const {
@@ -96,16 +71,24 @@ class TFSF {
     return _tfsf_box.get();
   }
 
+  inline double getL0() const { return _l_0; }
+  inline double getExi0() { return _ex_i0; }
+  inline double getEyi0() { return _ey_i0; }
+  inline double getEzi0() { return _ez_i0; }
+  inline double getHxi0() { return _hx_i0; }
+  inline double getHyi0() { return _hy_i0; }
+  inline double getHzi0() { return _hz_i0; }
+
   virtual void init(const Cube *simulation_box, double dx, double dy, double dz,
-                    double dt, TFSFBoundaryIndex tfsf_boundary_index) = 0;
+                    double dt, OldTFSFBoundaryIndex tfsf_boundary_index);
   virtual void updateIncidentField(size_t current_time_step) = 0;
   virtual void updateH() = 0;
   virtual void updateE() = 0;
 
  protected:
-  void defaultInitTFSF(const Cube *simulation_box, double dx, double dy,
-                       double dz, double dt,
-                       TFSFBoundaryIndex tfsf_boundary_index);
+  virtual void allocateKDotR() = 0;
+  virtual void allocateEiHi() = 0;
+  virtual void calculateKDotR() = 0;
 
  private:
   SpatialIndex _distance_x;
@@ -117,14 +100,24 @@ class TFSF {
   double _e_phi;
   PointVector _k;
   std::unique_ptr<Waveform> _waveform;
+  double _ex_i0;
+  double _ey_i0;
+  double _ez_i0;
+  double _hx_i0;
+  double _hy_i0;
+  double _hz_i0;
 
   double _dt;
   double _dx;
   double _dy;
   double _dz;
-  TFSFBoundaryIndex _tfsf_boundary_index;
+  OldTFSFBoundaryIndex _tfsf_boundary_index;
   std::unique_ptr<Cube> _tfsf_box;
+  double _l_0;
+
+  void initOldTFSF(const Cube *simulation_box, double dx, double dy, double dz,
+                   double dt, OldTFSFBoundaryIndex tfsf_boundary_index);
 };
 }  // namespace xfdtd
 
-#endif  // _TFSF_H_
+#endif  // _OLD_TFSF_H_

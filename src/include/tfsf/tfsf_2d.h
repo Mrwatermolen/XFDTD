@@ -1,5 +1,8 @@
+
 #ifndef _TFSF_2D_H_
 #define _TFSF_2D_H_
+
+#include <vector>
 
 #include "tfsf/tfsf.h"
 #include "util/type_define.h"
@@ -10,59 +13,63 @@ class TFSF2D : public TFSF {
   TFSF2D(SpatialIndex distance_x, SpatialIndex distance_y, double phi_inc,
          double ez_i0, std::unique_ptr<Waveform> waveform);
   TFSF2D(const TFSF2D &) = delete;
-  TFSF2D(TFSF2D &&) = default;
   TFSF2D &operator=(const TFSF2D &) = delete;
+  TFSF2D(TFSF2D &&) = default;
   TFSF2D &operator=(TFSF2D &&) = delete;
   ~TFSF2D() override = default;
 
+  void init(const Cube *simulation_box, double dx, double dy, double dz,
+            double dt, TFSFBoundaryIndex tfsf_boundary_index) override;
   void updateIncidentField(size_t current_time_step) override;
-  void updateE() override;
   void updateH() override;
+  void updateE() override;
 
- protected:
-  void allocateKDotR() override;
-  void allocateEiHi() override;
-  void calculateKDotR() override;
+  inline SpatialIndex getStrikeIndexX() const { return _strike_index_x; }
+  inline SpatialIndex getStrikeIndexY() const { return _strike_index_y; }
 
  private:
+  // fdtd update coefficient in free space
+  // Ei = ceie * Ei + ceihi * Hi
+  // Hi = chih * Hi + chiei * Ei
+  double _ceie{1.0};
+  double _ceihi;  // -(delta_t / (epsilon_0 * delta_l))
+  double _chih{1.0};
+  double _chiei;  // -(delta_t / (mu_0 * delta_l))
+
+  size_t _auxiliary_array_size;
+
+  SpatialIndex _strike_index_x;
+  SpatialIndex _strike_index_y;
+
   // TM mode
+  DoubleArrary1D _e_inc;
+  DoubleArrary1D _h_inc;
 
-  DoubleArrary1D _ezi_xn;
-  DoubleArrary1D _hyi_xn;
+  // the scalar projection on the direction k.
+  std::vector<SpatialIndex> _projection_index_ez_xn;
+  std::vector<SpatialIndex> _projection_index_hy_xn;
 
-  DoubleArrary1D _ezi_yn;
-  DoubleArrary1D _hxi_yn;
+  std::vector<SpatialIndex> _projection_index_ez_yn;
+  std::vector<SpatialIndex> _projection_index_hx_yn;
 
-  DoubleArrary1D _ezi_xp;
-  DoubleArrary1D _hyi_xp;
+  std::vector<SpatialIndex> _projection_index_ez_xp;
+  std::vector<SpatialIndex> _projection_index_hy_xp;
 
-  DoubleArrary1D _ezi_yp;
-  DoubleArrary1D _hxi_yp;
+  std::vector<SpatialIndex> _projection_index_ez_yp;
+  std::vector<SpatialIndex> _projection_index_hx_yp;
 
-  DoubleArrary1D _k_dot_r0_ez_xn;
-  DoubleArrary1D _k_dot_r0_hy_xn;
+  // linear interpolation coefficient
+  std::vector<double> _weight_ez_xn;
+  std::vector<double> _weight_hy_xn;
 
-  DoubleArrary1D _k_dot_r0_ez_yn;
-  DoubleArrary1D _k_dot_r0_hx_yn;
+  std::vector<double> _weight_ez_yn;
+  std::vector<double> _weight_hx_yn;
 
-  DoubleArrary1D _k_dot_r0_ez_xp;
-  DoubleArrary1D _k_dot_r0_hy_xp;
+  std::vector<double> _weight_ez_xp;
+  std::vector<double> _weight_hy_xp;
 
-  DoubleArrary1D _k_dot_r0_ez_yp;
-  DoubleArrary1D _k_dot_r0_hx_yp;
-
-  void calculateKDotRXN();
-  void calculateKDotRYN();
-  void calculateKDotRXP();
-  void calculateKDotRYP();
-
-  void updateEi(double time);
-  void updateHi(double time);
-
-  // TE Mode
-  double _hz_i0;
-  double _ex_i0;
-  double _ey_i0;
+  std::vector<double> _weight_ez_yp;
+  std::vector<double> _weight_hx_yp;
 };
 }  // namespace xfdtd
 
