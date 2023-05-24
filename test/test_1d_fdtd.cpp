@@ -8,7 +8,6 @@
 #include "additive_source/source.h"
 #include "boundary/boundary.h"
 #include "boundary/perfect_match_layer.h"
-#include "electromagnetic.h"
 #include "monitor/field_monitor.h"
 #include "monitor/movie_monitor.h"
 #include "object/object.h"
@@ -40,26 +39,27 @@ void testBasic() {
                                     Eigen::Vector3d(0, 0, 400 * dz)),
       std::make_unique<xfdtd::Material>(air_material)}};
   objects.emplace_back(std::make_shared<xfdtd::Object>(free_space));
-  objects.emplace_back(std::make_shared<xfdtd::Object>(
-      "objectA",
-      std::make_unique<xfdtd::Cube>(Eigen::Vector3d(0, 0, 100 * dz),
-                                    Eigen::Vector3d(0, 0, 150 * dz)),
-      std::make_unique<xfdtd::Material>("materialA", 2.2, 1, 0, 0, false)));
+  //   objects.emplace_back(std::make_shared<xfdtd::Object>(
+  //       "objectA",
+  //       std::make_unique<xfdtd::Cube>(Eigen::Vector3d(0, 0, 100 * dz),
+  //                                     Eigen::Vector3d(0, 0, 150 * dz)),
+  //       std::make_unique<xfdtd::Material>("materialA", 2.2, 1, 0, 0,
+  //       false)));
 
   auto gaussian_waveform{xfdtd::GaussianWaveform{1, tau, t_0}};
 
-  //   auto gaussian_point_source{xfdtd::HardPonitSource{
-  //       std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform)),
-  //       Eigen::Vector3d(0, 0, 250 * dz)}};
-  //   sources.emplace_back(std::make_shared<xfdtd::HardPonitSource>(
-  //       std::move(gaussian_point_source)));
+  auto gaussian_point_source{xfdtd::HardPonitSource{
+      std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform)),
+      Eigen::Vector3d(0, 0, 0 * dz)}};
+    sources.emplace_back(std::make_shared<xfdtd::HardPonitSource>(
+        std::move(gaussian_point_source)));
 
-  auto tfsf{xfdtd::TFSF1D{
-      30, xfdtd::constant::PI, -1,
-      std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform))}};
+  //   auto tfsf{xfdtd::TFSF1D{
+  //       30, xfdtd::constant::PI, -1,
+  //       std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform))}};
 
-  boundaries.emplace_back(
-      std::make_shared<xfdtd::PML>(xfdtd::Orientation::ZN, 10));
+  //   boundaries.emplace_back(
+  //       std::make_shared<xfdtd::PML>(xfdtd::Orientation::ZN, 10));
   boundaries.emplace_back(
       std::make_shared<xfdtd::PML>(xfdtd::Orientation::ZP, 10));
 
@@ -74,9 +74,8 @@ void testBasic() {
   monitors.emplace_back(
       std::make_shared<xfdtd::MovieMonitor>(std::move(movie_monitor)));
 
-  auto simulation{xfdtd::Simulation(
-      dz, objects, sources, std::make_unique<xfdtd::TFSF1D>(std::move(tfsf)),
-      boundaries, monitors)};
+  auto simulation{
+      xfdtd::Simulation(dz, objects, sources, boundaries, monitors)};
   simulation.run(total_time_steps);
   for (auto& m : monitors) {
     m->outputData();
