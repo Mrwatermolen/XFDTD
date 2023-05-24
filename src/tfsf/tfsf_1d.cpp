@@ -2,7 +2,6 @@
 
 #include <utility>
 
-#include "electromagnetic.h"
 #include "tfsf/tfsf.h"
 #include "util/constant.h"
 

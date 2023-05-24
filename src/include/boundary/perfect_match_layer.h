@@ -7,7 +7,7 @@
 
 #include "boundary/boundary.h"
 #include "shape/shape.h"
-#include "simulation/simulation.h"
+#include "util/type_define.h"
 
 namespace xfdtd {
 class PML : public Boundary {
@@ -21,19 +21,23 @@ class PML : public Boundary {
   PML& operator=(PML&& pml) noexcept = default;
   ~PML() override = default;
 
-  void initSize(double dl);
-  void init(double dl, double dt, SpatialIndex start_index, int na, int nb,
-            EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea);
+  void init(Simulation* simulation) override;
 
-  inline int getSize() const override { return _thickness; }
+  inline SpatialIndex getSize() const override { return _thickness; }
   inline Orientation getOrientation() const override { return _orientation; }
+  inline EFTA& getEx() { return getEMFInstance()->getEx(); }
+  inline EFTA& getEy() { return getEMFInstance()->getEy(); }
+  inline EFTA& getEz() { return getEMFInstance()->getEz(); }
+  inline EFTA& getHx() { return getEMFInstance()->getHx(); }
+  inline EFTA& getHy() { return getEMFInstance()->getHy(); }
+  inline EFTA& getHz() { return getEMFInstance()->getHz(); }
 
   const Eigen::ArrayXd& getKappaE() const;
   const Eigen::ArrayXd& getKappaM() const;
   bool isOrientatingPositive() const;
 
-  void updateE(EFTA& ea, EFTA& eb, EFTA& ha, EFTA& hb);
-  void updateH(EFTA& ea, EFTA& eb, EFTA& ha, EFTA& hb);
+  void updateH() override;
+  void updateE() override;
 
  private:
   Orientation _orientation;
@@ -76,8 +80,14 @@ class PML : public Boundary {
   Eigen::Tensor<double, 3> _c_psi_ha;
   Eigen::Tensor<double, 3> _c_psi_hb;
 
+  void init(double dl, double dt, SpatialIndex start_index, int na, int nb,
+            EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea);
+
   void initP(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea);
   void initN(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea);
+
+  void updateE(EFTA& ea, EFTA& eb, EFTA& ha, EFTA& hb);
+  void updateH(EFTA& ea, EFTA& eb, EFTA& ha, EFTA& hb);
 };
 }  // namespace xfdtd
 #endif  // _PERFECT_MATCH_LAYER_H_

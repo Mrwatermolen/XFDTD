@@ -7,12 +7,14 @@ add_subdirectory(waveform)
 add_subdirectory(additive_source)
 add_subdirectory(monitor)
 add_subdirectory(tfsf)
+add_subdirectory(electromagnetic_field)
 
 add_library(xfdtd STATIC ${ALL_OBJECT_FILES})
 
 set(XFDTD_LIBS
     xfdtd_additive_source
     xfdtd_boundary
+    xfdtd_electromagnetic_field
     xfdtd_material
     xfdtd_monitor
     xfdtd_object

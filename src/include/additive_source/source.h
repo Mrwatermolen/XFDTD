@@ -8,10 +8,10 @@ namespace xfdtd {
 class Source {
  public:
   explicit Source(std::unique_ptr<Waveform> waveform);
-  Source(const Source &others);
-  Source(Source &&others) noexcept;
-  Source &operator=(const Source &others);
-  Source &operator=(Source &&others) noexcept;
+  Source(const Source &others) = delete;
+  Source(Source &&others) noexcept = default;
+  Source &operator=(const Source &others) = delete;
+  Source &operator=(Source &&others) noexcept = default;
   virtual ~Source() = default;
 
   virtual void init(const std::vector<double> &time_array) = 0;

@@ -7,7 +7,7 @@
 
 #include "additive_source/source.h"
 #include "boundary/boundary.h"
-#include "electromagnetic.h"
+#include "electromagnetic_field/electromagnetic_field.h"
 #include "monitor/monitor.h"
 #include "object/object.h"
 #include "shape/cube.h"
@@ -16,17 +16,74 @@
 #include "util/type_define.h"
 
 namespace xfdtd {
-
+class TFSF2D;
 class Simulation {
+  friend class TFSF2D;
+
  public:
   inline static constexpr float DEFAULT_CFL{0.99};
-  Simulation(double cell_size, ObjectArray objects, SourceArray sources,
-             std::unique_ptr<TFSF> tfsf, BoundaryArray boundaries = {},
+  Simulation(double cell_size, ObjectArray objects, SourceArray sources = {},
+             std::unique_ptr<TFSF> tfsf = {}, BoundaryArray boundaries = {},
              MonitorArray _monitors = {}, float cfl = DEFAULT_CFL);
+  Simulation(double cell_size, ObjectArray objects, SourceArray sources = {},
+             BoundaryArray boundaries = {}, MonitorArray _monitors = {},
+             float cfl = DEFAULT_CFL);
 
   void checkRun(size_t time_steps);
   void run(size_t time_steps);
   void output();
+
+  inline double getDx() const { return _dx; }
+  inline double getDy() const { return _dy; }
+  inline double getDz() const { return _dz; }
+  inline double getDt() const { return _dt; }
+  inline SpatialIndex getNx() const { return _nx; }
+  inline SpatialIndex getNy() const { return _ny; }
+  inline SpatialIndex getNz() const { return _nz; }
+  inline EFTA& getCexe() { return _cexe; }
+  inline EFTA& getCexhy() { return _cexhy; }
+  inline EFTA& getCexhz() { return _cexhz; }
+  inline EFTA& getCeye() { return _ceye; }
+  inline EFTA& getCeyhz() { return _ceyhz; }
+  inline EFTA& getCeyhx() { return _ceyhx; }
+  inline EFTA& getCeze() { return _ceze; }
+  inline EFTA& getCezhx() { return _cezhx; }
+  inline EFTA& getCezhy() { return _cezhy; }
+  inline EFTA& getChxh() { return _chxh; }
+  inline EFTA& getChxey() { return _chxey; }
+  inline EFTA& getChxez() { return _chxez; }
+  inline EFTA& getChyh() { return _chyh; }
+  inline EFTA& getChyez() { return _chyez; }
+  inline EFTA& getChyex() { return _chyex; }
+  inline EFTA& getChzh() { return _chzh; }
+  inline EFTA& getChzex() { return _chzex; }
+  inline EFTA& getChzey() { return _chzey; }
+
+  inline std::shared_ptr<EMF> getEMFInstance() { return _emf; }
+  inline EFTA& getEx() { return _emf->getEx(); }
+  inline EFTA& getEy() { return _emf->getEy(); }
+  inline EFTA& getEz() { return _emf->getEz(); }
+  inline EFTA& getHx() { return _emf->getHx(); }
+  inline EFTA& getHy() { return _emf->getHy(); }
+  inline EFTA& getHz() { return _emf->getHz(); }
+  inline double& getEx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getEx(i, j, k);
+  }
+  inline double& getExy(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getEy(i, j, k);
+  }
+  inline double& getEz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getEz(i, j, k);
+  }
+  inline double& getHx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getHx(i, j, k);
+  }
+  inline double& getHy(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getHy(i, j, k);
+  }
+  inline double& getHz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getHz(i, j, k);
+  }
 
  private:
   // simulation parameter
@@ -51,6 +108,8 @@ class Simulation {
 
   YeeCellArray _grid_space;
   std::unique_ptr<Cube> _simulation_box;
+
+  std::shared_ptr<EMF> _emf;
 
   EFTA _cexe;
   EFTA _cexhy;
@@ -118,6 +177,30 @@ class Simulation {
   void handleHardPointSource(Source* source);
   void handlePMLBoundaryH(std::shared_ptr<Boundary>& boundary);
   void handlePMLBoundaryE(std::shared_ptr<Boundary>& boundary);
+
+  inline void allocateEx(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
+    _emf->allocateEx(nx, ny, nz);
+  }
+
+  inline void allocateEy(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
+    _emf->allocateEy(nx, ny, nz);
+  }
+
+  inline void allocateEz(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
+    _emf->allocateEz(nx, ny, nz);
+  }
+
+  inline void allocateHx(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
+    _emf->allocateHx(nx, ny, nz);
+  }
+
+  inline void allocateHy(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
+    _emf->allocateHy(nx, ny, nz);
+  }
+
+  inline void allocateHz(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
+    _emf->allocateHz(nx, ny, nz);
+  }
 };
 
 }  // namespace xfdtd

@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "electromagnetic.h"
+#include "electromagnetic_field/electromagnetic_field.h"
 #include "monitor/monitor.h"
 #include "shape/cube.h"
 #include "shape/shape.h"
@@ -24,6 +24,8 @@ class TimeDomainFieldMonitor : public Monitor {
   TimeDomainFieldMonitor& operator=(TimeDomainFieldMonitor&& other) noexcept =
       default;
   ~TimeDomainFieldMonitor() override = default;
+
+  double& getEMComponent(SpatialIndex i, SpatialIndex j, SpatialIndex k);
 
   void setYeeCells(const YeeCellArray& yee_cells) override;
   void setYeeCells(YeeCellArray&& yee_cells) override;

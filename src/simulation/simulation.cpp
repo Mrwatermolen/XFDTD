@@ -19,7 +19,7 @@
 #include "additive_source/source.h"
 #include "boundary/boundary.h"
 #include "boundary/perfect_match_layer.h"
-#include "electromagnetic.h"
+#include "electromagnetic_field/electromagnetic_field.h"
 #include "shape/cube.h"
 #include "shape/shape.h"
 #include "util/constant.h"
@@ -41,7 +41,22 @@ Simulation::Simulation(double cell_size, ObjectArray objects,
       _sources{std::move(sources)},
       _tfsf{std::move(tfsf)},
       _boundaries{std::move(boundaries)},
-      _monitors{std::move(monitors)} {}
+      _monitors{std::move(monitors)},
+      _emf{std::make_shared<EMF>()} {}
+
+Simulation::Simulation(double cell_size, ObjectArray objects,
+                       SourceArray sources, BoundaryArray boundaries,
+                       MonitorArray monitors, float cfl)
+    : _dx{cell_size},
+      _dy{cell_size},
+      _dz{cell_size},
+      _cfl{cfl},
+      _objects{std::move(objects)},
+      _sources{std::move(sources)},
+      _tfsf{nullptr},
+      _boundaries{std::move(boundaries)},
+      _monitors{std::move(monitors)},
+      _emf{std::make_shared<EMF>()} {}
 
 void Simulation::checkRun(size_t time_steps) {
   _time_steps = time_steps;
@@ -58,10 +73,10 @@ void Simulation::run(size_t time_steps) {
               << "/" << _time_steps << std::flush;
     _current_time_step = i;
     updateAddtiveSource();
-    updateTFSFIncidentField();
     updateH();
     updateTFSFH();
     updateBoundaryH();
+    updateTFSFIncidentField();
     updateE();
     updateTFSFE();
     updateBoundaryE();
@@ -91,11 +106,13 @@ void Simulation::handleHardPointSource(Source* source) {
   auto k{static_cast<SpatialIndex>(
       std::round((p.z() - _simulation_box->getZmin()) / _dz))};
   if (_nx == 1 && _ny == 1) {
-    getEx()(0, 0, k) = getEx()(0, 0, k) +
-                       _cexje(0, 0, k) * point->getValue(_current_time_step);
+    getEx(0, 0, k) =
+        getEx(0, 0, k) +
+        _cezje(0, 0, k) *
+            point->getValue(_current_time_step);  // the 1d point for TFSF
   } else {
-    getEz()(i, j, k) = getEz()(i, j, k) +
-                       _cezje(i, j, k) * point->getValue(_current_time_step);
+    getEz(i, j, k) =
+        getEz(i, j, k) + _cezje(i, j, k) * point->getValue(_current_time_step);
   }
 }
 
@@ -108,14 +125,6 @@ void Simulation::updateTFSFIncidentField() {
 }
 
 void Simulation::updateH() {
-  // if (_nx == 1 && _ny == 1) {
-  //   // 1D
-  //   for (SpatialIndex k{0}; k < _nz; ++k) {
-  //     _hy(0, 0, k) = _chyh(0, 0, k) * _hy(0, 0, k) +
-  //                    _chyex(0, 0, k) * (_ex(0, 0, k + 1) - _ex(0, 0, k));
-  //   }
-  //   return;
-  // }
   auto& ex{getEx()};
   auto& ey{getEy()};
   auto& ez{getEz()};
@@ -126,9 +135,9 @@ void Simulation::updateH() {
   for (SpatialIndex i{0}; i < _nx; ++i) {
     for (SpatialIndex j{0}; j < _ny; ++j) {
       for (SpatialIndex k{0}; k < _nz; ++k) {
-        getHx()(i, j, k) = _chxh(i, j, k) * getHx()(i, j, k) +
-                           _chxey(i, j, k) * (ey(i, j, k + 1) - ey(i, j, k)) +
-                           _chxez(i, j, k) * (ez(i, j + 1, k) - ez(i, j, k));
+        hx(i, j, k) = _chxh(i, j, k) * hx(i, j, k) +
+                      _chxey(i, j, k) * (ey(i, j, k + 1) - ey(i, j, k)) +
+                      _chxez(i, j, k) * (ez(i, j + 1, k) - ez(i, j, k));
 
         hy(i, j, k) = _chyh(i, j, k) * hy(i, j, k) +
                       _chyez(i, j, k) * (ez(i + 1, j, k) - ez(i, j, k)) +
@@ -152,13 +161,13 @@ void Simulation::updateTFSFH() {
 
 void Simulation::updateBoundaryH() {
   for (auto&& e : _boundaries) {
-    handlePMLBoundaryH(e);
+    e->updateH();
   }
 }
 
 void Simulation::updateBoundaryE() {
   for (auto&& e : _boundaries) {
-    handlePMLBoundaryE(e);
+    e->updateE();
   }
 }
 
@@ -180,13 +189,12 @@ void Simulation::updateE() {
   }
 
   if (_nz == 1) {
-    for (SpatialIndex i{1}; i < _nx; ++i) {
-      for (SpatialIndex j{1}; j < _ny; ++j) {
-        for (SpatialIndex k{0}; k < _nz; ++k) {
-          ez(i, j, k) =
-              _ceze(i, j, k) * ez(i, j, k) +
-              _cezhx(i, j, k) * (getHx()(i, j, k) - getHx()(i, j - 1, k)) +
-              _cezhy(i, j, k) * (hy(i, j, k) - hy(i - 1, j, k));
+    for (SpatialIndex k{0}; k < _nz; ++k) {
+      for (SpatialIndex i{1}; i < _nx; ++i) {
+        for (SpatialIndex j{1}; j < _ny; ++j) {
+          ez(i, j, k) = _ceze(i, j, k) * ez(i, j, k) +
+                        _cezhx(i, j, k) * (hx(i, j, k) - hx(i, j - 1, k)) +
+                        _cezhy(i, j, k) * (hy(i, j, k) - hy(i - 1, j, k));
         }
       }
     }
@@ -202,19 +210,18 @@ void Simulation::updateE() {
       }
     }
   }
-  for (SpatialIndex i{1}; i < _nx; ++i) {
-    for (SpatialIndex j{0}; j < _ny; ++j) {
-      for (SpatialIndex k{1}; k < _nz; ++k) {
-        ey(i, j, k) =
-            _ceye(i, j, k) * ey(i, j, k) +
-            _ceyhx(i, j, k) * (getHx()(i, j, k) - getHx()(i, j, k - 1)) +
-            _ceyhz(i, j, k) * (hz(i, j, k) - hz(i - 1, j, k));
+  for (SpatialIndex j{0}; j < _ny; ++j) {
+    for (SpatialIndex k{1}; k < _nz; ++k) {
+      for (SpatialIndex i{1}; i < _nx; ++i) {
+        ey(i, j, k) = _ceye(i, j, k) * ey(i, j, k) +
+                      _ceyhx(i, j, k) * (hx(i, j, k) - hx(i, j, k - 1)) +
+                      _ceyhz(i, j, k) * (hz(i, j, k) - hz(i - 1, j, k));
       }
     }
   }
-  for (SpatialIndex i{1}; i < _nx; ++i) {
-    for (SpatialIndex j{1}; j < _ny; ++j) {
-      for (SpatialIndex k{0}; k < _nz; ++k) {
+  for (SpatialIndex k{0}; k < _nz; ++k) {
+    for (SpatialIndex i{1}; i < _nx; ++i) {
+      for (SpatialIndex j{1}; j < _ny; ++j) {
         ez(i, j, k) =
             _ceze(i, j, k) * ez(i, j, k) +
             _cezhx(i, j, k) * (getHx()(i, j, k) - getHx()(i, j - 1, k)) +
@@ -235,46 +242,6 @@ void Simulation::updateTFSFE() {
 void Simulation::updateMonitor() {
   for (auto&& e : _monitors) {
     e->update(_current_time_step);
-  }
-}
-
-void Simulation::handlePMLBoundaryH(std::shared_ptr<Boundary>& boundary) {
-  auto cpml{std::dynamic_pointer_cast<PML>(boundary)};
-  if (cpml == nullptr) {
-    return;
-  }
-
-  auto ori{cpml->getOrientation()};
-  if (ori == Orientation::XN || ori == Orientation::XP) {
-    cpml->updateH(getEy(), getEz(), getHy(), getHz());
-    return;
-  }
-  if (ori == Orientation::YN || ori == Orientation::YP) {
-    cpml->updateH(getEz(), getEx(), getHz(), getHx());
-    return;
-  }
-  if (ori == Orientation::ZN || ori == Orientation::ZP) {
-    cpml->updateH(getEx(), getEy(), getHx(), getHy());
-  }
-}
-
-void Simulation::handlePMLBoundaryE(std::shared_ptr<Boundary>& boundary) {
-  auto cpml{std::dynamic_pointer_cast<PML>(boundary)};
-  if (cpml == nullptr) {
-    return;
-  }
-
-  auto ori{cpml->getOrientation()};
-  if (ori == Orientation::XN || ori == Orientation::XP) {
-    cpml->updateE(getEy(), getEz(), getHy(), getHz());
-    return;
-  }
-  if (ori == Orientation::YN || ori == Orientation::YP) {
-    cpml->updateE(getEz(), getEx(), getHz(), getHx());
-    return;
-  }
-  if (ori == Orientation::ZN || ori == Orientation::ZP) {
-    cpml->updateE(getEx(), getEy(), getHx(), getHy());
   }
 }
 

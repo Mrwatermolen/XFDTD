@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "electromagnetic_field/electromagnetic_field.h"
 #include "shape/cube.h"
 #include "util/type_define.h"
 #include "waveform/waveform.h"
@@ -12,7 +13,7 @@ class TFSF {
   TFSF(SpatialIndex distance_x, SpatialIndex distance_y,
        SpatialIndex distance_z, double theta_inc, double phi_inc,
        double e_theta, double e_phi, std::unique_ptr<Waveform> waveform);
-  TFSF(TFSF &&ohter) = default;
+  TFSF(TFSF&& ohter) = default;
   virtual ~TFSF() = default;
 
   struct TFSFBoundaryIndex {
@@ -24,7 +25,6 @@ class TFSF {
     SpatialIndex nz;
   };
 
-  inline auto getWaveform() { return _waveform->clone(); }
   inline std::tuple<SpatialIndex, SpatialIndex, SpatialIndex> getDistance()
       const {
     return {_distance_x, _distance_y, _distance_z};
@@ -89,21 +89,48 @@ class TFSF {
    */
   inline SpatialIndex getNz() const { return _tfsf_boundary_index.nz; }
 
-  inline const Cube *getTFSFCubeBox() const {
+  inline const Cube* getTFSFCubeBox() const {
     if (_tfsf_box == nullptr) {
       throw std::runtime_error("TFSF box is not initialized");
     }
     return _tfsf_box.get();
   }
 
-  virtual void init(const Cube *simulation_box, double dx, double dy, double dz,
+  inline EFTA& getEx() { return _emf->getEx(); }
+  inline EFTA& getEy() { return _emf->getEy(); }
+  inline EFTA& getEz() { return _emf->getEz(); }
+  inline EFTA& getHx() { return _emf->getHx(); }
+  inline EFTA& getHy() { return _emf->getHy(); }
+  inline EFTA& getHz() { return _emf->getHz(); }
+  inline double& getEx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getEx(i, j, k);
+  }
+  inline double& getExy(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getEy(i, j, k);
+  }
+  inline double& getEz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getEz(i, j, k);
+  }
+  inline double& getHx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getHx(i, j, k);
+  }
+  inline double& getHy(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getHy(i, j, k);
+  }
+  inline double& getHz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getHz(i, j, k);
+  }
+
+  void setEMFInstance(std::shared_ptr<EMF> emf) { _emf = std::move(emf); };
+
+  virtual void init(const Cube* simulation_box, double dx, double dy, double dz,
                     double dt, TFSFBoundaryIndex tfsf_boundary_index) = 0;
   virtual void updateIncidentField(size_t current_time_step) = 0;
   virtual void updateH() = 0;
   virtual void updateE() = 0;
 
  protected:
-  void defaultInitTFSF(const Cube *simulation_box, double dx, double dy,
+  void defaultInitTFSF(const Cube* simulation_box, double dx, double dy,
                        double dz, double dt,
                        TFSFBoundaryIndex tfsf_boundary_index);
 
@@ -124,6 +151,7 @@ class TFSF {
   double _dz;
   TFSFBoundaryIndex _tfsf_boundary_index;
   std::unique_ptr<Cube> _tfsf_box;
+  std::shared_ptr<EMF> _emf;
 };
 }  // namespace xfdtd
 

@@ -7,7 +7,6 @@
 
 #include "boundary/boundary.h"
 #include "boundary/perfect_match_layer.h"
-#include "electromagnetic.h"
 #include "monitor/field_monitor.h"
 #include "simulation/simulation.h"
 #include "simulation/yee_cell.h"
@@ -54,6 +53,7 @@ void Simulation::initTFSF() {
     return;
   }
   auto [x, y, z]{_tfsf->getDistance()};
+  _tfsf->setEMFInstance(getEMFInstance());
   _tfsf->init(_simulation_box.get(), _dx, _dy, _dz, _dt,
               {x, y, z, _nx - 2 * x, _ny - 2 * y, _nz - 2 * z});
 }
@@ -116,38 +116,45 @@ void Simulation::initUpdateCoefficient() {
 
 void Simulation::initBondaryCondition() {
   for (auto& e : _boundaries) {
-    auto cpml{std::dynamic_pointer_cast<PML>(e)};
-    if (cpml == nullptr) {
-      throw std::exception();
-    }
-    auto ori{e->getOrientation()};
-    if (ori == Orientation::XN) {
-      cpml->init(_dx, _dt, 0, _ny, _nz, _ceyhz, _cezhy, _chyez, _chzey);
-      continue;
-    }
-    if (ori == Orientation::YN) {
-      cpml->init(_dy, _dt, 0, _nz, _nx, _cezhx, _cexhz, _chzex, _chxez);
-    }
-    if (ori == Orientation::ZN) {
-      cpml->init(_dz, _dt, 0, _nx, _ny, _cexhy, _ceyhx, _chxey, _chyex);
-    }
-    if (ori == Orientation::XP) {
-      cpml->init(_dx, _dt, _nx - e->getSize(), _ny, _nz, _ceyhz, _cezhy, _chyez,
-                 _chzey);
-    }
-    if (ori == Orientation::YP) {
-      cpml->init(_dy, _dt, _ny - e->getSize(), _nz, _nx, _cezhx, _cexhz, _chzex,
-                 _chxez);
-    }
-    if (ori == Orientation::ZP) {
-      cpml->init(_dz, _dt, _nz - e->getSize(), _nx, _ny, _cexhy, _ceyhx, _chxey,
-                 _chyex);
-    }
+    // auto cpml{std::dynamic_pointer_cast<PML>(e)};
+    // if (cpml == nullptr) {
+    //   throw std::runtime_error{"Error: boundary is not PML"};
+    // }
+    e->setEMFInstance(getEMFInstance());
+    e->init(this);
+
+    // auto ori{e->getOrientation()};
+    // if (ori == Orientation::XN) {
+    //   cpml->init(_dx, _dt, 0, _ny, _nz, _ceyhz, _cezhy, _chyez, _chzey);
+    //   continue;
+    // }
+    // if (ori == Orientation::YN) {
+    //   cpml->init(_dy, _dt, 0, _nz, _nx, _cezhx, _cexhz, _chzex, _chxez);
+    // }
+    // if (ori == Orientation::ZN) {
+    //   cpml->init(_dz, _dt, 0, _nx, _ny, _cexhy, _ceyhx, _chxey, _chyex);
+    // }
+    // if (ori == Orientation::XP) {
+    //   cpml->init(_dx, _dt, _nx - e->getSize(), _ny, _nz, _ceyhz, _cezhy,
+    //   _chyez,
+    //              _chzey);
+    // }
+    // if (ori == Orientation::YP) {
+    //   cpml->init(_dy, _dt, _ny - e->getSize(), _nz, _nx, _cezhx, _cexhz,
+    //   _chzex,
+    //              _chxez);
+    // }
+    // if (ori == Orientation::ZP) {
+    //   cpml->init(_dz, _dt, _nz - e->getSize(), _nx, _ny, _cexhy, _ceyhx,
+    //   _chxey,
+    //              _chyex);
+    // }
   }
 }
 
 void Simulation::initMonitor() {
   for (auto&& e : _monitors) {
+    e->setEMFInstance(getEMFInstance());
     const auto& shape{e->getShape()};
     YeeCellArray temp;
     for (const auto& e : _grid_space) {

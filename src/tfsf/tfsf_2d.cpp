@@ -2,7 +2,6 @@
 
 #include <cmath>
 
-#include "electromagnetic.h"
 #include "util/constant.h"
 #include "util/float_compare.h"
 #include "util/type_define.h"
@@ -176,14 +175,14 @@ void TFSF2D::updateH() {
   }
 
   for (auto j{lj}; j < rj + 1; ++j) {
-    auto p{_projection_index_hy_xn[j - lj]};
-    auto w{_weight_hy_xn[j - lj]};
+    auto p{_projection_index_ez_xn[j - lj]};
+    auto w{_weight_ez_xn[j - lj]};
     auto ezi_xn{(1 - w) * _e_inc[p] + w * _e_inc[p + 1]};
     auto &hy_xn{getHy(li - 1, j, 0)};
     hy_xn -= (getDt() / (constant::MU_0 * getDx())) * ezi_xn;
 
-    p = _projection_index_hy_xp[j - lj];
-    w = _weight_hy_xp[j - lj];
+    p = _projection_index_ez_xp[j - lj];
+    w = _weight_ez_xp[j - lj];
     auto ezi_xp{(1 - w) * _e_inc[p] + w * _e_inc[p + 1]};
     auto &hy_xp{getHy(ri, j, 0)};
     hy_xp += (getDt() / (constant::MU_0 * getDx())) * ezi_xp;
@@ -203,28 +202,28 @@ void TFSF2D::updateE() {
   auto cos_phi{std::cos(getIncidentPhi())};
 
   for (auto i{li}; i < ri + 1; ++i) {
-    auto p{_projection_index_ez_yn[i - li]};
-    auto w{_weight_ez_yn[i - li]};
+    auto p{_projection_index_hx_yn[i - li]};
+    auto w{_weight_hx_yn[i - li]};
     auto hxi_yn{(1 - w) * sin_phi * _h_inc[p] + w * sin_phi * _h_inc[p + 1]};
     auto &ex_yn{getEz(i, lj, 0)};
     ex_yn += (dt / (constant::EPSILON_0 * dy)) * hxi_yn;
 
-    p = _projection_index_ez_yp[i - li];
-    w = _weight_ez_yp[i - li];
+    p = _projection_index_hx_yp[i - li];
+    w = _weight_hx_yp[i - li];
     auto hxi_yp{(1 - w) * sin_phi * _h_inc[p] + w * sin_phi * _h_inc[p + 1]};
     auto &ex_yp{getEz(i, rj, 0)};
     ex_yp -= (dt / (constant::EPSILON_0 * dy)) * hxi_yp;
   }
 
   for (auto j{lj}; j < rj + 1; ++j) {
-    auto p{_projection_index_ez_xn[j - lj]};
-    auto w{_weight_ez_xn[j - lj]};
+    auto p{_projection_index_hy_xn[j - lj]};
+    auto w{_weight_hy_xn[j - lj]};
     auto hyi_xn{-(1 - w) * cos_phi * _h_inc[p] - w * cos_phi * _h_inc[p + 1]};
     auto &ez_xn{getEz(li, j, 0)};
     ez_xn -= (dt / (constant::EPSILON_0 * dx)) * hyi_xn;
 
-    p = _projection_index_ez_xp[j - lj];
-    w = _weight_ez_xp[j - lj];
+    p = _projection_index_hy_xp[j - lj];
+    w = _weight_hy_xp[j - lj];
     auto hyi_xp{-(1 - w) * cos_phi * _h_inc[p] - w * cos_phi * _h_inc[p + 1]};
     auto &ez_xp{getEz(ri, j, 0)};
     ez_xp += (dt / (constant::EPSILON_0 * dx)) * hyi_xp;

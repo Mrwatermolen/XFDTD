@@ -33,6 +33,21 @@ using YeeCellArray = std::vector<std::shared_ptr<YeeCell>>;
 using MonitorArray = std::vector<std::shared_ptr<Monitor>>;
 
 enum class PlaneType { XY, YZ, ZX };
+
+inline DoubleArrary3D allocateDoubleArray3D(SpatialIndex nx, SpatialIndex ny,
+                                            SpatialIndex nz,
+                                            double default_value = 0.0) {
+  auto arr{DoubleArrary3D(nx, ny, nz)};
+  arr.setConstant(default_value);
+  return arr;
+}
+
+inline DoubleArrary2D allocateDoubleArray2D(SpatialIndex nx, SpatialIndex ny,
+                                            double default_value = 0.0) {
+  auto arr{DoubleArrary2D(nx, ny)};
+  arr.setConstant(default_value);
+  return arr;
+}
 }  // namespace xfdtd
 
 #endif  // _TYPE_DEFINE_H_

@@ -5,10 +5,10 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
-#include "electromagnetic.h"
 #include "simulation/yee_cell.h"
 #include "util/type_define.h"
 
@@ -20,6 +20,14 @@ TimeDomainFieldMonitor::TimeDomainFieldMonitor(
               std::move(_output_file_name)},
       _plane_type{plane_type},
       _component{component} {}
+
+double& TimeDomainFieldMonitor::getEMComponent(SpatialIndex i, SpatialIndex j,
+                                               SpatialIndex k) {
+  if (getEMFInstance() == nullptr) {
+    throw std::runtime_error{"Error: EMF is not set."};
+  }
+  return getEMFInstance()->getEMComponent(_component, i, j, k);
+}
 
 void TimeDomainFieldMonitor::setYeeCells(const YeeCellArray& yee_cells) {
   _yee_cells = yee_cells;
@@ -57,7 +65,7 @@ void TimeDomainFieldMonitor::outputData() {
         output_file << std::endl;
         counter = x;
       }
-      output_file << getEMComponent(_component, x, y, z) << " ";
+      output_file << getEMComponent(x, y, z) << " ";
     }
   } else if (_plane_type == PlaneType::YZ) {
     SpatialIndex counter{-1};
@@ -67,7 +75,7 @@ void TimeDomainFieldMonitor::outputData() {
         output_file << std::endl;
         counter = y;
       }
-      output_file << getEMComponent(_component, x, y, z) << " ";
+      output_file << getEMComponent(x, y, z) << " ";
     }
   } else if (_plane_type == PlaneType::ZX) {
     SpatialIndex counter{-1};
@@ -77,7 +85,7 @@ void TimeDomainFieldMonitor::outputData() {
         output_file << std::endl;
         counter = x;
       }
-      output_file << getEMComponent(_component, x, y, z) << " ";
+      output_file << getEMComponent(x, y, z) << " ";
     }
   }
   output_file.close();

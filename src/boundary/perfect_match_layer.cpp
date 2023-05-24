@@ -2,9 +2,11 @@
 
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 
 #include "boundary/boundary.h"
 #include "shape/cube.h"
+#include "simulation/simulation.h"
 #include "util/constant.h"
 
 namespace xfdtd {
@@ -18,8 +20,6 @@ PML::PML(Orientation orientation, int thickness, int order, double sigma_ratio,
       _alpha_min{alpha_min},
       _alpha_max{alpha_max},
       _kappa_max{kappa_max} {}
-
-void PML::initSize(double dl) {}
 
 void PML::init(double dl, double dt, SpatialIndex start_index, int na, int nb,
                EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea) {
@@ -45,6 +45,87 @@ void PML::init(double dl, double dt, SpatialIndex start_index, int na, int nb,
     initP(ceahb, cebha, chaeb, chbea);
   } else {
     initN(ceahb, cebha, chaeb, chbea);
+  }
+}
+
+void PML::updateH() {
+  auto ori{getOrientation()};
+  if (ori == Orientation::XN || ori == Orientation::XP) {
+    updateH(getEy(), getEz(), getHy(), getHz());
+    return;
+  }
+  if (ori == Orientation::YN || ori == Orientation::YP) {
+    updateH(getEz(), getEx(), getHz(), getHx());
+    return;
+  }
+  if (ori == Orientation::ZN || ori == Orientation::ZP) {
+    updateH(getEx(), getEy(), getHx(), getHy());
+  }
+}
+
+void PML::updateE() {
+  auto ori{getOrientation()};
+  if (ori == Orientation::XN || ori == Orientation::XP) {
+    updateE(getEy(), getEz(), getHy(), getHz());
+    return;
+  }
+  if (ori == Orientation::YN || ori == Orientation::YP) {
+    updateE(getEz(), getEx(), getHz(), getHx());
+    return;
+  }
+  if (ori == Orientation::ZN || ori == Orientation::ZP) {
+    updateE(getEx(), getEy(), getHx(), getHy());
+  }
+}
+
+void PML::init(Simulation* simulation) {
+  if (simulation == nullptr) {
+    throw std::runtime_error("simulation is nullptr");
+  }
+
+  auto ori{getOrientation()};
+  auto dt{simulation->getDt()};
+  auto dx{simulation->getDx()};
+  auto dy{simulation->getDy()};
+  auto dz{simulation->getDz()};
+  auto nx{simulation->getNx()};
+  auto ny{simulation->getNy()};
+  auto nz{simulation->getNz()};
+  auto& ceyhz{simulation->getCeyhz()};
+  auto& cezhy{simulation->getCezhy()};
+  auto& chyez{simulation->getChyez()};
+  auto& chzey{simulation->getChzey()};
+  auto& cezhx{simulation->getCezhx()};
+  auto& cexhz{simulation->getCexhz()};
+  auto& chzex{simulation->getChzex()};
+  auto& chxez{simulation->getChxez()};
+  auto& cexhy{simulation->getCexhy()};
+  auto& ceyhx{simulation->getCeyhx()};
+  auto& chxey{simulation->getChxey()};
+  auto& chyex{simulation->getChyex()};
+  if (ori == Orientation::XN) {
+    init(simulation->getDx(), simulation->getDt(), 0, simulation->getNy(),
+         simulation->getNz(), simulation->getCeyhz(), simulation->getCezhy(),
+         simulation->getChyez(), simulation->getChzey());
+    return;
+  }
+  if (ori == Orientation::YN) {
+    init(dy, dt, 0, nz, nx, cezhx, cexhz, chzex, chxez);
+    return;
+  }
+  if (ori == Orientation::ZN) {
+    init(dz, dt, 0, nx, ny, cexhy, ceyhx, chxey, chyex);
+    return;
+  }
+  if (ori == Orientation::XP) {
+    init(dx, dt, nx - getSize(), ny, nz, ceyhz, cezhy, chyez, chzey);
+    return;
+  }
+  if (ori == Orientation::YP) {
+    init(dy, dt, ny - getSize(), nz, nx, cezhx, cexhz, chzex, chxez);
+  }
+  if (ori == Orientation::ZP) {
+    init(dz, dt, nz - getSize(), nx, ny, cexhy, ceyhx, chxey, chyex);
   }
 }
 

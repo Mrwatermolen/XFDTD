@@ -31,6 +31,10 @@ class MovieMonitor : public Monitor {
 
   inline void setPlotStep(size_t plot_step) { _plot_step = plot_step; }
 
+  void setEMFInstance(std::shared_ptr<EMF> emf) override {
+    _monitor->setEMFInstance(std::move(emf));
+  }
+
  private:
   std::unique_ptr<Monitor> _monitor;
   size_t _total_time_steps;
