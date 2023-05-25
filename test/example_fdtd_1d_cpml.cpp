@@ -49,7 +49,7 @@ int main() {
 
   auto source{std::make_unique<xfdtd::HardPonitSource>(
       std::make_unique<xfdtd::GaussianWaveform>(1, tau, t_0),
-      Eigen::Vector3d(0, 0, 300 * dz))};
+      xfdtd::PointVector(0, 0, 300 * dz))};
 
   std::vector<double> ex;
   std::vector<double> cexe;

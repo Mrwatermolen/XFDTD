@@ -59,26 +59,6 @@ void Simulation::initTFSF() {
 }
 
 void Simulation::initUpdateCoefficient() {
-  _cexe.resize(_nx, _ny + 1, _nz + 1);
-  _cexhy.resize(_nx, _ny + 1, _nz + 1);
-  _cexhz.resize(_nx, _ny + 1, _nz + 1);
-  _ceye.resize(_nx + 1, _ny, _nz + 1);
-  _ceyhx.resize(_nx + 1, _ny, _nz + 1);
-  _ceyhz.resize(_nx + 1, _ny, _nz + 1);
-  _ceze.resize(_nx + 1, _ny + 1, _nz);
-  _cezhx.resize(_nx + 1, _ny + 1, _nz);
-  _cezhy.resize(_nx + 1, _ny + 1, _nz);
-
-  _chxh.resize(_nx, _ny + 1, _nz);
-  _chxey.resize(_nx, _ny + 1, _nz);
-  _chxez.resize(_nx, _ny + 1, _nz);
-  _chyh.resize(_nx + 1, _ny, _nz);
-  _chyez.resize(_nx + 1, _ny, _nz);
-  _chyex.resize(_nx + 1, _ny, _nz);
-  _chzh.resize(_nx, _ny, _nz);
-  _chzex.resize(_nx, _ny, _nz + 1);
-  _chzey.resize(_nx, _ny, _nz + 1);
-
   _cexe = (2 * _eps_x - _dt * _sigma_e_x) / (2 * _eps_x + _dt * _sigma_e_x);
   _cexhz = (2 * _dt / _dy) / (2 * _eps_x + _dt * _sigma_e_x);
   _cexhy = -(2 * _dt / _dz) / (2 * _eps_x + _dt * _sigma_e_x);
@@ -156,6 +136,9 @@ void Simulation::initMonitor() {
   for (auto&& e : _monitors) {
     e->setEMFInstance(getEMFInstance());
     const auto& shape{e->getShape()};
+    if (shape == nullptr) {
+      continue;
+    }
     YeeCellArray temp;
     for (const auto& e : _grid_space) {
       if (shape->isPointInside(e->getCenter())) {
@@ -247,8 +230,8 @@ void Simulation::caculateDomainSize() {
     }
   }
   _simulation_box = std::make_unique<Cube>(
-      Eigen::Vector3d{min_x, min_y, min_z},
-      Eigen::Vector3d{max_x - min_x, max_y - min_y, max_z - min_z});
+      PointVector{min_x, min_y, min_z},
+      PointVector{max_x - min_x, max_y - min_y, max_z - min_z});
   _nx = std::round(_simulation_box->getSize().x() / _dx);
   _ny = std::round(_simulation_box->getSize().y() / _dy);
   _nz = std::round(_simulation_box->getSize().z() / _dz);
@@ -273,16 +256,16 @@ void Simulation::gridSimualtionSpace() {
     for (SpatialIndex k{0}; k < _nz; ++k) {
       auto index{0 * _ny * _nz + 0 * _nz + k};
       _grid_space.emplace_back(std::make_shared<YeeCell>(
-          Eigen::Vector3d{min_x, min_y, min_z + k * _dz},
-          Eigen::Vector3d{0, 0, _dz}, -1, 0, 0, k));
+          PointVector{min_x, min_y, min_z + k * _dz},
+          PointVector{0, 0, _dz}, -1, 0, 0, k));
     }
   } else if (_nz == 1) {
     for (SpatialIndex i{0}; i < _nx; ++i) {
       for (SpatialIndex j{0}; j < _ny; ++j) {
         auto index{i * _ny + j};
         _grid_space.emplace_back(std::make_shared<YeeCell>(
-            Eigen::Vector3d{min_x + i * _dx, min_y + j * _dy, 0},
-            Eigen::Vector3d{_dx, _dy, 0}, -1, i, j, 0));
+            PointVector{min_x + i * _dx, min_y + j * _dy, 0},
+            PointVector{_dx, _dy, 0}, -1, i, j, 0));
       }
     }
   } else {
@@ -291,9 +274,9 @@ void Simulation::gridSimualtionSpace() {
         for (SpatialIndex k{0}; k < _nz; ++k) {
           auto index{i * _ny * _nz + j * _nz + k};
           _grid_space.emplace_back(std::make_shared<YeeCell>(
-              Eigen::Vector3d{min_x + i * _dx, min_y + j * _dy,
+              PointVector{min_x + i * _dx, min_y + j * _dy,
                               min_z + k * _dz},
-              Eigen::Vector3d{_dx, _dy, _dz}, -1, i, j, k));
+              PointVector{_dx, _dy, _dz}, -1, i, j, k));
         }
       }
     }

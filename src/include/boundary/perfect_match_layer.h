@@ -4,6 +4,7 @@
 #include <Eigen/Core>
 #include <memory>
 #include <unsupported/Eigen/CXX11/Tensor>
+#include <vector>
 
 #include "boundary/boundary.h"
 #include "shape/shape.h"
@@ -32,8 +33,8 @@ class PML : public Boundary {
   inline EFTA& getHy() { return getEMFInstance()->getHy(); }
   inline EFTA& getHz() { return getEMFInstance()->getHz(); }
 
-  const Eigen::ArrayXd& getKappaE() const;
-  const Eigen::ArrayXd& getKappaM() const;
+  const DoubleArrary1D& getKappaE() const;
+  const DoubleArrary1D& getKappaM() const;
   bool isOrientatingPositive() const;
 
   void updateH() override;
@@ -55,30 +56,30 @@ class PML : public Boundary {
   SpatialIndex _nb;
   SpatialIndex _start_index;
 
-  Eigen::ArrayXd _rho_e;
-  Eigen::ArrayXd _rho_m;
-  Eigen::ArrayXd _sigma_e;
-  Eigen::ArrayXd _sigma_m;
-  Eigen::ArrayXd _kappa_e;
-  Eigen::ArrayXd _kappa_m;
-  Eigen::ArrayXd _alpha_e;
-  Eigen::ArrayXd _alpha_m;
+  DoubleArrary1D _rho_e;
+  DoubleArrary1D _rho_m;
+  DoubleArrary1D _sigma_e;
+  DoubleArrary1D _sigma_m;
+  DoubleArrary1D _kappa_e;
+  DoubleArrary1D _kappa_m;
+  DoubleArrary1D _alpha_e;
+  DoubleArrary1D _alpha_m;
 
   // update parameters
-  Eigen::ArrayXd _cpml_a_e;
-  Eigen::ArrayXd _cpml_b_e;
-  Eigen::ArrayXd _cpml_a_m;
-  Eigen::ArrayXd _cpml_b_m;
+  DoubleArrary1D _cpml_a_e;
+  DoubleArrary1D _cpml_b_e;
+  DoubleArrary1D _cpml_a_m;
+  DoubleArrary1D _cpml_b_m;
 
-  Eigen::Tensor<double, 3> _psi_ea;
-  Eigen::Tensor<double, 3> _psi_eb;
-  Eigen::Tensor<double, 3> _psi_ha;
-  Eigen::Tensor<double, 3> _psi_hb;
+  DoubleArrary3D _psi_ea;
+  DoubleArrary3D _psi_eb;
+  DoubleArrary3D _psi_ha;
+  DoubleArrary3D _psi_hb;
 
-  Eigen::Tensor<double, 3> _c_psi_ea;
-  Eigen::Tensor<double, 3> _c_psi_eb;
-  Eigen::Tensor<double, 3> _c_psi_ha;
-  Eigen::Tensor<double, 3> _c_psi_hb;
+  DoubleArrary3D _c_psi_ea;
+  DoubleArrary3D _c_psi_eb;
+  DoubleArrary3D _c_psi_ha;
+  DoubleArrary3D _c_psi_hb;
 
   void init(double dl, double dt, SpatialIndex start_index, int na, int nb,
             EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea);

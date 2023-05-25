@@ -6,7 +6,7 @@
 namespace xfdtd {
 class Line : public Curve {
  public:
-  Line(Eigen::Vector3d start, Eigen::Vector3d end);
+  Line(PointVector start, PointVector end);
   Line(const Line &line) = default;
   Line(Line &&line) noexcept = default;
   Line &operator=(const Line &line) = default;
@@ -19,15 +19,15 @@ class Line : public Curve {
 
   double getNorm() const;
 
-  bool isPointInside(const Eigen::Vector3d &point) const override;
+  bool isPointInside(const PointVector &point) const override;
   bool isVertical(const Line &line) const;
   bool isParallel(const Line &line) const;
 
   std::unique_ptr<Shape> getWrappedBox() const override;
 
  private:
-  Eigen::Vector3d _start;
-  Eigen::Vector3d _end;
+  PointVector _start;
+  PointVector _end;
 };
 }  //   namespace xfdtd
 

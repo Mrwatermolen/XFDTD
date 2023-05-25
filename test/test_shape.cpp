@@ -9,12 +9,10 @@
 #include "shape/shape.h"
 #include "shape/sphere.h"
 
-using Eigen::Vector3d;
-
 int main() {
-  auto cube1{std::make_unique<xfdtd::Cube>(Eigen::Vector3d(0, 0, 0),
-                                           Vector3d(1, 1, 1))};
-  auto sphere1{std::make_unique<xfdtd::Sphere>(Eigen::Vector3d(0, 0, 0), 2)};
+  auto cube1{std::make_unique<xfdtd::Cube>(xfdtd::PointVector(0, 0, 0),
+                                           xfdtd::PointVector(1, 1, 1))};
+  auto sphere1{std::make_unique<xfdtd::Sphere>(xfdtd::PointVector(0, 0, 0), 2)};
   std::shared_ptr<xfdtd::Shape> temp{std::move(cube1->getWrappedBox())};
   auto wrapped_cube1{std::dynamic_pointer_cast<xfdtd::Cube>(temp)};
   temp = std::move(sphere1->getWrappedBox());
@@ -34,7 +32,7 @@ int main() {
   std::uniform_real_distribution<double> distribution(-0.02, 3.0);
   auto dice{[&]() -> double { return distribution(generator); }};
   for (size_t i{0}; i < 100; ++i) {
-    auto point{Vector3d(dice(), dice(), dice())};
+    auto point{xfdtd::PointVector(dice(), dice(), dice())};
     std::cout << "Point: " << point.transpose() << std::endl;
     std::cout << "isPointInside cube1: " << cube1->isPointInside(point)
               << std::endl;

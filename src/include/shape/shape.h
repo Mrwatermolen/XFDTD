@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include "util/type_define.h"
 
 namespace xfdtd {
 
@@ -19,7 +20,7 @@ class Shape {
   /**
    * @brief determine if the point is in the shape
    */
-  virtual bool isPointInside(const Eigen::Vector3d& point) const = 0;
+  virtual bool isPointInside(const PointVector& point) const = 0;
 
   virtual std::unique_ptr<Shape> getWrappedBox() const = 0;
   // virtual bool

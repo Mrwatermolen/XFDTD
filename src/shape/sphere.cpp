@@ -10,7 +10,7 @@
 #include "util/float_compare.h"
 
 namespace xfdtd {
-Sphere::Sphere(Eigen::Vector3d center, double radius)
+Sphere::Sphere(PointVector center, double radius)
     : _center{std::move(center)}, _radius{radius} {}
 
 Sphere::operator std::string() const {
@@ -23,14 +23,14 @@ std::unique_ptr<Shape> Sphere::clone() const {
   return std::make_unique<Sphere>(*this);
 }
 
-bool Sphere::isPointInside(const Eigen::Vector3d &point) const {
+bool Sphere::isPointInside(const PointVector &point) const {
   auto dist{(point - _center).norm()};
   return isLessOrEqual(dist, _radius, constant::TOLERABLE_EPSILON);
 }
 
 std::unique_ptr<Shape> Sphere::getWrappedBox() const {
   return std::make_unique<Cube>(
-      (_center - Eigen::Vector3d{_radius / 2, _radius / 2, _radius / 2}),
-      Eigen::Vector3d{_radius, _radius, _radius});
+      (_center - PointVector{_radius / 2, _radius / 2, _radius / 2}),
+      PointVector{_radius, _radius, _radius});
 }
 }  // namespace xfdtd

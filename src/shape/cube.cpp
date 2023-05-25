@@ -10,7 +10,7 @@
 
 namespace xfdtd {
 
-Cube::Cube(Eigen::Vector3d point, Eigen::Vector3d size)
+Cube::Cube(PointVector point, PointVector size)
     : _point{std::move(point)}, _size{std::move(size)} {};
 
 Cube::operator std::string() const {
@@ -24,7 +24,7 @@ std::unique_ptr<Shape> Cube::clone() const {
   return std::make_unique<Cube>(*this);
 }
 
-bool Cube::isPointInside(const Eigen::Vector3d &point) const {
+bool Cube::isPointInside(const PointVector &point) const {
   return isLessOrEqual(_point.x(), point.x(), constant::TOLERABLE_EPSILON) &&
          isLessOrEqual(_point.y(), point.y(), constant::TOLERABLE_EPSILON) &&
          isLessOrEqual(_point.z(), point.z(), constant::TOLERABLE_EPSILON) &&

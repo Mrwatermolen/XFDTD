@@ -18,7 +18,7 @@ class Cylinder : public Shape {
 
   std::unique_ptr<Shape> clone() const override;
 
-  bool isPointInside(const Eigen::Vector3d& point) const override;
+  bool isPointInside(const PointVector& point) const override;
 
   std::unique_ptr<Shape> getWrappedBox() const override;
 

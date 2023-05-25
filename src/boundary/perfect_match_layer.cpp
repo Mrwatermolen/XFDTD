@@ -3,11 +3,13 @@
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 
 #include "boundary/boundary.h"
 #include "shape/cube.h"
 #include "simulation/simulation.h"
 #include "util/constant.h"
+#include "util/type_define.h"
 
 namespace xfdtd {
 
@@ -28,18 +30,18 @@ void PML::init(double dl, double dt, SpatialIndex start_index, int na, int nb,
   _na = na;
   _nb = nb;
   _start_index = start_index;
-  _rho_e.resize(_thickness);
-  _rho_m.resize(_thickness);
-  _sigma_e.resize(_thickness);
-  _sigma_m.resize(_thickness);
-  _alpha_e.resize(_thickness);
-  _alpha_m.resize(_thickness);
-  _kappa_e.resize(_thickness);
-  _kappa_m.resize(_thickness);
-  _cpml_a_e.resize(_thickness);
-  _cpml_b_e.resize(_thickness);
-  _cpml_a_m.resize(_thickness);
-  _cpml_b_m.resize(_thickness);
+  _rho_e = std::move(allocateDoubleArray1D(_thickness));
+  _rho_m = std::move(allocateDoubleArray1D(_thickness));
+  _sigma_e = std::move(allocateDoubleArray1D(_thickness));
+  _sigma_m = std::move(allocateDoubleArray1D(_thickness));
+  _alpha_e = std::move(allocateDoubleArray1D(_thickness));
+  _alpha_m = std::move(allocateDoubleArray1D(_thickness));
+  _kappa_e = std::move(allocateDoubleArray1D(_thickness));
+  _kappa_m = std::move(allocateDoubleArray1D(_thickness));
+  _cpml_a_e = std::move(allocateDoubleArray1D(_thickness));
+  _cpml_b_e = std::move(allocateDoubleArray1D(_thickness));
+  _cpml_a_m = std::move(allocateDoubleArray1D(_thickness));
+  _cpml_b_m = std::move(allocateDoubleArray1D(_thickness));
 
   if (isOrientatingPositive()) {
     initP(ceahb, cebha, chaeb, chbea);
@@ -160,19 +162,15 @@ void PML::initP(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea) {
 
   if (_orientation == Orientation::XP) {
     // a:y b:z
-    _psi_ea.resize(_thickness, _na, _nb + 1);
-    _psi_ea.setZero();
-    _psi_eb.resize(_thickness, _na + 1, _nb);
-    _psi_eb.setZero();
-    _psi_ha.resize(_thickness, _na + 1, _nb);
-    _psi_ha.setZero();
-    _psi_hb.resize(_thickness, _na, _nb + 1);
-    _psi_hb.setZero();
+    _psi_ea = std::move(allocateDoubleArray3D(_thickness, _na, _nb + 1));
+    _psi_eb = std::move(allocateDoubleArray3D(_thickness, _na + 1, _nb));
+    _psi_ha = std::move(allocateDoubleArray3D(_thickness, _na + 1, _nb));
+    _psi_hb = std::move(allocateDoubleArray3D(_thickness, _na, _nb + 1));
 
-    _c_psi_ea.resize(_thickness, _na, _nb + 1);
-    _c_psi_eb.resize(_thickness, _na + 1, _nb);
-    _c_psi_ha.resize(_thickness, _na + 1, _nb);
-    _c_psi_hb.resize(_thickness, _na, _nb + 1);
+    _c_psi_ea = std::move(allocateDoubleArray3D(_thickness, _na, _nb + 1));
+    _c_psi_eb = std::move(allocateDoubleArray3D(_thickness, _na + 1, _nb));
+    _c_psi_ha = std::move(allocateDoubleArray3D(_thickness, _na + 1, _nb));
+    _c_psi_hb = std::move(allocateDoubleArray3D(_thickness, _na, _nb + 1));
 
     for (int i = 0; i < _thickness; ++i) {
       for (int j = 0; j < _na; ++j) {
@@ -199,19 +197,15 @@ void PML::initP(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea) {
   }
 
   if (_orientation == Orientation::YP) {
-    _psi_ea.resize(_nb + 1, _thickness, _na);
-    _psi_ea.setZero();
-    _psi_eb.resize(_nb, _thickness, _na + 1);
-    _psi_eb.setZero();
-    _psi_ha.resize(_nb, _thickness, _na + 1);
-    _psi_ha.setZero();
-    _psi_hb.resize(_nb + 1, _thickness, _na);
-    _psi_hb.setZero();
+    _psi_ea = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
+    _psi_eb = std::move(allocateDoubleArray3D(_nb, _thickness, _na + 1));
+    _psi_ha = std::move(allocateDoubleArray3D(_nb, _thickness, _na + 1));
+    _psi_hb = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
 
-    _c_psi_ea.resize(_nb + 1, _thickness, _na);
-    _c_psi_eb.resize(_nb, _thickness, _na + 1);
-    _c_psi_ha.resize(_nb, _thickness, _na + 1);
-    _c_psi_hb.resize(_nb + 1, _thickness, _na);
+    _c_psi_ea = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
+    _c_psi_eb = std::move(allocateDoubleArray3D(_nb, _thickness, _na + 1));
+    _c_psi_ha = std::move(allocateDoubleArray3D(_nb, _thickness, _na + 1));
+    _c_psi_hb = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
 
     for (int j = 0; j < _thickness; ++j) {
       for (int k = 0; k < _na; ++k) {
@@ -238,19 +232,15 @@ void PML::initP(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea) {
   }
 
   if (_orientation == Orientation::ZP) {
-    _psi_ea.resize(_na, _nb + 1, _thickness);
-    _psi_ea.setZero();
-    _psi_eb.resize(_na + 1, _nb, _thickness);
-    _psi_eb.setZero();
-    _psi_ha.resize(_na + 1, _nb, _thickness);
-    _psi_ha.setZero();
-    _psi_hb.resize(_na, _nb + 1, _thickness);
-    _psi_hb.setZero();
+    _psi_ea = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
+    _psi_eb = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
+    _psi_ha = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
+    _psi_hb = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
 
-    _c_psi_ea.resize(_na, _nb + 1, _thickness);
-    _c_psi_eb.resize(_na + 1, _nb, _thickness);
-    _c_psi_ha.resize(_na + 1, _nb, _thickness);
-    _c_psi_hb.resize(_na, _nb + 1, _thickness);
+    _c_psi_ea = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
+    _c_psi_eb = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
+    _c_psi_ha = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
+    _c_psi_hb = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
 
     for (int k = 0; k < _thickness; ++k) {
       for (int i = 0; i < _na; ++i) {
@@ -304,19 +294,15 @@ void PML::initN(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea) {
 
   if (_orientation == Orientation::XN) {
     // a:y b:z
-    _psi_ea.resize(_thickness, _na, _nb + 1);
-    _psi_ea.setZero();
-    _psi_eb.resize(_thickness, _na + 1, _nb);
-    _psi_eb.setZero();
-    _psi_ha.resize(_thickness, _na + 1, _nb);
-    _psi_ha.setZero();
-    _psi_hb.resize(_thickness, _na, _nb + 1);
-    _psi_hb.setZero();
+    _psi_ea = std::move(allocateDoubleArray3D(_thickness, _na, _nb + 1));
+    _psi_eb = std::move(allocateDoubleArray3D(_thickness, _na + 1, _nb));
+    _psi_ha = std::move(allocateDoubleArray3D(_thickness, _na + 1, _nb));
+    _psi_hb = std::move(allocateDoubleArray3D(_thickness, _na, _nb + 1));
 
-    _c_psi_ea.resize(_thickness, _na, _nb + 1);
-    _c_psi_eb.resize(_thickness, _na + 1, _nb);
-    _c_psi_ha.resize(_thickness, _na + 1, _nb);
-    _c_psi_hb.resize(_thickness, _na, _nb + 1);
+    _c_psi_ea = std::move(allocateDoubleArray3D(_thickness, _na, _nb + 1));
+    _c_psi_eb = std::move(allocateDoubleArray3D(_thickness, _na + 1, _nb));
+    _c_psi_ha = std::move(allocateDoubleArray3D(_thickness, _na + 1, _nb));
+    _c_psi_hb = std::move(allocateDoubleArray3D(_thickness, _na, _nb + 1));
 
     for (int i = 0; i < _thickness; ++i) {
       for (int j = 0; j < _na; ++j) {
@@ -343,20 +329,15 @@ void PML::initN(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea) {
   }
 
   if (_orientation == Orientation::YN) {
-    // a:z b:x
-    _psi_ea.resize(_nb + 1, _thickness, _na);
-    _psi_ea.setZero();
-    _psi_eb.resize(_nb, _thickness, _na + 1);
-    _psi_eb.setZero();
-    _psi_ha.resize(_nb, _thickness, _na + 1);
-    _psi_ha.setZero();
-    _psi_hb.resize(_nb + 1, _thickness, _na);
-    _psi_hb.setZero();
+    _psi_ea = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
+    _psi_eb = std::move(allocateDoubleArray3D(_nb, _thickness, _na + 1));
+    _psi_ha = std::move(allocateDoubleArray3D(_nb, _thickness, _na + 1));
+    _psi_hb = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
 
-    _c_psi_ea.resize(_nb + 1, _thickness, _na);
-    _c_psi_eb.resize(_nb, _thickness, _na + 1);
-    _c_psi_ha.resize(_nb, _thickness, _na + 1);
-    _c_psi_hb.resize(_nb + 1, _thickness, _na);
+    _c_psi_ea = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
+    _c_psi_eb = std::move(allocateDoubleArray3D(_nb, _thickness, _na + 1));
+    _c_psi_ha = std::move(allocateDoubleArray3D(_nb, _thickness, _na + 1));
+    _c_psi_hb = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
 
     for (int j = 0; j < _thickness; ++j) {
       for (int k = 0; k < _na; ++k) {
@@ -383,19 +364,15 @@ void PML::initN(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea) {
   }
 
   if (_orientation == Orientation::ZN) {
-    _psi_ea.resize(_na, _nb + 1, _thickness);
-    _psi_ea.setZero();
-    _psi_eb.resize(_na + 1, _nb, _thickness);
-    _psi_eb.setZero();
-    _psi_ha.resize(_na + 1, _nb, _thickness);
-    _psi_ha.setZero();
-    _psi_hb.resize(_na, _nb + 1, _thickness);
-    _psi_hb.setZero();
+    _psi_ea = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
+    _psi_eb = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
+    _psi_ha = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
+    _psi_hb = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
 
-    _c_psi_ea.resize(_na, _nb + 1, _thickness);
-    _c_psi_eb.resize(_na + 1, _nb, _thickness);
-    _c_psi_ha.resize(_na + 1, _nb, _thickness);
-    _c_psi_hb.resize(_na, _nb + 1, _thickness);
+    _c_psi_ea = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
+    _c_psi_eb = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
+    _c_psi_ha = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
+    _c_psi_hb = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
 
     for (int k = 0; k < _thickness; ++k) {
       for (int i = 0; i < _na; ++i) {

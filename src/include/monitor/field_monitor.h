@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <vector>
 
 #include "electromagnetic_field/electromagnetic_field.h"
 #include "monitor/monitor.h"
@@ -25,7 +26,9 @@ class TimeDomainFieldMonitor : public Monitor {
       default;
   ~TimeDomainFieldMonitor() override = default;
 
+  PlaneType getPlaneType() const { return _plane_type; }
   double& getEMComponent(SpatialIndex i, SpatialIndex j, SpatialIndex k);
+  const YeeCellArray& getYeeCells() const { return _yee_cells; }
 
   void setYeeCells(const YeeCellArray& yee_cells) override;
   void setYeeCells(YeeCellArray&& yee_cells) override;

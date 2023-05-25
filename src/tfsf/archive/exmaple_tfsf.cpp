@@ -17,7 +17,7 @@ ArhTFSF1D::ArhTFSF1D(SpatialIndex distance_x, SpatialIndex distance_y,
                      std::unique_ptr<Waveform> waveform)
     : TFSF(distance_z, distance_z, distance_z, theta_inc, phi_inc, e_theta,
            e_phi, std::move(waveform)) {
-  _k = Eigen::Vector3d{sin(_theta_inc) * cos(_phi_inc),
+  _k = PointVector{sin(_theta_inc) * cos(_phi_inc),
                        sin(_theta_inc) * sin(_phi_inc), cos(_theta_inc)};
   _ex_i0 = cos(_theta_inc) * cos(_phi_inc) * _e_theta - sin(_phi_inc) * _e_phi;
   _ey_i0 = cos(_theta_inc) * sin(_phi_inc) * _e_theta + cos(_phi_inc) * _e_phi;

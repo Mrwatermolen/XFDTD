@@ -42,8 +42,8 @@ class TFSF2D : public TFSF {
   SpatialIndex _strike_index_y;
 
   // TM mode
-  DoubleArrary1D _e_inc;
-  DoubleArrary1D _h_inc;
+  std::vector<double> _e_inc;
+  std::vector<double> _h_inc;
 
   // the scalar projection on the direction k.
   std::vector<SpatialIndex> _projection_index_ez_xn;

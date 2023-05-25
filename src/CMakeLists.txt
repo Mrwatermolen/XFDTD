@@ -22,7 +22,7 @@ set(XFDTD_LIBS
     xfdtd_simulation
     xfdtd_waveform)
 
-target_link_libraries(xfdtd ${XFDTD_LIBS})
+target_link_libraries(xfdtd ${XFDTD_LIBS} xtensor)
 
 target_include_directories(
   xfdtd PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

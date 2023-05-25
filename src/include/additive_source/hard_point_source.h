@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "additive_source/source.h"
+#include "util/type_define.h"
 #include "waveform/waveform.h"
 
 namespace xfdtd {
@@ -12,19 +13,19 @@ namespace xfdtd {
 // only for 1d test
 class HardPonitSource : public Source {
  public:
-  HardPonitSource(std::unique_ptr<Waveform> waveform, Eigen::Vector3d point);
+  HardPonitSource(std::unique_ptr<Waveform> waveform, PointVector point);
   HardPonitSource(const HardPonitSource& other) = delete;
   HardPonitSource(HardPonitSource&& other) noexcept = default;
   ~HardPonitSource() override = default;
 
   void init(const std::vector<double>& time_array) override;
 
-  Eigen::Vector3d getPoint() const;
+  PointVector getPoint() const;
 
   double getJe() const;
 
  private:
-  Eigen::Vector3d _point;
+  PointVector _point;
 };
 }  // namespace xfdtd
 

@@ -5,12 +5,13 @@
 #include <string_view>
 
 #include "shape/shape.h"
+#include "util/type_define.h"
 
 namespace xfdtd {
 
 class Sphere : public Shape {
  public:
-  Sphere(Eigen::Vector3d center, double radius);
+  Sphere(PointVector center, double radius);
   Sphere(const Sphere &other) = default;
   Sphere(Sphere &&other) noexcept = default;
   Sphere &operator=(const Sphere &other) = default;
@@ -21,12 +22,12 @@ class Sphere : public Shape {
 
   std::unique_ptr<Shape> clone() const override;
 
-  bool isPointInside(const Eigen::Vector3d &point) const override;
+  bool isPointInside(const PointVector &point) const override;
 
   std::unique_ptr<Shape> getWrappedBox() const override;
 
  private:
-  Eigen::Vector3d _center;
+  PointVector _center;
   double _radius;
 };
 }  // namespace xfdtd

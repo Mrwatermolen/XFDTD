@@ -9,7 +9,7 @@
 #include "util/float_compare.h"
 
 namespace xfdtd {
-Line::Line(Eigen::Vector3d start, Eigen::Vector3d end)
+Line::Line(PointVector start, PointVector end)
     : _start(std::move(start)), _end(std::move(end)) {}
 
 Line::operator std::string() const {
@@ -25,7 +25,7 @@ std::unique_ptr<Shape> Line::clone() const {
 
 double Line::getNorm() const { return (_end - _start).norm(); }
 
-bool Line::isPointInside(const Eigen::Vector3d &point) const {
+bool Line::isPointInside(const PointVector &point) const {
   return isGreaterOrEqual(point.x(), _start.x(), constant::TOLERABLE_EPSILON) &&
          isGreaterOrEqual(point.y(), _start.y(), constant::TOLERABLE_EPSILON) &&
          isLessOrEqual(point.x(), _end.x(), constant::TOLERABLE_EPSILON) &&

@@ -24,7 +24,7 @@ class Object {
 
   std::unique_ptr<Object> clone() const;
 
-  inline bool isPointInside(const Eigen::Vector3d& ponit) {
+  inline bool isPointInside(const PointVector& ponit) {
     return _shape->isPointInside(ponit);
   }
 

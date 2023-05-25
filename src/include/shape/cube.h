@@ -12,7 +12,7 @@ namespace xfdtd {
  */
 class Cube : public Shape {
  public:
-  Cube(Eigen::Vector3d point, Eigen::Vector3d size);
+  Cube(PointVector point, PointVector size);
   Cube(const Cube &other) = default;
   Cube(Cube &&other) noexcept = default;
   Cube &operator=(const Cube &other) = default;
@@ -23,23 +23,23 @@ class Cube : public Shape {
 
   std::unique_ptr<Shape> clone() const override;
 
-  bool isPointInside(const Eigen::Vector3d &point) const override;
+  bool isPointInside(const PointVector &point) const override;
   std::unique_ptr<Shape> getWrappedBox() const override;
 
-  inline double getXmin() const { return _point.x(); }
-  inline double getXmax() const { return _point.x() + _size.x(); }
-  inline double getYmin() const { return _point.y(); }
-  inline double getYmax() const { return _point.y() + _size.y(); }
-  inline double getZmin() const { return _point.z(); }
-  inline double getZmax() const { return _point.z() + _size.z(); }
+  inline double getXmin() const { return _point(0); }
+  inline double getXmax() const { return _point(0) + _size(0); }
+  inline double getYmin() const { return _point(1); }
+  inline double getYmax() const { return _point(1) + _size(1); }
+  inline double getZmin() const { return _point(2); }
+  inline double getZmax() const { return _point(2) + _size(2); }
 
-  inline Eigen::Vector3d getCenter() const { return _point + _size / 2; }
-  inline Eigen::Vector3d getPoint() const { return _point; }
-  inline Eigen::Vector3d getSize() const { return _size; }
+  inline PointVector getCenter() const { return _point + _size / 2; }
+  inline PointVector getPoint() const { return _point; }
+  inline PointVector getSize() const { return _size; }
 
  private:
-  Eigen::Vector3d _point;
-  Eigen::Vector3d _size;
+  PointVector _point;
+  PointVector _size;
 };
 }  // namespace xfdtd
 
