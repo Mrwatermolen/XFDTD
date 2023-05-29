@@ -9,9 +9,9 @@
 #include "boundary/boundary.h"
 #include "electromagnetic_field/electromagnetic_field.h"
 #include "monitor/monitor.h"
+#include "nffft/nffft.h"
 #include "object/object.h"
 #include "shape/cube.h"
-#include "simulation/yee_cell.h"
 #include "tfsf/tfsf.h"
 #include "util/type_define.h"
 
@@ -23,15 +23,15 @@ class Simulation {
  public:
   inline static constexpr float DEFAULT_CFL{0.99};
   Simulation(double cell_size, ObjectArray objects, SourceArray sources = {},
-             std::unique_ptr<TFSF> tfsf = {}, BoundaryArray boundaries = {},
-             MonitorArray _monitors = {}, float cfl = DEFAULT_CFL);
+             std::unique_ptr<TFSF> tfsf = {}, std::unique_ptr<NFFFT> nffft = {},
+             BoundaryArray boundaries = {}, MonitorArray _monitors = {},
+             float cfl = DEFAULT_CFL);
   Simulation(double cell_size, ObjectArray objects, SourceArray sources = {},
              BoundaryArray boundaries = {}, MonitorArray _monitors = {},
              float cfl = DEFAULT_CFL);
 
   void checkRun(size_t time_steps);
   void run(size_t time_steps);
-  void output();
 
   inline double getDx() const { return _dx; }
   inline double getDy() const { return _dy; }
@@ -96,6 +96,7 @@ class Simulation {
   SourceArray _sources;
   BoundaryArray _boundaries;
   std::unique_ptr<TFSF> _tfsf;
+  std::unique_ptr<NFFFT> _nffft;
   MonitorArray _monitors;
 
   SpatialIndex _nx;
@@ -155,6 +156,7 @@ class Simulation {
   void initMaterialGrid();
   void initSource();
   void initTFSF();
+  void initNFFFT();
   void initUpdateCoefficient();
   void initBondaryCondition();
   void initMonitor();
@@ -172,6 +174,7 @@ class Simulation {
   void updateE();
   void updateTFSFE();
   void updateBoundaryE();
+  void updateNFFFT();
   void updateMonitor();
 
   void handleHardPointSource(Source* source);

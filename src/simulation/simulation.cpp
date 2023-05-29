@@ -31,8 +31,8 @@
 namespace xfdtd {
 Simulation::Simulation(double cell_size, ObjectArray objects,
                        SourceArray sources, std::unique_ptr<TFSF> tfsf,
-                       BoundaryArray boundaries, MonitorArray monitors,
-                       float cfl)
+                       std::unique_ptr<NFFFT> nffft, BoundaryArray boundaries,
+                       MonitorArray monitors, float cfl)
     : _dx{cell_size},
       _dy{cell_size},
       _dz{cell_size},
@@ -40,6 +40,7 @@ Simulation::Simulation(double cell_size, ObjectArray objects,
       _objects{std::move(objects)},
       _sources{std::move(sources)},
       _tfsf{std::move(tfsf)},
+      _nffft{std::move(nffft)},
       _boundaries{std::move(boundaries)},
       _monitors{std::move(monitors)},
       _emf{std::make_shared<EMF>()} {}
@@ -80,7 +81,11 @@ void Simulation::run(size_t time_steps) {
     updateE();
     updateTFSFE();
     updateBoundaryE();
+    updateNFFFT();
     updateMonitor();
+  }
+  if (_nffft != nullptr) {
+    _nffft->outputData();
   }
   std::cout << "\n"
             << "Simulation finished." << std::endl;
@@ -222,10 +227,9 @@ void Simulation::updateE() {
   for (SpatialIndex k{0}; k < _nz; ++k) {
     for (SpatialIndex i{1}; i < _nx; ++i) {
       for (SpatialIndex j{1}; j < _ny; ++j) {
-        ez(i, j, k) =
-            _ceze(i, j, k) * ez(i, j, k) +
-            _cezhx(i, j, k) * (getHx()(i, j, k) - getHx()(i, j - 1, k)) +
-            _cezhy(i, j, k) * (hy(i, j, k) - hy(i - 1, j, k));
+        ez(i, j, k) = _ceze(i, j, k) * ez(i, j, k) +
+                      _cezhx(i, j, k) * (hx(i, j, k) - hx(i, j - 1, k)) +
+                      _cezhy(i, j, k) * (hy(i, j, k) - hy(i - 1, j, k));
       }
     }
   }
@@ -237,6 +241,14 @@ void Simulation::updateTFSFE() {
   }
 
   _tfsf->updateE();
+}
+
+void Simulation::updateNFFFT() {
+  if (_nffft == nullptr) {
+    return;
+  }
+
+  _nffft->update(_current_time_step);
 }
 
 void Simulation::updateMonitor() {

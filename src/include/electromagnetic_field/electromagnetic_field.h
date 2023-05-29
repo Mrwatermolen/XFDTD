@@ -33,6 +33,24 @@ class EMF {
   inline double& getHz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
     return _hz(i, j, k);
   }
+  inline double getEx(SpatialIndex i, SpatialIndex j, SpatialIndex k) const {
+    return _ex(i, j, k);
+  }
+  inline double getEy(SpatialIndex i, SpatialIndex j, SpatialIndex k) const {
+    return _ey(i, j, k);
+  }
+  inline double getEz(SpatialIndex i, SpatialIndex j, SpatialIndex k) const {
+    return _ez(i, j, k);
+  }
+  inline double getHx(SpatialIndex i, SpatialIndex j, SpatialIndex k) const {
+    return _hx(i, j, k);
+  }
+  inline double getHy(SpatialIndex i, SpatialIndex j, SpatialIndex k) const {
+    return _hy(i, j, k);
+  }
+  inline double getHz(SpatialIndex i, SpatialIndex j, SpatialIndex k) const {
+    return _hz(i, j, k);
+  }
 
   EFTA& getEMComponent(EMComponent c);
   double& getEMComponent(EMComponent c, SpatialIndex i, SpatialIndex j,

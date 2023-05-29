@@ -25,7 +25,7 @@ void testBasic() {
   constexpr double dz{1e-3};
   constexpr double tau{nc * dz / (2 * c)};
   constexpr double t_0{4.5 * tau};
-  constexpr size_t total_time_steps{1000};
+  constexpr size_t total_time_steps{1200};
 
   auto objects{xfdtd::ObjectArray{}};
   auto sources{xfdtd::SourceArray{}};
@@ -36,7 +36,7 @@ void testBasic() {
   auto free_space{xfdtd::Object{
       "free_space",
       std::make_unique<xfdtd::Cube>(xfdtd::PointVector(0, 0, 0),
-                                    xfdtd::PointVector(0, 0, 400 * dz)),
+                                    xfdtd::PointVector(0, 0, 300 * dz)),
       std::make_unique<xfdtd::Material>(air_material)}};
   objects.emplace_back(std::make_shared<xfdtd::Object>(free_space));
   //   objects.emplace_back(std::make_shared<xfdtd::Object>(
@@ -50,22 +50,22 @@ void testBasic() {
 
   auto gaussian_point_source{xfdtd::HardPonitSource{
       std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform)),
-      xfdtd::PointVector(0, 0, 0 * dz)}};
-    sources.emplace_back(std::make_shared<xfdtd::HardPonitSource>(
-        std::move(gaussian_point_source)));
+      xfdtd::PointVector(0, 0, 50 * dz)}};
+  sources.emplace_back(std::make_shared<xfdtd::HardPonitSource>(
+      std::move(gaussian_point_source)));
 
   //   auto tfsf{xfdtd::TFSF1D{
   //       30, xfdtd::constant::PI, -1,
   //       std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform))}};
 
-  //   boundaries.emplace_back(
-  //       std::make_shared<xfdtd::PML>(xfdtd::Orientation::ZN, 10));
+  boundaries.emplace_back(
+      std::make_shared<xfdtd::PML>(xfdtd::Orientation::ZN, 10));
   boundaries.emplace_back(
       std::make_shared<xfdtd::PML>(xfdtd::Orientation::ZP, 10));
 
   auto monitor{xfdtd::TimeDomainFieldMonitor{
       std::make_unique<xfdtd::Cube>(xfdtd::PointVector(0, 0, -10 * dz),
-                                    xfdtd::PointVector(0, 0, 410 * dz)),
+                                    xfdtd::PointVector(0, 0, 310 * dz)),
       xfdtd::PlaneType::ZX, xfdtd::EMComponent::EX,
       std::filesystem::absolute("visualizing_data/1d_movie_monitor"), ""}};
   auto movie_monitor{xfdtd::MovieMonitor{

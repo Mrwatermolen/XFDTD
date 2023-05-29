@@ -21,7 +21,7 @@ for i=1:size(AllFile,1)
     data = importdata(filename{i}).data;
     sizes = size(data);
     plot(data(1,:));
-    ylim([-1, 1])
+     ylim([-1, 1])
     title(num2str(i))
     %抓取当前的figure，保存为rgb图像后，再转化为索引图像
     [A,map] = rgb2ind(frame2im(getframe),256);
@@ -33,7 +33,3 @@ for i=1:size(AllFile,1)
     pic_index = pic_index + 1;
     pause(0.1)
 end
-
-data = importdata(filename{1}).data;
-imagesc(data)
-colorbar

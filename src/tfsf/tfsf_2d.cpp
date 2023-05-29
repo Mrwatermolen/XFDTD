@@ -13,8 +13,8 @@ TFSF2D::TFSF2D(SpatialIndex distance_x, SpatialIndex distance_y, double phi_inc,
            std::move(waveform)) {}
 
 void TFSF2D::init(const Cube *simulation_box, double dx, double dy, double dz,
-                  double dt, TFSFBoundaryIndex tfsf_boundary_index) {
-  defaultInitTFSF(simulation_box, dx, dy, dz, dt, tfsf_boundary_index);
+                  double dt, std::unique_ptr<GridBox> tfsf_grid_box) {
+  defaultInitTFSF(simulation_box, dx, dy, dz, dt, std::move(tfsf_grid_box));
   // TODO(franzero)
   _ceihi = -(getDt() / (constant::EPSILON_0 * getDx()));
   _chiei = -(getDt() / (constant::MU_0 * getDx()));

@@ -19,7 +19,7 @@ class TFSF2D : public TFSF {
   ~TFSF2D() override = default;
 
   void init(const Cube *simulation_box, double dx, double dy, double dz,
-            double dt, TFSFBoundaryIndex tfsf_boundary_index) override;
+            double dt, std::unique_ptr<GridBox> tfsf_grid_box) override;
   void updateIncidentField(size_t current_time_step) override;
   void updateH() override;
   void updateE() override;

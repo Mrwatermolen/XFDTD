@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "electromagnetic_field/electromagnetic_field.h"
+#include "mesh/grid_box.h"
 #include "shape/cube.h"
 #include "util/type_define.h"
 #include "waveform/waveform.h"
@@ -15,15 +16,6 @@ class TFSF {
        double e_theta, double e_phi, std::unique_ptr<Waveform> waveform);
   TFSF(TFSF&& ohter) = default;
   virtual ~TFSF() = default;
-
-  struct TFSFBoundaryIndex {
-    SpatialIndex start_x;
-    SpatialIndex start_y;
-    SpatialIndex start_z;
-    SpatialIndex nx;
-    SpatialIndex ny;
-    SpatialIndex nz;
-  };
 
   inline std::tuple<SpatialIndex, SpatialIndex, SpatialIndex> getDistance()
       const {
@@ -41,53 +33,28 @@ class TFSF {
   inline double getDy() const { return _dy; }
   inline double getDz() const { return _dz; }
 
-  /**
-   * @brief get the wave vector of the incident field
-   */
   inline PointVector getKVector() const { return _k; }
-
-  /**
-   * @brief Get the index of the TFSF boundary with normal vector xn
-   */
   inline SpatialIndex getStartIndexX() const {
-    return _tfsf_boundary_index.start_x;
+    return _tfsf_grid_box->getStartIndexX();
   }
-  /**
-   * @brief Get the index of the TFSF boundary with normal vector xp
-   */
   inline SpatialIndex getEndIndexX() const {
     return getStartIndexX() + getNx();
   }
-  /**
-   * @brief Get the index of the TFSF boundary with normal vector yn
-   */
   inline SpatialIndex getStartIndexY() const {
-    return _tfsf_boundary_index.start_y;
+    return _tfsf_grid_box->getStartIndexY();
   }
-  /**
-   * @brief Get the index of the TFSF boundary with normal vector yp
-   */
   inline SpatialIndex getEndIndexY() const {
-    return getStartIndexX() + getNx();
+    return getStartIndexY() + getNy();
   }
   inline SpatialIndex getStartIndexZ() const {
-    return _tfsf_boundary_index.start_z;
+    return _tfsf_grid_box->getStartIndexZ();
   }
   inline SpatialIndex getEndIndexZ() const {
     return getStartIndexZ() + getNz();
   }
-  /**
-   * @brief Get the number of cells in the x direction of the TFSF boundary
-   */
-  inline SpatialIndex getNx() const { return _tfsf_boundary_index.nx; }
-  /**
-   * @brief Get the number of cells in the y direction of the TFSF boundary
-   */
-  inline SpatialIndex getNy() const { return _tfsf_boundary_index.ny; }
-  /**
-   * @brief Get the number of cells in the z direction of the TFSF boundary
-   */
-  inline SpatialIndex getNz() const { return _tfsf_boundary_index.nz; }
+  inline SpatialIndex getNx() const { return _tfsf_grid_box->getNx(); }
+  inline SpatialIndex getNy() const { return _tfsf_grid_box->getNy(); }
+  inline SpatialIndex getNz() const { return _tfsf_grid_box->getNz(); }
 
   inline const Cube* getTFSFCubeBox() const {
     if (_tfsf_box == nullptr) {
@@ -124,7 +91,7 @@ class TFSF {
   void setEMFInstance(std::shared_ptr<EMF> emf) { _emf = std::move(emf); };
 
   virtual void init(const Cube* simulation_box, double dx, double dy, double dz,
-                    double dt, TFSFBoundaryIndex tfsf_boundary_index) = 0;
+                    double dt, std::unique_ptr<GridBox> tfsf_grid_box) = 0;
   virtual void updateIncidentField(size_t current_time_step) = 0;
   virtual void updateH() = 0;
   virtual void updateE() = 0;
@@ -132,7 +99,7 @@ class TFSF {
  protected:
   void defaultInitTFSF(const Cube* simulation_box, double dx, double dy,
                        double dz, double dt,
-                       TFSFBoundaryIndex tfsf_boundary_index);
+                       std::unique_ptr<GridBox> tfsf_grid_box);
 
  private:
   SpatialIndex _distance_x;
@@ -143,13 +110,13 @@ class TFSF {
   double _e_theta;
   double _e_phi;
   PointVector _k;
-  std::unique_ptr<Waveform> _waveform;
+  std::shared_ptr<Waveform> _waveform;
 
   double _dt;
   double _dx;
   double _dy;
   double _dz;
-  TFSFBoundaryIndex _tfsf_boundary_index;
+  std::unique_ptr<GridBox> _tfsf_grid_box;
   std::unique_ptr<Cube> _tfsf_box;
   std::shared_ptr<EMF> _emf;
 };

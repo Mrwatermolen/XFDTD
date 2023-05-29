@@ -14,11 +14,11 @@ TFSF1D::TFSF1D(SpatialIndex distance_z, double theta_inc, double e_i_0,
 }
 
 void TFSF1D::init(const Cube* simulation_box, double dx, double dy, double dz,
-                  double dt, TFSFBoundaryIndex tfsf_boundary_index) {
+                  double dt, std::unique_ptr<GridBox> tfsf_grid_box) {
   if (simulation_box == nullptr) {
     throw std::runtime_error("TFSF::initTFSF() simulation_box is nullptr");
   }
-  defaultInitTFSF(simulation_box, dx, dy, dz, dt, tfsf_boundary_index);
+  defaultInitTFSF(simulation_box, dx, dy, dz, dt, std::move(tfsf_grid_box));
 
   Eigen::Matrix<double, 8, 3> fdtd_domain_matrix;
   fdtd_domain_matrix(0, 0) = simulation_box->getXmin();

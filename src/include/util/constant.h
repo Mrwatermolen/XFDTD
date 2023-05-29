@@ -7,7 +7,7 @@
 namespace xfdtd::constant {
 
 //
-inline constexpr double PI{3.14159265358979323846};
+inline constexpr double PI{M_PI};
 
 //
 inline constexpr double EPSILON_0{8.854187817e-12};

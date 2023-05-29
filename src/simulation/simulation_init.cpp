@@ -7,6 +7,7 @@
 
 #include "boundary/boundary.h"
 #include "boundary/perfect_match_layer.h"
+#include "mesh/grid_box.h"
 #include "monitor/field_monitor.h"
 #include "simulation/simulation.h"
 #include "simulation/yee_cell.h"
@@ -30,6 +31,7 @@ void Simulation::init() {
   initMaterialGrid();
   initSource();
   initTFSF();
+  initNFFFT();
   initUpdateCoefficient();
   initBondaryCondition();
   initMonitor();
@@ -55,7 +57,18 @@ void Simulation::initTFSF() {
   auto [x, y, z]{_tfsf->getDistance()};
   _tfsf->setEMFInstance(getEMFInstance());
   _tfsf->init(_simulation_box.get(), _dx, _dy, _dz, _dt,
-              {x, y, z, _nx - 2 * x, _ny - 2 * y, _nz - 2 * z});
+              std::make_unique<GridBox>(x, y, z, _nx - 2 * x, _ny - 2 * y,
+                                        _nz - 2 * z));
+}
+
+void Simulation::initNFFFT() {
+  if (_nffft == nullptr) {
+    return;
+  }
+  auto [x, y, z]{_nffft->getDistance()};
+  _nffft->init(
+      std::make_unique<GridBox>(x, y, z, _nx - 2 * x, _ny - 2 * y, _nz - 2 * z),
+      getEMFInstance(), _time_steps, _dt, _dx, _dy, _dz);
 }
 
 void Simulation::initUpdateCoefficient() {
@@ -255,9 +268,9 @@ void Simulation::gridSimualtionSpace() {
   if (_nx == 1 && _ny == 1) {
     for (SpatialIndex k{0}; k < _nz; ++k) {
       auto index{0 * _ny * _nz + 0 * _nz + k};
-      _grid_space.emplace_back(std::make_shared<YeeCell>(
-          PointVector{min_x, min_y, min_z + k * _dz},
-          PointVector{0, 0, _dz}, -1, 0, 0, k));
+      _grid_space.emplace_back(
+          std::make_shared<YeeCell>(PointVector{min_x, min_y, min_z + k * _dz},
+                                    PointVector{0, 0, _dz}, -1, 0, 0, k));
     }
   } else if (_nz == 1) {
     for (SpatialIndex i{0}; i < _nx; ++i) {
@@ -274,8 +287,7 @@ void Simulation::gridSimualtionSpace() {
         for (SpatialIndex k{0}; k < _nz; ++k) {
           auto index{i * _ny * _nz + j * _nz + k};
           _grid_space.emplace_back(std::make_shared<YeeCell>(
-              PointVector{min_x + i * _dx, min_y + j * _dy,
-                              min_z + k * _dz},
+              PointVector{min_x + i * _dx, min_y + j * _dy, min_z + k * _dz},
               PointVector{_dx, _dy, _dz}, -1, i, j, k));
         }
       }

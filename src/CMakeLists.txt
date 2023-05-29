@@ -8,6 +8,8 @@ add_subdirectory(additive_source)
 add_subdirectory(monitor)
 add_subdirectory(tfsf)
 add_subdirectory(electromagnetic_field)
+add_subdirectory(nffft)
+add_subdirectory(mesh)
 
 add_library(xfdtd STATIC ${ALL_OBJECT_FILES})
 
@@ -20,9 +22,10 @@ set(XFDTD_LIBS
     xfdtd_object
     xfdtd_shape
     xfdtd_simulation
-    xfdtd_waveform)
+    xfdtd_waveform
+    xfdtd_nffft)
 
-target_link_libraries(xfdtd ${XFDTD_LIBS} xtensor)
+target_link_libraries(xfdtd ${XFDTD_LIBS} xtensor ${FFTW_LIBRARIES})
 
 target_include_directories(
   xfdtd PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

@@ -10,9 +10,8 @@
 #include <string>
 #include <utility>
 
-#include "simulation/yee_cell.h"
 #include "util/type_define.h"
-
+#include "simulation/yee_cell.h"
 namespace xfdtd {
 TimeDomainFieldMonitor::TimeDomainFieldMonitor(
     std::unique_ptr<Shape> shape, PlaneType plane_type, EMComponent component,

@@ -14,11 +14,11 @@ class TFSF1D : public TFSF {
  public:
   TFSF1D(SpatialIndex distance_z, double theta_inc, double e_i_0,
          std::unique_ptr<Waveform> waveform);
-  TFSF1D(TFSF1D &&) = default;
+  TFSF1D(TFSF1D&&) = default;
   ~TFSF1D() override = default;
 
-  void init(const Cube *simulation_box, double dx, double dy, double dz,
-            double dt, TFSFBoundaryIndex tfsf_boundary_index) override;
+  void init(const Cube* simulation_box, double dx, double dy, double dz,
+            double dt, std::unique_ptr<GridBox> tfsf_grid_box) override;
   void updateIncidentField(size_t current_time_step) override;
   void updateH() override;
   void updateE() override;

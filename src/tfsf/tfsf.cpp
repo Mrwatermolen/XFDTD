@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include "shape/cube.h"
 #include "util/constant.h"
 #include "util/type_define.h"
 
@@ -23,7 +22,7 @@ TFSF::TFSF(SpatialIndex distance_x, SpatialIndex distance_y,
 
 void TFSF::defaultInitTFSF(const Cube *simulation_box, double dx, double dy,
                            double dz, double dt,
-                           TFSFBoundaryIndex tfsf_boundary_index) {
+                           std::unique_ptr<GridBox> tfsf_grid_box) {
   if (simulation_box == nullptr) {
     throw std::runtime_error("TFSF::initTFSF() simulation_box is nullptr");
   }
@@ -32,7 +31,7 @@ void TFSF::defaultInitTFSF(const Cube *simulation_box, double dx, double dy,
   _dy = dy;
   _dz = dz;
   _dt = dt;
-  _tfsf_boundary_index = tfsf_boundary_index;
+  _tfsf_grid_box = std::move(tfsf_grid_box);
   _tfsf_box = std::make_unique<Cube>(
       PointVector({simulation_box->getXmin() + getStartIndexX() * getDx(),
                    simulation_box->getYmin() + getStartIndexY() * getDy(),
