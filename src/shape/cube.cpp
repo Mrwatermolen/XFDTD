@@ -4,8 +4,8 @@
 #include <memory>
 #include <utility>
 
-#include "util/constant.h"
 #include "shape/shape.h"
+#include "util/constant.h"
 #include "util/float_compare.h"
 
 namespace xfdtd {
@@ -30,9 +30,9 @@ bool Cube::isPointInside(const PointVector &point) const {
          isLessOrEqual(_point.z(), point.z(), constant::TOLERABLE_EPSILON) &&
          isGreaterOrEqual(_point.x() + _size.x(), point.x(),
                           constant::TOLERABLE_EPSILON) &&
-         isGreaterOrEqual(_point.x() + _size.y(), point.y(),
+         isGreaterOrEqual(_point.y() + _size.y(), point.y(),
                           constant::TOLERABLE_EPSILON) &&
-         isGreaterOrEqual(_point.x() + _size.z(), point.z(),
+         isGreaterOrEqual(_point.z() + _size.z(), point.z(),
                           constant::TOLERABLE_EPSILON);
 }
 
