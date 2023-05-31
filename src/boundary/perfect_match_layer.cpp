@@ -235,7 +235,7 @@ void PML::initP(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea) {
     _psi_ea = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
     _psi_eb = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
     _psi_ha = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
-    _psi_hb = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
+    _psi_hb = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
 
     _c_psi_ea = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
     _c_psi_eb = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
@@ -367,7 +367,7 @@ void PML::initN(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea) {
     _psi_ea = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
     _psi_eb = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
     _psi_ha = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));
-    _psi_hb = std::move(allocateDoubleArray3D(_nb + 1, _thickness, _na));
+    _psi_hb = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
 
     _c_psi_ea = std::move(allocateDoubleArray3D(_na, _nb + 1, _thickness));
     _c_psi_eb = std::move(allocateDoubleArray3D(_na + 1, _nb, _thickness));

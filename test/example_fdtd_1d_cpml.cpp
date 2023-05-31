@@ -36,7 +36,7 @@ int main() {
   constexpr double dy{1e-3};
   constexpr double tau{nc * dz / (2 * c)};
   constexpr double t_0{4.5 * tau};
-  constexpr size_t nz{616};
+  constexpr size_t nz{300};
   constexpr size_t ncpml{10};
   constexpr size_t time_steps{1000};
   constexpr double sigma{std::numeric_limits<double>::epsilon() / 1000.0};
@@ -49,7 +49,7 @@ int main() {
 
   auto source{std::make_unique<xfdtd::HardPonitSource>(
       std::make_unique<xfdtd::GaussianWaveform>(1, tau, t_0),
-      xfdtd::PointVector(0, 0, 300 * dz))};
+      xfdtd::PointVector(0, 0, 150 * dz))};
 
   std::vector<double> ex;
   std::vector<double> cexe;
@@ -128,10 +128,10 @@ int main() {
                   (kappa_m[i] * (sigma_m[i] + kappa_m[i] * alpha_m[i]));
   }
 
-  // printP("rho_e", rho_e);
-  // printP("sigma_e", sigma_e);
-  // printP("kappa_e", kappa_e);
-  // printP("alpha_e", alpha_e);
+  printP("rho_e", rho_e);
+  printP("sigma_e", sigma_e);
+  printP("kappa_e", kappa_e);
+  printP("alpha_e", alpha_e);
   printP("cpml_b_e", cpml_b_e);
   printP("cpml_a_e", cpml_a_e);
 
@@ -143,6 +143,9 @@ int main() {
     cexhy[i + 1] = cexhy[i + 1] / kappa_e[i];
     chyex[i] = chyex[i] / kappa_m[i];
   }
+
+  printP("c_psi_ex", c_psi_ex);
+  printP("c_psi_hy", c_psi_hy);
 
   source->init(time_array);
   auto oup_dir = std::filesystem::absolute("output");
@@ -156,8 +159,8 @@ int main() {
     }
   }
   for (size_t i{0}; i < time_steps; ++i) {
-    std::cout << "Time: " << i << std::endl;
-    ex[300] = ex[300] + source->getValue(i) * (a * dz);
+    // std::cout << "Time: " << i << std::endl;
+    ex[150] = ex[150] + source->getValue(i) * (a * dz);
     for (size_t j{0}; j < nz; ++j) {
       hy[j] = hy[j] + chyex[j] * (ex[j + 1] - ex[j]);
     }
@@ -173,18 +176,18 @@ int main() {
       ex[j + 1] = ex[j + 1] + c_psi_ex[j] * psi_ex[j];
     }
 
-    if (i % 11 == 10) {
-      std::stringstream ss;
-      ss << std::setw(4) << std::setfill('0') << i << "\n";
-      std::string s;
-      ss >> s;
-      std::ofstream f(std::filesystem::absolute(oup_dir) /
-                      ("Ex-" + s + ".dat"));
+    // if (i % 11 == 10) {
+    //   std::stringstream ss;
+    //   ss << std::setw(4) << std::setfill('0') << i << "\n";
+    //   std::string s;
+    //   ss >> s;
+    //   std::ofstream f(std::filesystem::absolute(oup_dir) /
+    //                   ("Ex-" + s + ".dat"));
 
-      for (auto k{0}; k < nz; ++k) {
-        f << k << "\t" << ex[k] << "\n";
-      }
-      f.close();
-    }
+    //   for (auto k{0}; k < nz; ++k) {
+    //     f << k << "\t" << ex[k] << "\n";
+    //   }
+    //   f.close();
+    // }
   }
 }

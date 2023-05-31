@@ -50,7 +50,7 @@ void testBasic() {
 
   auto gaussian_point_source{xfdtd::HardPonitSource{
       std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform)),
-      xfdtd::PointVector(0, 0, 50 * dz)}};
+      xfdtd::PointVector(0, 0, 150 * dz)}};
   sources.emplace_back(std::make_shared<xfdtd::HardPonitSource>(
       std::move(gaussian_point_source)));
 
@@ -70,7 +70,7 @@ void testBasic() {
       std::filesystem::absolute("visualizing_data/1d_movie_monitor"), ""}};
   auto movie_monitor{xfdtd::MovieMonitor{
       std::make_unique<xfdtd::TimeDomainFieldMonitor>(std::move(monitor)),
-      total_time_steps, 20}};
+      total_time_steps, 10}};
   monitors.emplace_back(
       std::make_shared<xfdtd::MovieMonitor>(std::move(movie_monitor)));
 

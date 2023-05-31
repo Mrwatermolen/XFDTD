@@ -250,12 +250,15 @@ void Simulation::caculateDomainSize() {
   _nz = std::round(_simulation_box->getSize().z() / _dz);
   if (_nx == 0) {
     _nx = 1;
+    _dx = 1;
   }
   if (_ny == 0) {
     _ny = 1;
+    _dy = 1;
   }
   if (_nz == 0) {
     _nz = 1;
+    _dz = 1;
   }
 }
 
