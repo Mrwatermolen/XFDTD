@@ -1,5 +1,6 @@
 #include "tfsf/tfsf.h"
 
+#include <cmath>
 #include <memory>
 
 #include "util/constant.h"
@@ -7,35 +8,31 @@
 
 namespace xfdtd {
 TFSF::TFSF(SpatialIndex distance_x, SpatialIndex distance_y,
-           SpatialIndex distance_z, double theta_inc, double phi_inc,
-           double e_theta, double e_phi, std::unique_ptr<Waveform> waveform)
+           SpatialIndex distance_z, double e_0, double theta_inc,
+           double phi_inc, double psi, std::unique_ptr<Waveform> waveform)
     : _distance_x{distance_x},
       _distance_y{distance_y},
       _distance_z{distance_z},
+      _e_0{e_0},
       _theta_inc{theta_inc},
       _phi_inc{phi_inc},
-      _e_theta{e_theta},
-      _e_phi{e_phi},
-      _k{PointVector{sin(_theta_inc) * cos(_phi_inc),
-                     sin(_theta_inc) * sin(_phi_inc), cos(_theta_inc)}},
+      _psi{psi},
+      _sin_theta_inc{std::sin(theta_inc)},
+      _cos_theta_inc{std::cos(theta_inc)},
+      _sin_phi_inc{std::sin(phi_inc)},
+      _cos_phi_inc{std::cos(phi_inc)},
+      _sin_psi{std::sin(psi)},
+      _cos_psi{std::cos(psi)},
+      _k{PointVector{_sin_theta_inc * _cos_phi_inc,
+                     _sin_theta_inc * _sin_phi_inc, _cos_theta_inc}},
       _waveform{std::move(waveform)} {}
 
-void TFSF::defaultInitTFSF(const Cube *simulation_box, double dx, double dy,
-                           double dz, double dt,
+void TFSF::defaultInitTFSF(double dx, double dy, double dz, double dt,
                            std::unique_ptr<GridBox> tfsf_grid_box) {
-  if (simulation_box == nullptr) {
-    throw std::runtime_error("TFSF::initTFSF() simulation_box is nullptr");
-  }
-
   _dx = dx;
   _dy = dy;
   _dz = dz;
   _dt = dt;
   _tfsf_grid_box = std::move(tfsf_grid_box);
-  _tfsf_box = std::make_unique<Cube>(
-      PointVector({simulation_box->getXmin() + getStartIndexX() * getDx(),
-                   simulation_box->getYmin() + getStartIndexY() * getDy(),
-                   simulation_box->getZmin() + getStartIndexZ() * getDz()}),
-      PointVector({getNx() * getDx(), getNy() * getDy(), getNz() * getDz()}));
 }
 }  // namespace xfdtd

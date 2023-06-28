@@ -18,8 +18,6 @@
 namespace xfdtd {
 class TFSF2D;
 class Simulation {
-  friend class TFSF2D;
-
  public:
   inline static constexpr float DEFAULT_CFL{0.99};
   Simulation(double cell_size, ObjectArray objects, SourceArray sources = {},

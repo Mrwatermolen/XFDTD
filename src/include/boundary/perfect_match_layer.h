@@ -1,9 +1,7 @@
 #ifndef _PERFECT_MATCH_LAYER_H_
 #define _PERFECT_MATCH_LAYER_H_
 
-#include <Eigen/Core>
 #include <memory>
-#include <unsupported/Eigen/CXX11/Tensor>
 #include <vector>
 
 #include "boundary/boundary.h"

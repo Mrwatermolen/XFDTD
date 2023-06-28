@@ -1,17 +1,22 @@
-#ifndef _TFSF_2D_H_
-#define _TFSF_2D_H_
+#ifndef _TFSF_3D_H_
+#define _TFSF_3D_H_
+
+#include <vector>
 
 #include "tfsf/tfsf.h"
+#include "util/type_define.h"
+
 namespace xfdtd {
-class TFSF2D : public TFSF {
+class TFSF3D : public TFSF {
  public:
-  TFSF2D(SpatialIndex distance_x, SpatialIndex distance_y, double phi_inc,
-         double ez_i0, std::unique_ptr<Waveform> waveform);
-  TFSF2D(const TFSF2D &) = delete;
-  TFSF2D &operator=(const TFSF2D &) = delete;
-  TFSF2D(TFSF2D &&) = default;
-  TFSF2D &operator=(TFSF2D &&) = delete;
-  ~TFSF2D() override = default;
+  TFSF3D(SpatialIndex distance_x, SpatialIndex distance_y,
+         SpatialIndex distance_z, double e_0, double theta_inc, double phi_inc,
+         double psi, std::unique_ptr<Waveform> waveform);
+  TFSF3D(const TFSF3D &) = delete;
+  TFSF3D &operator=(const TFSF3D &) = delete;
+  TFSF3D(TFSF3D &&) = default;
+  TFSF3D &operator=(TFSF3D &&) = delete;
+  ~TFSF3D() override = default;
 
   void init(double dx, double dy, double dz, double dt,
             std::unique_ptr<GridBox> tfsf_grid_box) override;
@@ -35,20 +40,29 @@ class TFSF2D : public TFSF {
 
   xt::xarray<double> _e_inc;
   xt::xarray<double> _h_inc;
-
+  xt::xarray<double> _ex_inc;
+  xt::xarray<double> _ey_inc;
+  xt::xarray<double> _ez_inc;
   xt::xarray<double> _hx_inc;
   xt::xarray<double> _hy_inc;
-  xt::xarray<double> _ez_inc;
+  xt::xarray<double> _hz_inc;
 
+  // the scalar projection on the direction k.
   xt::xarray<double> _projection_x_full;
   xt::xarray<double> _projection_y_full;
+  xt::xarray<double> _projection_z_full;
   xt::xarray<double> _projection_x_half;
   xt::xarray<double> _projection_y_half;
+  xt::xarray<double> _projection_z_half;
+
+  double getIncidentEx(int i, int j, int k);
+  double getIncidentEy(int i, int j, int k);
+  double getIncidentEz(int i, int j, int k);
 
   double getIncidentHx(int i, int j, int k);
   double getIncidentHy(int i, int j, int k);
-  double getIncidentEz(int i, int j, int k);
+  double getIncidentHz(int i, int j, int k);
 };
 }  // namespace xfdtd
 
-#endif  // _TFSF_2D_H_
+#endif  // _TFSF_3D_H_

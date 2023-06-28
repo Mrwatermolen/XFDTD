@@ -1,5 +1,6 @@
 #include <fftw3.h>
 
+#include <algorithm>
 #include <complex>
 #include <cstddef>
 #include <tuple>
@@ -84,7 +85,8 @@ int main() {
 
   std::cout << xt::concatenate(xt::xtuple(a, b), 2) << std::endl;
 
-  std::cout << xt::view(data, xt::all(), 0, 0).shape(0) << xt::view(data, xt::all(), 0, 0).shape(1) << std::endl;
+  std::cout << xt::view(data, xt::all(), 0, 0).shape(0)
+            << xt::view(data, xt::all(), 0, 0).shape(1) << std::endl;
 
   return 0;
 }

@@ -1,9 +1,11 @@
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <xtensor/xadapt.hpp>
 
 #include "boundary/boundary.h"
 #include "boundary/perfect_match_layer.h"
@@ -11,7 +13,6 @@
 #include "monitor/field_monitor.h"
 #include "simulation/simulation.h"
 #include "simulation/yee_cell.h"
-#include "tfsf/tfsf_1d.h"
 #include "util/constant.h"
 #include "util/float_compare.h"
 #include "util/type_define.h"
@@ -56,7 +57,7 @@ void Simulation::initTFSF() {
   }
   auto [x, y, z]{_tfsf->getDistance()};
   _tfsf->setEMFInstance(getEMFInstance());
-  _tfsf->init(_simulation_box.get(), _dx, _dy, _dz, _dt,
+  _tfsf->init(_dx, _dy, _dz, _dt,
               std::make_unique<GridBox>(x, y, z, _nx - 2 * x, _ny - 2 * y,
                                         _nz - 2 * z));
 }
@@ -76,72 +77,59 @@ void Simulation::initUpdateCoefficient() {
   _cexhz = (2 * _dt / _dy) / (2 * _eps_x + _dt * _sigma_e_x);
   _cexhy = -(2 * _dt / _dz) / (2 * _eps_x + _dt * _sigma_e_x);
   _cexje = -(2 * _dt) / (2 * _eps_x + _dt * _sigma_e_x);
+  // _cexe.fill(1);
+  // _cexhz.fill(_dt / (_dx * constant::EPSILON_0));
+  // _cexhy.fill(-_dt / (_dx * constant::EPSILON_0));
 
   // _ey
   _ceye = (2 * _eps_y - _dt * _sigma_e_y) / (2 * _eps_y + _dt * _sigma_e_y);
   _ceyhx = (2 * _dt / _dz) / (2 * _eps_y + _dt * _sigma_e_y);
   _ceyhz = -(2 * _dt / _dx) / (2 * _eps_y + _dt * _sigma_e_y);
   _ceyje = -(2 * _dt) / (2 * _eps_y + _dt * _sigma_e_y);
+  // _ceye.fill(1);
+  // _ceyhx.fill(_dt / (_dz * constant::EPSILON_0));
+  // _ceyhz.fill(-_dt / (_dz * constant::EPSILON_0));
 
   // _ez
   _ceze = (2 * _eps_z - _dt * _sigma_e_z) / (2 * _eps_z + _dt * _sigma_e_z);
-  _cezhx = -(2 * _dt / _dy) / (2 * _eps_z + _dt * _sigma_e_z);
   _cezhy = (2 * _dt / _dx) / (2 * _eps_z + _dt * _sigma_e_z);
+  _cezhx = -(2 * _dt / _dy) / (2 * _eps_z + _dt * _sigma_e_z);
   _cezje = -(2 * _dt) / (2 * _eps_z + _dt * _sigma_e_z);
+  // _ceze.fill(1);
+  // _cezhy.fill(_dt / (_dx * constant::EPSILON_0));
+  // _cezhx.fill(-_dt / (_dx * constant::EPSILON_0));
 
   _chxh = (2 * _mu_x - _dt * _sigma_m_x) / (2 * _mu_x + _dt * _sigma_m_x);
   _chxey = (2 * _dt / _dz) / (2 * _mu_x + _dt * _sigma_m_x);
   _chxez = -(2 * _dt / _dy) / (2 * _mu_x + _dt * _sigma_m_x);
   _chxjm = -(2 * _dt) / (2 * _mu_x + _dt * _sigma_m_x);
+  // _chxh.fill(1);
+  // _chxey.fill(_dt / (_dx * constant::MU_0));
+  // _chxez.fill(-_dt / (_dx * constant::MU_0));
 
   // _hy
   _chyh = (2 * _mu_y - _dt * _sigma_m_y) / (2 * _mu_y + _dt * _sigma_m_y);
   _chyez = (2 * _dt / _dx) / (2 * _mu_y + _dt * _sigma_m_y);
   _chyex = -(2 * _dt / _dz) / (2 * _mu_y + _dt * _sigma_m_y);
   _chyjm = -(2 * _dt) / (2 * _mu_y + _dt * _sigma_m_y);
+  // _chyh.fill(1);
+  // _chyez.fill(_dt / (_dx * constant::MU_0));
+  // _chyex.fill(-_dt / (_dx * constant::MU_0));
 
   // _hz
   _chzh = (2 * _mu_z - _dt * _sigma_m_z) / (2 * _mu_z + _dt * _sigma_m_z);
   _chzex = (2 * _dt / _dy) / (2 * _mu_z + _dt * _sigma_m_z);
   _chzey = -(2 * _dt / _dx) / (2 * _mu_z + _dt * _sigma_m_z);
   _chzjm = -(2 * _dt) / (2 * _mu_z + _dt * _sigma_m_z);
+  // _chzh.fill(1);
+  // _chzex.fill(_dt / (_dy * constant::MU_0));
+  // _chzey.fill(-_dt / (_dx * constant::MU_0));
 }
 
 void Simulation::initBondaryCondition() {
   for (auto& e : _boundaries) {
-    // auto cpml{std::dynamic_pointer_cast<PML>(e)};
-    // if (cpml == nullptr) {
-    //   throw std::runtime_error{"Error: boundary is not PML"};
-    // }
     e->setEMFInstance(getEMFInstance());
     e->init(this);
-
-    // auto ori{e->getOrientation()};
-    // if (ori == Orientation::XN) {
-    //   cpml->init(_dx, _dt, 0, _ny, _nz, _ceyhz, _cezhy, _chyez, _chzey);
-    //   continue;
-    // }
-    // if (ori == Orientation::YN) {
-    //   cpml->init(_dy, _dt, 0, _nz, _nx, _cezhx, _cexhz, _chzex, _chxez);
-    // }
-    // if (ori == Orientation::ZN) {
-    //   cpml->init(_dz, _dt, 0, _nx, _ny, _cexhy, _ceyhx, _chxey, _chyex);
-    // }
-    // if (ori == Orientation::XP) {
-    //   cpml->init(_dx, _dt, _nx - e->getSize(), _ny, _nz, _ceyhz, _cezhy,
-    //   _chyez,
-    //              _chzey);
-    // }
-    // if (ori == Orientation::YP) {
-    //   cpml->init(_dy, _dt, _ny - e->getSize(), _nz, _nx, _cezhx, _cexhz,
-    //   _chzex,
-    //              _chxez);
-    // }
-    // if (ori == Orientation::ZP) {
-    //   cpml->init(_dz, _dt, _nz - e->getSize(), _nx, _ny, _cexhy, _ceyhx,
-    //   _chxey,
-    //              _chyex);
-    // }
   }
 }
 
@@ -175,8 +163,8 @@ void Simulation::caculateDomainSize() {
   }
 
   for (const auto& e : _objects) {
-    std::shared_ptr<Shape> tmep{std::move(e->getWrappedBox())};
-    auto box{std::dynamic_pointer_cast<Cube>(tmep)};
+    auto tmep{std::move(e->getWrappedBox())};
+    auto box{dynamic_cast<Cube*>(tmep.get())};
     if (box == nullptr) {
       continue;
     }
@@ -205,17 +193,8 @@ void Simulation::caculateDomainSize() {
     if (isGreaterOrEqual(t, max_z, constant::TOLERABLE_EPSILON)) {
       max_z = t;
     }
+    // tmep.release();  // For Debug
   }
-
-  auto nx = std::round((max_x - min_x) / _dx);
-  auto ny = std::round((max_y - min_y) / _dy);
-  auto nz = std::round((max_z - min_z) / _dz);
-  double size_x = nx * _dx;
-  double size_y = ny * _dy;
-  double size_z = nz * _dz;
-  max_x = min_x + size_x;
-  max_y = min_y + size_y;
-  max_z = min_z + size_z;
 
   for (auto& e : _boundaries) {
     auto ori{e->getOrientation()};
@@ -242,12 +221,19 @@ void Simulation::caculateDomainSize() {
       max_z += _dz * len;
     }
   }
+
+  _nx = std::round((max_x - min_x) / _dx);
+  _ny = std::round((max_y - min_y) / _dy);
+  _nz = std::round((max_z - min_z) / _dz);
+  double size_x = _nx * _dx;
+  double size_y = _ny * _dy;
+  double size_z = _nz * _dz;
+  max_x = min_x + size_x;
+  max_y = min_y + size_y;
+  max_z = min_z + size_z;
   _simulation_box = std::make_unique<Cube>(
       PointVector{min_x, min_y, min_z},
       PointVector{max_x - min_x, max_y - min_y, max_z - min_z});
-  _nx = std::round(_simulation_box->getSize().x() / _dx);
-  _ny = std::round(_simulation_box->getSize().y() / _dy);
-  _nz = std::round(_simulation_box->getSize().z() / _dz);
   if (_nx == 0) {
     _nx = 1;
     _dx = 1;

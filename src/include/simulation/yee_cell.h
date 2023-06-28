@@ -29,7 +29,7 @@ class YeeCell {
   }
 
  private:
-  std::shared_ptr<Cube> _shape;
+  std::unique_ptr<Cube> _shape;
   int _material_index{-1};
   SpatialIndex _x;
   SpatialIndex _y;

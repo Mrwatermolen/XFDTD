@@ -35,8 +35,8 @@ void testBasic() {
   auto air_material{xfdtd::Material{"vaccum", 1, 1, 0, 0, false}};
   auto free_space{xfdtd::Object{
       "free_space",
-      std::make_unique<xfdtd::Cube>(xfdtd::PointVector(0, 0, 0),
-                                    xfdtd::PointVector(0, 0, 300 * dz)),
+      std::make_unique<xfdtd::Cube>(xfdtd::PointVector{0, 0, 0},
+                                    xfdtd::PointVector{0, 0, 300 * dz}),
       std::make_unique<xfdtd::Material>(air_material)}};
   objects.emplace_back(std::make_shared<xfdtd::Object>(free_space));
   //   objects.emplace_back(std::make_shared<xfdtd::Object>(
@@ -50,13 +50,13 @@ void testBasic() {
 
   auto gaussian_point_source{xfdtd::HardPonitSource{
       std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform)),
-      xfdtd::PointVector(0, 0, 150 * dz)}};
+      xfdtd::PointVector{0, 0, 150 * dz}}};
   sources.emplace_back(std::make_shared<xfdtd::HardPonitSource>(
       std::move(gaussian_point_source)));
 
-  //   auto tfsf{xfdtd::TFSF1D{
-  //       30, xfdtd::constant::PI, -1,
-  //       std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform))}};
+    auto tfsf{xfdtd::TFSF1D{
+        30, xfdtd::constant::PI, -1,
+        std::make_unique<xfdtd::GaussianWaveform>(std::move(gaussian_waveform))}};
 
   boundaries.emplace_back(
       std::make_shared<xfdtd::PML>(xfdtd::Orientation::ZN, 10));
@@ -64,8 +64,8 @@ void testBasic() {
       std::make_shared<xfdtd::PML>(xfdtd::Orientation::ZP, 10));
 
   auto monitor{xfdtd::TimeDomainFieldMonitor{
-      std::make_unique<xfdtd::Cube>(xfdtd::PointVector(0, 0, -10 * dz),
-                                    xfdtd::PointVector(0, 0, 310 * dz)),
+      std::make_unique<xfdtd::Cube>(xfdtd::PointVector{0, 0, -10 * dz},
+                                    xfdtd::PointVector{0, 0, 310 * dz}),
       xfdtd::PlaneType::ZX, xfdtd::EMComponent::EX,
       std::filesystem::absolute("visualizing_data/1d_movie_monitor"), ""}};
   auto movie_monitor{xfdtd::MovieMonitor{

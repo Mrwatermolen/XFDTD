@@ -1,7 +1,6 @@
 #ifndef _SHAPE_H_
 #define _SHAPE_H_
 
-#include <Eigen/Core>
 #include <memory>
 #include <string>
 #include <string_view>

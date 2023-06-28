@@ -1,7 +1,6 @@
 #ifndef __HARD_POINT_SOURCE_H__
 #define __HARD_POINT_SOURCE_H__
 
-#include <Eigen/Core>
 #include <memory>
 
 #include "additive_source/source.h"

@@ -6,7 +6,7 @@ namespace xfdtd {
 YeeCell::YeeCell(PointVector point, PointVector size,
                  int material_index, SpatialIndex x, SpatialIndex y,
                  SpatialIndex z)
-    : _shape{std::make_shared<Cube>(std::move(point), std::move(size))},
+    : _shape{std::make_unique<Cube>(std::move(point), std::move(size))},
       _material_index{material_index},
       _x{x},
       _y{y},

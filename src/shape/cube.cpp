@@ -14,10 +14,10 @@ Cube::Cube(PointVector point, PointVector size)
     : _point{std::move(point)}, _size{std::move(size)} {};
 
 Cube::operator std::string() const {
-  return std::string("Cube: ") + std::to_string(_point.x()) + " " +
-         std::to_string(_point.y()) + " " + std::to_string(_point.z()) + " " +
-         std::to_string(_size.x()) + " " + std::to_string(_size.y()) + " " +
-         std::to_string(_size.z());
+  return std::string("Cube: ") + std::to_string(_point(0)) + " " +
+         std::to_string(_point(1)) + " " + std::to_string(_point(2)) + " " +
+         std::to_string(_size(0)) + " " + std::to_string(_size(1)) + " " +
+         std::to_string(_size(2));
 }
 
 std::unique_ptr<Shape> Cube::clone() const {
@@ -25,14 +25,14 @@ std::unique_ptr<Shape> Cube::clone() const {
 }
 
 bool Cube::isPointInside(const PointVector &point) const {
-  return isLessOrEqual(_point.x(), point.x(), constant::TOLERABLE_EPSILON) &&
-         isLessOrEqual(_point.y(), point.y(), constant::TOLERABLE_EPSILON) &&
-         isLessOrEqual(_point.z(), point.z(), constant::TOLERABLE_EPSILON) &&
-         isGreaterOrEqual(_point.x() + _size.x(), point.x(),
+  return isLessOrEqual(_point(0), point(0), constant::TOLERABLE_EPSILON) &&
+         isLessOrEqual(_point(1), point(1), constant::TOLERABLE_EPSILON) &&
+         isLessOrEqual(_point(2), point(2), constant::TOLERABLE_EPSILON) &&
+         isGreaterOrEqual(_point(0) + _size(0), point(0),
                           constant::TOLERABLE_EPSILON) &&
-         isGreaterOrEqual(_point.y() + _size.y(), point.y(),
+         isGreaterOrEqual(_point(1) + _size(1), point(1),
                           constant::TOLERABLE_EPSILON) &&
-         isGreaterOrEqual(_point.z() + _size.z(), point.z(),
+         isGreaterOrEqual(_point(2) + _size(2), point(2),
                           constant::TOLERABLE_EPSILON);
 }
 

@@ -1,7 +1,6 @@
 #ifndef _SPHERE_H_
 #define _SPHERE_H_
 
-#include <Eigen/Core>
 #include <string_view>
 
 #include "shape/shape.h"

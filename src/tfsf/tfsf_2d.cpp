@@ -1,157 +1,140 @@
 #include "tfsf/tfsf_2d.h"
 
-#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <istream>
 
 #include "util/constant.h"
-#include "util/float_compare.h"
-#include "util/type_define.h"
-
 namespace xfdtd {
 TFSF2D::TFSF2D(SpatialIndex distance_x, SpatialIndex distance_y, double phi_inc,
                double ez_i0, std::unique_ptr<Waveform> waveform)
-    : TFSF(distance_x, distance_y, 0, constant::PI / 2, phi_inc, ez_i0, 0,
-           std::move(waveform)) {}
+    : TFSF(distance_x, distance_y, 0, ez_i0, constant::PI / 2, phi_inc, 0,
+           std::move(waveform)) {
+  auto sin_phi{getIncidentSinPhi()};
+  auto cos_phi{getIncidentCosPhi()};
+  auto sin_theta{getIncidentSinTheta()};
+  auto cos_theta{getIncidentCosTheta()};
+  xt::xtensor<double, 2> u{{-sin_phi, cos_theta * cos_phi, sin_theta * cos_phi},
+                           {cos_phi, cos_theta * sin_phi, sin_theta * sin_phi},
+                           {0, -sin_theta, cos_theta}};
 
-void TFSF2D::init(const Cube *simulation_box, double dx, double dy, double dz,
-                  double dt, std::unique_ptr<GridBox> tfsf_grid_box) {
-  defaultInitTFSF(simulation_box, dx, dy, dz, dt, std::move(tfsf_grid_box));
-  // TODO(franzero)
-  _ceihi = -(getDt() / (constant::EPSILON_0 * getDx()));
-  _chiei = -(getDt() / (constant::MU_0 * getDx()));
+  auto sin_psi{getIncidentSinPsi()};
+  auto cos_psi{getIncidentCosPsi()};
+  auto k_e{PointVector{sin_psi, cos_psi}};
+  _transform_e = xt::linalg::dot(u, k_e);
+  _transform_h = xt::linalg::cross(getKVector(), _transform_e);
+}
+
+void TFSF2D::init(double dx, double dy, double dz, double dt,
+                  std::unique_ptr<GridBox> tfsf_grid_box) {
+  defaultInitTFSF(dx, dy, dz, dt, std::move(tfsf_grid_box));
+  const auto nx{getNx()};
+  const auto ny{getNy()};
 
   // IMPORTANT: assume that dx is equal to dy.
-  auto incident_phi{getIncidentPhi()};
-  if (isGreaterOrEqual(incident_phi, 0.0, constant::TOLERABLE_EPSILON) &&
-      isLessOrEqual(incident_phi, constant::PI / 2,
-                    constant::TOLERABLE_EPSILON)) {
-    _strike_index_x = getStartIndexX();
-    _strike_index_y = getStartIndexY();
-  } else if (isGreaterOrEqual(incident_phi, constant::PI / 2,
-                              constant::TOLERABLE_EPSILON) &&
-             isLessOrEqual(incident_phi, constant::PI,
-                           constant::TOLERABLE_EPSILON)) {
-    _strike_index_x = getEndIndexX();
-    _strike_index_y = getStartIndexY();
-  } else if (isGreaterOrEqual(incident_phi, constant::PI,
-                              constant::TOLERABLE_EPSILON) &&
-             isLessOrEqual(incident_phi, constant::PI * 1.5,
-                           constant::TOLERABLE_EPSILON)) {
-    _strike_index_x = getEndIndexX();
-    _strike_index_y = getEndIndexY();
-  } else {
-    _strike_index_x = getStartIndexX();
-    _strike_index_y = getEndIndexY();
+  const auto incident_phi{getIncidentPhi()};
+  const auto incident_theta{getIncidentTheta()};
+  const auto ratio_delta{
+      1 / sqrt(pow(sin(incident_theta), 4) *
+                   (pow(cos(incident_phi), 4) + pow(sin(incident_phi), 4)) +
+               pow(cos(incident_theta), 4))};
+  const auto k_inc{getKInc()};
+
+  const auto diagonal_length{
+      sqrt(pow(getNx(), 2) + pow(getNy(), 2) + sqrt(pow(getNz(), 2))) *
+      ratio_delta};
+  _auxiliary_array_size =
+      static_cast<size_t>(std::ceil(diagonal_length)) + 4 + 1;
+  _e_inc.resize({_auxiliary_array_size});
+  _h_inc.resize({_auxiliary_array_size - 1});
+
+  _ez_inc.resize({_auxiliary_array_size});
+  _hx_inc.resize({_auxiliary_array_size - 1});
+  _hy_inc.resize({_auxiliary_array_size - 1});
+  auto extra_distance{2 * getKInc() / ratio_delta};
+  PointVector origination_point;
+  if (k_inc(0) >= 0 && k_inc(1) >= 0) {
+    // xp yp
+    origination_point = PointVector{static_cast<double>(getStartIndexX()),
+                                    static_cast<double>(getStartIndexY()), 0};
+
+  } else if (k_inc(0) >= 0 && k_inc(1) < 0) {
+    // xp yn
+    origination_point = PointVector{static_cast<double>(getStartIndexX()),
+                                    static_cast<double>(getEndIndexY()), 0};
+  } else if (k_inc(0) < 0 && k_inc(1) >= 0) {
+    // xn yp
+    origination_point = PointVector{static_cast<double>(getEndIndexX()),
+                                    static_cast<double>(getStartIndexY()), 0};
+  } else if (k_inc(0) < 0 && k_inc(1) < 0) {
+    // xn yn
+    origination_point = PointVector{static_cast<double>(getEndIndexX()),
+                                    static_cast<double>(getEndIndexY()), 0};
+  }
+  origination_point -= extra_distance;
+
+  _projection_x_full = xt::zeros<double>({nx + 1});
+  _projection_y_full = xt::zeros<double>({ny + 1});
+  _projection_x_half = xt::zeros<double>({nx + 2});
+  _projection_y_half = xt::zeros<double>({ny + 2});
+  const auto k_inc_x{k_inc[0]};
+  const auto k_inc_y{k_inc[1]};
+
+  for (size_t i{0}; i < nx + 1; ++i) {
+    _projection_x_full(i) =
+        (i + getStartIndexX() - origination_point(0)) * k_inc_x * ratio_delta;
+  }
+  for (size_t i{0}; i < ny + 1; ++i) {
+    _projection_y_full(i) =
+        (i + getStartIndexY() - origination_point(1)) * k_inc_y * ratio_delta;
+  }
+  for (size_t i{0}; i < nx + 2; ++i) {
+    _projection_x_half(i) =
+        (i + getStartIndexX() - origination_point(0) - 0.5) * k_inc_x *
+        ratio_delta;
+  }
+  for (size_t i{0}; i < ny + 2; ++i) {
+    _projection_y_half(i) =
+        (i + getStartIndexY() - origination_point(1) - 0.5) * k_inc_y *
+        ratio_delta;
+  }
+  // ez
+  for (auto i{getStartIndexX()}; i < getEndIndexX(); ++i) {
+    getIncidentEz(i, getStartIndexY(), 0);
+  }
+  for (auto i{getStartIndexX()}; i < getEndIndexX(); ++i) {
+    getIncidentEz(i, getEndIndexY(), 0);
   }
 
-  auto diagonal_length{std::sqrt(std::pow(getNx(), 2) + std::pow(getNy(), 2))};
-  // why is the length times 2 plus 4 and plus 1?
-  // The number of E points on the diagonal = number of points on on side of %
-  // TF / SF boundary. Add 4 to this, 2 on either end
-  // TODO(franzero): Can observe reflection obviously while using Mur abosrbing
-  // Bbundary bondition. A temporary solution is to extend the length.
-  size_t temp_times{4};
-  _auxiliary_array_size = std::ceil(diagonal_length * temp_times) + 4 + 1;
-  _e_inc.resize(_auxiliary_array_size);
-  _h_inc.resize(_auxiliary_array_size - 1);
-
-  _projection_index_ez_xn.resize(getNy() + 1);
-  _projection_index_hy_xn.resize(getNy() + 1);
-
-  _projection_index_ez_yn.resize(getNx() + 1);
-  _projection_index_hx_yn.resize(getNx() + 1);
-
-  _projection_index_ez_xp.resize(getNy() + 1);
-  _projection_index_hy_xp.resize(getNy() + 1);
-
-  _projection_index_ez_yp.resize(getNx() + 1);
-  _projection_index_hx_yp.resize(getNx() + 1);
-
-  _weight_ez_xn.resize(getNy() + 1);
-  _weight_hy_xn.resize(getNy() + 1);
-
-  _weight_ez_yn.resize(getNx() + 1);
-  _weight_hx_yn.resize(getNx() + 1);
-
-  _weight_ez_xp.resize(getNy() + 1);
-  _weight_hy_xp.resize(getNy() + 1);
-
-  _weight_ez_yp.resize(getNx() + 1);
-  _weight_hx_yp.resize(getNx() + 1);
-
-  auto li{getStartIndexX()};
-  auto ri{getEndIndexX()};
-  auto lj{getStartIndexY()};
-  auto rj{getEndIndexY()};
-  auto k_inc{getKVector()};
-
-  for (auto i{li}; i < ri + 1; ++i) {
-    auto vec_ez_yn{
-        PointVector{i - getStrikeIndexX(), lj - getStrikeIndexY(), 0}};
-    auto k_dot_ez_yn{k_inc.transpose() * vec_ez_yn};
-    _projection_index_ez_yn[i - li] =
-        std::floor(k_dot_ez_yn) + 2;  // 2 for boundary
-    _weight_ez_yn[i - li] = k_dot_ez_yn - _projection_index_ez_yn[i - li] + 2;
-
-    auto vec_hx_yn{
-        PointVector{i - getStrikeIndexX(), lj - 0.5 - getStrikeIndexY(), 0}};
-    auto k_dot_hx_yn{k_inc.transpose() * vec_hx_yn};
-    _projection_index_hx_yn[i - li] = std::floor(k_dot_hx_yn) + 2;
-    _weight_hx_yn[i - li] = k_dot_hx_yn - _projection_index_hx_yn[i - li] + 2;
-
-    auto vec_ez_yp{
-        PointVector{i - getStrikeIndexX(), rj - getStrikeIndexY(), 0}};
-    auto k_dot_ez_yp{k_inc.transpose() * vec_ez_yp};
-    _projection_index_ez_yp[i - li] = std::floor(k_dot_ez_yp) + 2;
-    _weight_ez_yp[i - li] = k_dot_ez_yp - _projection_index_ez_yp[i - li] + 2;
-
-    auto vec_hx_yp{
-        PointVector{i - getStrikeIndexX(), rj + 0.5 - getStrikeIndexY(), 0}};
-    auto k_dot_hx_yp{k_inc.transpose() * vec_hx_yp};
-    _projection_index_hx_yp[i - li] = std::floor(k_dot_hx_yp) + 2;
-    _weight_hx_yp[i - li] = k_dot_hx_yp - _projection_index_hx_yp[i - li] + 2;
+  for (SpatialIndex i{getStartIndexY()}; i < getEndIndexY() + 1; ++i) {
+    getIncidentHy(getStartIndexX() - 1, i, 0);
   }
+  std::cout << std::endl;
 
-  for (auto j{lj}; j < rj + 1; ++j) {
-    auto vec_ez_xn{
-        PointVector{li - getStrikeIndexX(), j - getStrikeIndexY(), 0}};
-    auto k_dot_ez_xn{k_inc.transpose() * vec_ez_xn};
-    _projection_index_ez_xn[j - lj] = std::floor(k_dot_ez_xn) + 2;
-    _weight_ez_xn[j - lj] = k_dot_ez_xn - _projection_index_ez_xn[j - lj] + 2;
-
-    auto vec_hy_xn{
-        PointVector{li - 0.5 - getStrikeIndexX(), j - getStrikeIndexY(), 0}};
-    auto k_dot_hy_xn{k_inc.transpose() * vec_hy_xn};
-    _projection_index_hy_xn[j - lj] = std::floor(k_dot_hy_xn) + 2;
-    _weight_hy_xn[j - lj] = k_dot_hy_xn - _projection_index_hy_xn[j - lj] + 2;
-
-    auto vec_ez_xp{
-        PointVector{ri - getStrikeIndexX(), j - getStrikeIndexY(), 0}};
-    auto k_dot_ez_xp{k_inc.transpose() * vec_ez_xp};
-    _projection_index_ez_xp[j - lj] = std::floor(k_dot_ez_xp) + 2;
-    _weight_ez_xp[j - lj] = k_dot_ez_xp - _projection_index_ez_xp[j - lj] + 2;
-
-    auto vec_hy_xp{
-        PointVector{ri + 0.5 - getStrikeIndexX(), j - getStrikeIndexY(), 0}};
-    auto k_dot_hy_xp{k_inc.transpose() * vec_hy_xp};
-    _projection_index_hy_xp[j - lj] = std::floor(k_dot_hy_xp) + 2;
-    _weight_hy_xp[j - lj] = k_dot_hy_xp - _projection_index_hy_xp[j - lj] + 2;
-  }
+  _scaled_dl = getDx() / ratio_delta;
+  _ceihi = -(dt / (constant::EPSILON_0 * _scaled_dl));
+  _chiei = -(dt / (constant::MU_0 * _scaled_dl));
 }
 
 void TFSF2D::updateIncidentField(size_t current_time_step) {
+  auto dt{getDt()};
   _e_inc[0] = getIncidentFieldWaveformValueByTime(current_time_step * getDt());
   // 1D Mur Absorbing Boundary Condition
-  auto alpha{constant::C_0 * getDt() - getDx() / constant::C_0 * getDt() +
-             getDx()};
-  auto temp{_e_inc[_e_inc.size() - 2]};
   for (auto i{1}; i < _e_inc.size() - 1; ++i) {
     _e_inc[i] = _ceie * _e_inc[i] + _ceihi * (_h_inc[i] - _h_inc[i - 1]);
   }
   _e_inc[_e_inc.size() - 1] =
-      temp + alpha * (_e_inc[_e_inc.size() - 2] - _e_inc[_e_inc.size() - 1]);
+      _e_inc[_e_inc.size() - 1] -
+      (constant::C_0 * dt / _scaled_dl) *
+          (_e_inc[_e_inc.size() - 1] - _e_inc[_e_inc.size() - 2]);
+
   for (auto i{0}; i < _h_inc.size(); ++i) {
     _h_inc[i] = _chih * _h_inc[i] + _chiei * (_e_inc[i + 1] - _e_inc[i]);
   }
+
+  _ez_inc = _transform_e(2) * _e_inc;
+  _hx_inc = _transform_h(0) * _h_inc;
+  _hy_inc = _transform_h(1) * _h_inc;
 }
 
 void TFSF2D::updateH() {
@@ -160,32 +143,39 @@ void TFSF2D::updateH() {
   auto lj{getStartIndexY()};
   auto rj{getEndIndexY()};
 
-  for (auto i{li}; i < ri + 1; ++i) {
-    auto p{_projection_index_ez_yn[i - li]};
-    auto w{_weight_ez_yn[i - li]};
-    auto ezi_yn{(1 - w) * _e_inc[p] + w * _e_inc[p + 1]};
-    auto &hx_yn{getHx(i, lj - 1, 0)};
-    hx_yn += (getDt() / (constant::MU_0 * getDy())) * ezi_yn;
+  auto dt{getDt()};
+  auto dx{getDx()};
+  auto dy{getDy()};
 
-    p = _projection_index_ez_yp[i - li];
-    w = _weight_ez_yp[i - li];
-    auto ezi_yp{(1 - w) * _e_inc[p] + w * _e_inc[p + 1]};
-    auto &hx_yp{getHx(i, rj, 0)};
-    hx_yp -= (getDt() / (constant::MU_0 * getDy())) * ezi_yp;
+  auto cbx{dt / (constant::MU_0 * dx)};
+  auto cby{dt / (constant::MU_0 * dy)};
+
+  // xn
+  for (SpatialIndex j{lj}; j < rj + 1; ++j) {
+    auto& hy_xn{getHy(li - 1, j, 0)};
+    auto ezi{getIncidentEz(li, j, 0)};
+    hy_xn -= cbx * ezi;
   }
 
-  for (auto j{lj}; j < rj + 1; ++j) {
-    auto p{_projection_index_ez_xn[j - lj]};
-    auto w{_weight_ez_xn[j - lj]};
-    auto ezi_xn{(1 - w) * _e_inc[p] + w * _e_inc[p + 1]};
-    auto &hy_xn{getHy(li - 1, j, 0)};
-    hy_xn -= (getDt() / (constant::MU_0 * getDx())) * ezi_xn;
+  // xp
+  for (SpatialIndex j{lj}; j < rj + 1; ++j) {
+    auto& hy_xp{getHy(ri, j, 0)};
+    auto ezi{getIncidentEz(ri, j, 0)};
+    hy_xp += cbx * ezi;
+  }
 
-    p = _projection_index_ez_xp[j - lj];
-    w = _weight_ez_xp[j - lj];
-    auto ezi_xp{(1 - w) * _e_inc[p] + w * _e_inc[p + 1]};
-    auto &hy_xp{getHy(ri, j, 0)};
-    hy_xp += (getDt() / (constant::MU_0 * getDx())) * ezi_xp;
+  // yn
+  for (auto i{li}; i < ri + 1; ++i) {
+    auto& hx_yn{getHx(i, lj - 1, 0)};
+    auto ezi{getIncidentEz(i, lj, 0)};
+    hx_yn += cby * ezi;
+  }
+
+  // yp
+  for (auto i{li}; i < ri + 1; ++i) {
+    auto& hx_yp{getHx(i, rj, 0)};
+    auto ezi{getIncidentEz(i, rj, 0)};
+    hx_yp -= cby * ezi;
   }
 }
 
@@ -198,35 +188,63 @@ void TFSF2D::updateE() {
   auto dt{getDt()};
   auto dx{getDx()};
   auto dy{getDy()};
-  auto sin_phi{std::sin(getIncidentPhi())};
-  auto cos_phi{std::cos(getIncidentPhi())};
 
-  for (auto i{li}; i < ri + 1; ++i) {
-    auto p{_projection_index_hx_yn[i - li]};
-    auto w{_weight_hx_yn[i - li]};
-    auto hxi_yn{(1 - w) * sin_phi * _h_inc[p] + w * sin_phi * _h_inc[p + 1]};
-    auto &ex_yn{getEz(i, lj, 0)};
-    ex_yn += (dt / (constant::EPSILON_0 * dy)) * hxi_yn;
+  auto cax{dt / (constant::EPSILON_0 * dx)};
+  auto cay{dt / (constant::EPSILON_0 * dy)};
 
-    p = _projection_index_hx_yp[i - li];
-    w = _weight_hx_yp[i - li];
-    auto hxi_yp{(1 - w) * sin_phi * _h_inc[p] + w * sin_phi * _h_inc[p + 1]};
-    auto &ex_yp{getEz(i, rj, 0)};
-    ex_yp -= (dt / (constant::EPSILON_0 * dy)) * hxi_yp;
+  for (SpatialIndex j{lj}; j < rj + 1; ++j) {
+    auto& ez_xn{getEz(li, j, 0)};
+    auto hyi{getIncidentHy(li - 1, j, 0)};
+    ez_xn -= cax * hyi;
   }
 
-  for (auto j{lj}; j < rj + 1; ++j) {
-    auto p{_projection_index_hy_xn[j - lj]};
-    auto w{_weight_hy_xn[j - lj]};
-    auto hyi_xn{-(1 - w) * cos_phi * _h_inc[p] - w * cos_phi * _h_inc[p + 1]};
-    auto &ez_xn{getEz(li, j, 0)};
-    ez_xn -= (dt / (constant::EPSILON_0 * dx)) * hyi_xn;
+  for (SpatialIndex j{lj}; j < rj + 1; ++j) {
+    auto& ez_xp{getEz(ri, j, 0)};
+    auto hyi{getIncidentHy(ri, j, 0)};
+    ez_xp += cax * hyi;
+  }
 
-    p = _projection_index_hy_xp[j - lj];
-    w = _weight_hy_xp[j - lj];
-    auto hyi_xp{-(1 - w) * cos_phi * _h_inc[p] - w * cos_phi * _h_inc[p + 1]};
-    auto &ez_xp{getEz(ri, j, 0)};
-    ez_xp += (dt / (constant::EPSILON_0 * dx)) * hyi_xp;
+  for (SpatialIndex i{li}; i < ri + 1; ++i) {
+    auto& ez_yn{getEz(i, lj, 0)};
+    auto hxi{getIncidentHx(i, lj - 1, 0)};
+    ez_yn += cay * hxi;
+  }
+
+  for (SpatialIndex i{li}; i < ri + 1; ++i) {
+    auto& ez_yp{getEz(i, rj, 0)};
+    auto hxi{getIncidentHx(i, rj, 0)};
+    ez_yp -= cay * hxi;
   }
 }
+
+double TFSF2D::getIncidentEz(int i, int j, int k) {
+  // 0 0 0.5
+  i = i - getStartIndexX();
+  j = j - getStartIndexY();
+  auto projection{_projection_x_full(i) + _projection_y_full(j)};
+  auto index{static_cast<SpatialIndex>(projection)};
+  auto weight{projection - index};
+  return (1 - weight) * _ez_inc(index) + weight * _ez_inc(index + 1);
+}
+
+double TFSF2D::getIncidentHx(int i, int j, int k) {
+  // 0 0.5 0.5
+  i = i - getStartIndexX();
+  j = j - getStartIndexY() + 1;
+  auto projection{_projection_x_full(i) + _projection_y_half(j)};
+  auto index{static_cast<SpatialIndex>(projection)};
+  auto weight{projection - index};
+  return (1 - weight) * _hx_inc(index) + weight * _hx_inc(index + 1);
+}
+
+double TFSF2D::getIncidentHy(int i, int j, int k) {
+  // 0.5 0 0.5
+  i = i - getStartIndexX() + 1;
+  j = j - getStartIndexY();
+  auto projection{_projection_x_half(i) + _projection_y_full(j)};
+  auto index{static_cast<SpatialIndex>(projection)};
+  auto weight{projection - index};
+  return (1 - weight) * _hy_inc(index) + weight * _hy_inc(index + 1);
+}
+
 }  // namespace xfdtd

@@ -20,42 +20,43 @@ void TFSF1D::init(const Cube* simulation_box, double dx, double dy, double dz,
   }
   defaultInitTFSF(simulation_box, dx, dy, dz, dt, std::move(tfsf_grid_box));
 
-  Eigen::Matrix<double, 8, 3> fdtd_domain_matrix;
-  fdtd_domain_matrix(0, 0) = simulation_box->getXmin();
-  fdtd_domain_matrix(0, 1) = simulation_box->getYmin();
-  fdtd_domain_matrix(0, 2) = simulation_box->getZmin();
+  // Eigen::Matrix<double, 8, 3> fdtd_domain_matrix;
+  // fdtd_domain_matrix(0, 0) = simulation_box->getXmin();
+  // fdtd_domain_matrix(0, 1) = simulation_box->getYmin();
+  // fdtd_domain_matrix(0, 2) = simulation_box->getZmin();
 
-  fdtd_domain_matrix(1, 0) = simulation_box->getXmin();
-  fdtd_domain_matrix(1, 1) = simulation_box->getYmin();
-  fdtd_domain_matrix(1, 2) = simulation_box->getZmax();
+  // fdtd_domain_matrix(1, 0) = simulation_box->getXmin();
+  // fdtd_domain_matrix(1, 1) = simulation_box->getYmin();
+  // fdtd_domain_matrix(1, 2) = simulation_box->getZmax();
 
-  fdtd_domain_matrix(2, 0) = simulation_box->getXmin();
-  fdtd_domain_matrix(2, 1) = simulation_box->getYmax();
-  fdtd_domain_matrix(2, 2) = simulation_box->getZmin();
+  // fdtd_domain_matrix(2, 0) = simulation_box->getXmin();
+  // fdtd_domain_matrix(2, 1) = simulation_box->getYmax();
+  // fdtd_domain_matrix(2, 2) = simulation_box->getZmin();
 
-  fdtd_domain_matrix(3, 0) = simulation_box->getXmin();
-  fdtd_domain_matrix(3, 1) = simulation_box->getYmax();
-  fdtd_domain_matrix(3, 2) = simulation_box->getZmax();
+  // fdtd_domain_matrix(3, 0) = simulation_box->getXmin();
+  // fdtd_domain_matrix(3, 1) = simulation_box->getYmax();
+  // fdtd_domain_matrix(3, 2) = simulation_box->getZmax();
 
-  fdtd_domain_matrix(4, 0) = simulation_box->getXmax();
-  fdtd_domain_matrix(4, 1) = simulation_box->getYmin();
-  fdtd_domain_matrix(4, 2) = simulation_box->getZmin();
+  // fdtd_domain_matrix(4, 0) = simulation_box->getXmax();
+  // fdtd_domain_matrix(4, 1) = simulation_box->getYmin();
+  // fdtd_domain_matrix(4, 2) = simulation_box->getZmin();
 
-  fdtd_domain_matrix(5, 0) = simulation_box->getXmax();
-  fdtd_domain_matrix(5, 1) = simulation_box->getYmin();
-  fdtd_domain_matrix(5, 2) = simulation_box->getZmax();
+  // fdtd_domain_matrix(5, 0) = simulation_box->getXmax();
+  // fdtd_domain_matrix(5, 1) = simulation_box->getYmin();
+  // fdtd_domain_matrix(5, 2) = simulation_box->getZmax();
 
-  fdtd_domain_matrix(6, 0) = simulation_box->getXmax();
-  fdtd_domain_matrix(6, 1) = simulation_box->getYmax();
-  fdtd_domain_matrix(6, 2) = simulation_box->getZmin();
+  // fdtd_domain_matrix(6, 0) = simulation_box->getXmax();
+  // fdtd_domain_matrix(6, 1) = simulation_box->getYmax();
+  // fdtd_domain_matrix(6, 2) = simulation_box->getZmin();
 
-  fdtd_domain_matrix(7, 0) = simulation_box->getXmax();
-  fdtd_domain_matrix(7, 1) = simulation_box->getYmax();
-  fdtd_domain_matrix(7, 2) = simulation_box->getZmax();
+  // fdtd_domain_matrix(7, 0) = simulation_box->getXmax();
+  // fdtd_domain_matrix(7, 1) = simulation_box->getYmax();
+  // fdtd_domain_matrix(7, 2) = simulation_box->getZmax();
 
-  auto k_dot_r{fdtd_domain_matrix * getKVector()};
-  auto k_dot_r_min{k_dot_r.minCoeff()};
-  _l_0 = (k_dot_r_min) / constant::C_0;
+  // auto k_dot_r{fdtd_domain_matrix * getKVector()};
+  // auto k_dot_r_min{k_dot_r.minCoeff()};
+  // _l_0 = (k_dot_r_min) / constant::C_0;
+  _l_0 = 0;
 
   allocateKDotR();
   allocateEiHi();
@@ -118,7 +119,7 @@ void TFSF1D::calculateKDotR() {
 
 void TFSF1D::caculateKDotRZN() {
   auto k_vec{getKVector()};
-  auto start_z{getTFSFCubeBox()->getPoint().z()};
+  auto start_z{getTFSFCubeBox()->getPoint()(2)};
   _k_dot_r0_ex_zn = k_vec(2) * (start_z) / constant::C_0 - getL0();
   _k_dot_r0_hy_zn =
       k_vec(2) * (start_z - 0.5 * getDz()) / constant::C_0 - getL0();
@@ -126,8 +127,7 @@ void TFSF1D::caculateKDotRZN() {
 
 void TFSF1D::caculateKDotRZP() {
   auto k_vec{getKVector()};
-  auto end_z{getTFSFCubeBox()->getPoint().z() +
-             getTFSFCubeBox()->getSize().z()};
+  auto end_z{getTFSFCubeBox()->getPoint()(2) + getTFSFCubeBox()->getSize()(2)};
   _k_dot_r0_ex_zp = k_vec(2) * (end_z) / constant::C_0 - getL0();
   _k_dot_r0_hy_zp =
       k_vec(2) * (end_z + 0.5 * getDz()) / constant::C_0 - getL0();

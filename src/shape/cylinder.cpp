@@ -22,15 +22,14 @@ bool Cylinder::isPointInside(const PointVector& point) const {
   if (!getWrappedBox()->isPointInside(point)) {
     return false;
   }
-  auto dis{std::sqrt(std::pow(point.x() - _center.x(), 2) +
-                     std::pow(point.y() - _center.y(), 2))};
+  auto dis{sqrt(pow(point(0) - _center(0), 2) + pow(point(1) - _center(1), 2))};
   return isLessOrEqual(dis, _raduis, constant::TOLERABLE_EPSILON);
 }
 
 std::unique_ptr<Shape> Cylinder::getWrappedBox() const {
   return std::make_unique<Cube>(
-      PointVector(_center.x() - _raduis, _center.y() - _raduis,
-                  _center.z() - _height / 2),
-      PointVector(2 * _raduis, 2 * _raduis, _height));
+      PointVector{_center(0) - _raduis, _center(1) - _raduis,
+                  _center(2) - _height / 2},
+      PointVector{2 * _raduis, 2 * _raduis, _height});
 }
 }  // namespace xfdtd

@@ -3,8 +3,8 @@
 
 #include <algorithm>
 #include <memory>
-#include <unsupported/Eigen/CXX11/Tensor>
 #include <vector>
+#include <xtensor-blas/xlinalg.hpp>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xfixed.hpp>
 
@@ -15,14 +15,14 @@ class Boundary;
 class YeeCell;
 class Monitor;
 // coordinate
-using PointVector = Eigen::Vector3d;
+using PointVector = xt::xtensor_fixed<double, xt::xshape<3>>;
 
 // using DoubleArrary1D = std::vector<double>;
 // using DoubleArrary2D = Eigen::MatrixXd;
 // using DoubleArrary3D = Eigen::Tensor<double, 3>;
 using DoubleArrary1D = xt::xarray<double>;
 using DoubleArrary2D = xt::xarray<double>;
-using DoubleArrary3D = xt::xarray<double>;
+using DoubleArrary3D = xt::xtensor<double, 3>;
 
 // using ElectromagneticFieldTimedomainArray = Eigen::Tensor<double, 3>;
 // using ElectromagneticFieldFrequencydomainArray =
@@ -51,8 +51,11 @@ inline DoubleArrary3D allocateDoubleArray3D(SpatialIndex nx, SpatialIndex ny,
   std::vector<size_t> a_shape = {static_cast<size_t>(nx),
                                  static_cast<size_t>(ny),
                                  static_cast<size_t>(nz)};
-  auto arr{DoubleArrary3D(a_shape)};
-  arr.fill(default_value);
+  auto arr{
+      xt::xtensor<double, 3>({static_cast<size_t>(nx), static_cast<size_t>(ny),
+                              static_cast<size_t>(nz)},
+                             default_value)};
+  // arr.fill(default_value);
   return arr;
 }
 

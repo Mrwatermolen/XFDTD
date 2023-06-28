@@ -8,18 +8,32 @@ project(
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(XTENSOR_USE_XSIMD 1)
 
 include("cmake/FindFFTW.cmake")
-find_package(Eigen3 REQUIRED)
 find_package(xtl REQUIRED)
 find_package(xtensor REQUIRED)
 set(FFTW_USE_DOUBLE on)
 find_package(xtensor-fftw REQUIRED)
+if(WIN32)
+  find_package(OpenBLAS REQUIRED)
+  set(BLAS_LIBRARIES ${CMAKE_INSTALL_PREFIX}${OpenBLAS_LIBRARIES})
+else()
+  find_package(BLAS REQUIRED)
+  find_package(LAPACK REQUIRED)
+endif()
 
-set(XFDTD_EIGEN_LIB_INCLUDE_DIR ${EIGEN3_INCLUDE_DIR})
 set(XFDTD_XTENSOR_LIB_INCLUDE_DIR ${xtensor_INCLUDE_DIRS})
 
-include_directories(src/include ${XFDTD_EIGEN_LIB_INCLUDE_DIR} ${XFDTD_XTENSOR_LIB_INCLUDE_DIR} ${FFTW_INCLUDE_DIR} ${xtensor-fftw_INCLUDE_DIRS})
+include_directories(
+  src/include
+  ${FFTW_INCLUDE_DIR}
+  ${XFDTD_XTENSOR_LIB_INCLUDE_DIR}
+  ${xtensor-fftw_INCLUDE_DIRS}
+  xtensor::optimize
+  xtensor::use_xsimd
+  ${BLAS_LIBRARIES}
+  ${LAPACK_LIBRARIES})
 
 add_subdirectory(src)
 add_subdirectory(test)
