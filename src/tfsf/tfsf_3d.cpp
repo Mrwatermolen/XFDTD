@@ -27,7 +27,7 @@ TFSF3D::TFSF3D(SpatialIndex distance_x, SpatialIndex distance_y,
 
   auto sin_psi{getIncidentSinPsi()};
   auto cos_psi{getIncidentCosPsi()};
-  auto k_e{PointVector{sin_psi, cos_psi}};
+  auto k_e{PointVector{sin_psi, cos_psi, 0}};
   _transform_e = xt::linalg::dot(u, k_e);
   _transform_h = xt::linalg::cross(getKVector(), _transform_e);
 };
@@ -52,7 +52,7 @@ void TFSF3D::init(double dx, double dy, double dz, double dt,
       sqrt(pow(getNx(), 2) + pow(getNy(), 2) + sqrt(pow(getNz(), 2))) *
       ratio_delta};
   _auxiliary_array_size =
-      static_cast<size_t>(std::ceil(diagonal_length))*4 + 4 + 1;
+      static_cast<size_t>(std::ceil(diagonal_length)) * 4 + 4 + 1;
   _e_inc.resize({_auxiliary_array_size});
   _ex_inc.resize({_auxiliary_array_size});
   _ey_inc.resize({_auxiliary_array_size});

@@ -82,80 +82,80 @@ void Simulation::checkRun(size_t time_steps) {
   }
   object_ofs.close();
 
-  std::ofstream coff_ofs{"simulation_coff_check", std::ios::out};
-  coff_ofs << "cexe max " << *std::max_element(_cexe.begin(), _cexe.end())
-           << std::endl;
-  coff_ofs << "cexe min " << *std::min_element(_cexe.begin(), _cexe.end())
-           << std::endl;
-  coff_ofs << "cexhz max " << *std::max_element(_cexhz.begin(), _cexhz.end())
-           << std::endl;
-  coff_ofs << "cexhz min " << *std::min_element(_cexhz.begin(), _cexhz.end())
-           << std::endl;
-  coff_ofs << "cexhy max " << *std::max_element(_cexhy.begin(), _cexhy.end())
-           << std::endl;
-  coff_ofs << "cexhy min " << *std::min_element(_cexhy.begin(), _cexhy.end())
-           << std::endl;
-  coff_ofs << "ceye max " << *std::max_element(_ceye.begin(), _ceye.end())
-           << std::endl;
-  coff_ofs << "ceye min " << *std::min_element(_ceye.begin(), _ceye.end())
-           << std::endl;
-  coff_ofs << "ceyhx max " << *std::max_element(_ceyhx.begin(), _ceyhx.end())
-           << std::endl;
-  coff_ofs << "ceyhx min " << *std::min_element(_ceyhx.begin(), _ceyhx.end())
-           << std::endl;
-  coff_ofs << "ceyhz max " << *std::max_element(_ceyhz.begin(), _ceyhz.end())
-           << std::endl;
-  coff_ofs << "ceyhz min " << *std::min_element(_ceyhz.begin(), _ceyhz.end())
-           << std::endl;
-  coff_ofs << "ceze max " << *std::max_element(_ceze.begin(), _ceze.end())
-           << std::endl;
-  coff_ofs << "ceze min " << *std::min_element(_ceze.begin(), _ceze.end())
-           << std::endl;
-  coff_ofs << "cezhx max " << *std::max_element(_cezhx.begin(), _cezhx.end())
-           << std::endl;
-  coff_ofs << "cezhx min " << *std::min_element(_cezhx.begin(), _cezhx.end())
-           << std::endl;
-  coff_ofs << "cezhy max " << *std::max_element(_cezhy.begin(), _cezhy.end())
-           << std::endl;
-  coff_ofs << "cezhy min " << *std::min_element(_cezhy.begin(), _cezhy.end())
-           << std::endl;
-  coff_ofs << "chxh max " << *std::max_element(_chxh.begin(), _chxh.end())
-           << std::endl;
-  coff_ofs << "chxh min " << *std::min_element(_chxh.begin(), _chxh.end())
-           << std::endl;
-  coff_ofs << "chxez max " << *std::max_element(_chxez.begin(), _chxez.end())
-           << std::endl;
-  coff_ofs << "chxez min " << *std::min_element(_chxez.begin(), _chxez.end())
-           << std::endl;
-  coff_ofs << "chxey max " << *std::max_element(_chxey.begin(), _chxey.end())
-           << std::endl;
-  coff_ofs << "chxey min " << *std::min_element(_chxey.begin(), _chxey.end())
-           << std::endl;
-  coff_ofs << "chyh max " << *std::max_element(_chyh.begin(), _chyh.end())
-           << std::endl;
-  coff_ofs << "chyh min " << *std::min_element(_chyh.begin(), _chyh.end())
-           << std::endl;
-  coff_ofs << "chyex max " << *std::max_element(_chyex.begin(), _chyex.end())
-           << std::endl;
-  coff_ofs << "chyex min " << *std::min_element(_chyex.begin(), _chyex.end())
-           << std::endl;
-  coff_ofs << "chyez max " << *std::max_element(_chyez.begin(), _chyez.end())
-           << std::endl;
-  coff_ofs << "chyez min " << *std::min_element(_chyez.begin(), _chyez.end())
-           << std::endl;
-  coff_ofs << "chzh max " << *std::max_element(_chzh.begin(), _chzh.end())
-           << std::endl;
-  coff_ofs << "chzh min " << *std::min_element(_chzh.begin(), _chzh.end())
-           << std::endl;
-  coff_ofs << "chzex max " << *std::max_element(_chzex.begin(), _chzex.end())
-           << std::endl;
-  coff_ofs << "chzex min " << *std::min_element(_chzex.begin(), _chzex.end())
-           << std::endl;
-  coff_ofs << "chzey max " << *std::max_element(_chzey.begin(), _chzey.end())
-           << std::endl;
-  coff_ofs << "chzey min " << *std::min_element(_chzey.begin(), _chzey.end())
-           << std::endl;
-  coff_ofs.close();
+  // std::ofstream coff_ofs{"simulation_coff_check", std::ios::out};
+  // coff_ofs << "cexe max " << *std::max_element(_cexe.begin(), _cexe.end())
+  //          << std::endl;
+  // coff_ofs << "cexe min " << *std::min_element(_cexe.begin(), _cexe.end())
+  //          << std::endl;
+  // coff_ofs << "cexhz max " << *std::max_element(_cexhz.begin(), _cexhz.end())
+  //          << std::endl;
+  // coff_ofs << "cexhz min " << *std::min_element(_cexhz.begin(), _cexhz.end())
+  //          << std::endl;
+  // coff_ofs << "cexhy max " << *std::max_element(_cexhy.begin(), _cexhy.end())
+  //          << std::endl;
+  // coff_ofs << "cexhy min " << *std::min_element(_cexhy.begin(), _cexhy.end())
+  //          << std::endl;
+  // coff_ofs << "ceye max " << *std::max_element(_ceye.begin(), _ceye.end())
+  //          << std::endl;
+  // coff_ofs << "ceye min " << *std::min_element(_ceye.begin(), _ceye.end())
+  //          << std::endl;
+  // coff_ofs << "ceyhx max " << *std::max_element(_ceyhx.begin(), _ceyhx.end())
+  //          << std::endl;
+  // coff_ofs << "ceyhx min " << *std::min_element(_ceyhx.begin(), _ceyhx.end())
+  //          << std::endl;
+  // coff_ofs << "ceyhz max " << *std::max_element(_ceyhz.begin(), _ceyhz.end())
+  //          << std::endl;
+  // coff_ofs << "ceyhz min " << *std::min_element(_ceyhz.begin(), _ceyhz.end())
+  //          << std::endl;
+  // coff_ofs << "ceze max " << *std::max_element(_ceze.begin(), _ceze.end())
+  //          << std::endl;
+  // coff_ofs << "ceze min " << *std::min_element(_ceze.begin(), _ceze.end())
+  //          << std::endl;
+  // coff_ofs << "cezhx max " << *std::max_element(_cezhx.begin(), _cezhx.end())
+  //          << std::endl;
+  // coff_ofs << "cezhx min " << *std::min_element(_cezhx.begin(), _cezhx.end())
+  //          << std::endl;
+  // coff_ofs << "cezhy max " << *std::max_element(_cezhy.begin(), _cezhy.end())
+  //          << std::endl;
+  // coff_ofs << "cezhy min " << *std::min_element(_cezhy.begin(), _cezhy.end())
+  //          << std::endl;
+  // coff_ofs << "chxh max " << *std::max_element(_chxh.begin(), _chxh.end())
+  //          << std::endl;
+  // coff_ofs << "chxh min " << *std::min_element(_chxh.begin(), _chxh.end())
+  //          << std::endl;
+  // coff_ofs << "chxez max " << *std::max_element(_chxez.begin(), _chxez.end())
+  //          << std::endl;
+  // coff_ofs << "chxez min " << *std::min_element(_chxez.begin(), _chxez.end())
+  //          << std::endl;
+  // coff_ofs << "chxey max " << *std::max_element(_chxey.begin(), _chxey.end())
+  //          << std::endl;
+  // coff_ofs << "chxey min " << *std::min_element(_chxey.begin(), _chxey.end())
+  //          << std::endl;
+  // coff_ofs << "chyh max " << *std::max_element(_chyh.begin(), _chyh.end())
+  //          << std::endl;
+  // coff_ofs << "chyh min " << *std::min_element(_chyh.begin(), _chyh.end())
+  //          << std::endl;
+  // coff_ofs << "chyex max " << *std::max_element(_chyex.begin(), _chyex.end())
+  //          << std::endl;
+  // coff_ofs << "chyex min " << *std::min_element(_chyex.begin(), _chyex.end())
+  //          << std::endl;
+  // coff_ofs << "chyez max " << *std::max_element(_chyez.begin(), _chyez.end())
+  //          << std::endl;
+  // coff_ofs << "chyez min " << *std::min_element(_chyez.begin(), _chyez.end())
+  //          << std::endl;
+  // coff_ofs << "chzh max " << *std::max_element(_chzh.begin(), _chzh.end())
+  //          << std::endl;
+  // coff_ofs << "chzh min " << *std::min_element(_chzh.begin(), _chzh.end())
+  //          << std::endl;
+  // coff_ofs << "chzex max " << *std::max_element(_chzex.begin(), _chzex.end())
+  //          << std::endl;
+  // coff_ofs << "chzex min " << *std::min_element(_chzex.begin(), _chzex.end())
+  //          << std::endl;
+  // coff_ofs << "chzey max " << *std::max_element(_chzey.begin(), _chzey.end())
+  //          << std::endl;
+  // coff_ofs << "chzey min " << *std::min_element(_chzey.begin(), _chzey.end())
+  //          << std::endl;
+  // coff_ofs.close();
 }
 
 void Simulation::run(size_t time_steps) {
