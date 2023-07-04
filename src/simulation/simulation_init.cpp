@@ -67,6 +67,12 @@ void Simulation::initNFFFT() {
     return;
   }
   auto [x, y, z]{_nffft->getDistance()};
+  if (_nz == 1) {
+    _nffft->init(
+        std::make_unique<GridBox>(x, y, 0, _nx - 2 * x, _ny - 2 * y, 1),
+        getEMFInstance(), _time_steps, _dt, _dx, _dy, 1);
+    return;
+  }
   _nffft->init(
       std::make_unique<GridBox>(x, y, z, _nx - 2 * x, _ny - 2 * y, _nz - 2 * z),
       getEMFInstance(), _time_steps, _dt, _dx, _dy, _dz);

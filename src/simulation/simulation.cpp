@@ -1,4 +1,4 @@
-// #define XTENSOR_USE_XSIMD
+#define XTENSOR_USE_XSIMD
 
 #include "simulation/simulation.h"
 
@@ -62,7 +62,6 @@ Simulation::Simulation(double cell_size, ObjectArray objects,
       _emf{std::make_shared<EMF>()} {}
 
 void Simulation::checkRun(size_t time_steps) {
-  std::system("clear");
   std::cout << "Simulation Check:" << std::endl;
   _time_steps = time_steps;
   init();

@@ -1,6 +1,7 @@
 #ifndef _NFFFT_H_
 #define _NFFFT_H_
 
+#include <filesystem>
 #include <memory>
 #include <tuple>
 #include <utility>
@@ -14,96 +15,71 @@ namespace xfdtd {
 class NFFFT {
  public:
   NFFFT(SpatialIndex distance_x, SpatialIndex distance_y,
-        SpatialIndex direction_z, double far_tehta, double far_phi);
+        SpatialIndex direction_z, std::filesystem::path output_dir_path);
+  virtual ~NFFFT() = default;
 
-  inline size_t getTotalTimeSteps() const { return _total_time_steps; }
-  inline size_t getCurrentTimeStep() const { return _current_time_step; }
   inline std::tuple<SpatialIndex, SpatialIndex, SpatialIndex> getDistance() {
     return {_distance_x, _distance_y, _distance_z};
   }
-  inline SpatialIndex getOutputBoundaryStartX() const {
-    return _output_box->getStartIndexX();
-  }
-  inline SpatialIndex getOutputBoundaryEndX() const {
-    return _output_box->getEndIndexX();
-  }
-  inline SpatialIndex getOutputBoundaryStartY() const {
-    return _output_box->getStartIndexY();
-  }
-  inline SpatialIndex getOutputBoundaryEndY() const {
-    return _output_box->getEndIndexY();
-  }
-  inline SpatialIndex getOutputBoundaryStartZ() const {
-    return _output_box->getStartIndexZ();
-  }
-  inline SpatialIndex getOutputBoundaryEndZ() const {
-    return _output_box->getEndIndexZ();
-  }
-  inline SpatialIndex getOutputBoundaryNx() const {
-    return _output_box->getNx();
-  }
-  inline SpatialIndex getOutputBoundaryNy() const {
-    return _output_box->getNy();
-  }
-  inline SpatialIndex getOutputBoundaryNz() const {
-    return _output_box->getNz();
-  }
-  inline SpatialIndex getOutputBoundaryCenterX() const {
-    return (getOutputBoundaryEndX() + getOutputBoundaryStartX()) / 2;
-  }
-  inline SpatialIndex getOutputBoundaryCenterY() const {
-    return (getOutputBoundaryEndY() + getOutputBoundaryStartY()) / 2;
-  }
-  inline SpatialIndex getOutputBoundaryCenterZ() const {
-    return (getOutputBoundaryEndZ() + getOutputBoundaryStartZ()) / 2;
-  }
-  inline const std::shared_ptr<const EMF> &getEMFInstance() const {
-    return _emf;
-  }
-  inline double getFarfieldPhi() const { return _farfield_phi; }
-  inline double getFarfieldTheta() const { return _farfield_theta; }
+
+  inline SpatialIndex getStartIndexX() { return _output_box->getStartIndexX(); }
+  inline SpatialIndex getStartIndexY() { return _output_box->getStartIndexY(); }
+  inline SpatialIndex getStartIndexZ() { return _output_box->getStartIndexZ(); }
+  inline SpatialIndex getEndIndexX() { return _output_box->getEndIndexX(); }
+  inline SpatialIndex getEndIndexY() { return _output_box->getEndIndexY(); }
+  inline SpatialIndex getEndIndexZ() { return _output_box->getEndIndexZ(); }
+  inline SpatialIndex getNx() { return _output_box->getNx(); }
+  inline SpatialIndex getNy() { return _output_box->getNy(); }
+  inline SpatialIndex getNz() { return _output_box->getNz(); }
+  inline size_t getTotalTimeSteps() { return _total_time_steps; }
   inline double getDt() const { return _dt; }
   inline double getDx() const { return _dx; }
   inline double getDy() const { return _dy; }
+  inline double getDz() const { return _dz; }
+  inline std::filesystem::path getOutputDirPath() { return _output_dir_path; }
 
-  // WARNING: dz is always 1
-  inline double getDz() const { return 1; }
+  virtual void update(size_t current_time_step) = 0;
+  virtual void outputData() = 0;
 
-  void update(size_t current_time_step);
-  void outputData();
+  virtual void init(std::unique_ptr<GridBox> output_box,
+                    std::shared_ptr<EMF> emf, size_t total_time_steps,
+                    double dt, double dx, double dy, double dz) = 0;
 
-  void init(std::unique_ptr<GridBox> _output_box, std::shared_ptr<EMF> emf,
-            size_t total_time_steps, double dt, double dx, double dy,
-            double dz);
+ protected:
+  void defaultInit(std::unique_ptr<GridBox> output_box,
+                   std::shared_ptr<EMF> emf, size_t total_time_steps, double dt,
+                   double dx, double dy, double dz);
+
+  double getEx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getEx(i, j, k);
+  }
+  double getEy(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getEy(i, j, k);
+  }
+  double getEz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getEz(i, j, k);
+  }
+  double getHx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getHx(i, j, k);
+  }
+  double getHy(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getHy(i, j, k);
+  }
+  double getHz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _emf->getHz(i, j, k);
+  }
 
  private:
   SpatialIndex _distance_x, _distance_y, _distance_z;
+  std::filesystem::path _output_dir_path;
+
   std::unique_ptr<GridBox> _output_box;
   std::shared_ptr<const EMF> _emf;
   size_t _total_time_steps;
-  DoubleArrary3D _jmy_xn;
-  DoubleArrary3D _jmy_xp;
-  DoubleArrary3D _jmx_yn;
-  DoubleArrary3D _jmx_yp;
-  DoubleArrary3D _jez_xn;
-  DoubleArrary3D _jez_xp;
-  DoubleArrary3D _jez_yn;
-  DoubleArrary3D _jez_yp;
-  size_t _current_time_step{0};
-  double _farfield_phi{constant::PI * 1.25};
-  double _farfield_theta{constant::PI / 2};
   double _dt;
   double _dx;
   double _dy;
   double _dz;
-
-  void getJmXN();
-  void getJeJmXN();
-  void getJeJmYN();
-  void getJeJmXP();
-  void getJeJmYP();
-
-  void caculateFarfield();
 };
 }  // namespace xfdtd
 

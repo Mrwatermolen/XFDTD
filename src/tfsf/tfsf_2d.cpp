@@ -44,7 +44,7 @@ void TFSF2D::init(double dx, double dy, double dz, double dt,
       sqrt(pow(getNx(), 2) + pow(getNy(), 2) + sqrt(pow(getNz(), 2))) *
       ratio_delta};
   _auxiliary_array_size =
-      static_cast<size_t>(std::ceil(diagonal_length)) + 4 + 1;
+      static_cast<size_t>(std::ceil(diagonal_length)) * 4 + 4 + 1;
   _e_inc.resize({_auxiliary_array_size});
   _h_inc.resize({_auxiliary_array_size - 1});
 

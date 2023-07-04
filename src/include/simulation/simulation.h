@@ -31,6 +31,8 @@ class Simulation {
   void checkRun(size_t time_steps);
   void run(size_t time_steps);
 
+  inline auto getTimeArray() { return _time_array; }
+
   inline double getDx() const { return _dx; }
   inline double getDy() const { return _dy; }
   inline double getDz() const { return _dz; }

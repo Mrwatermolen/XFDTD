@@ -13,6 +13,7 @@
 #include "monitor/field_monitor.h"
 #include "monitor/movie_monitor.h"
 #include "nffft/nffft.h"
+#include "nffft/nffft_2d_test.h"
 #include "object/object.h"
 #include "shape/cylinder.h"
 #include "simulation/simulation.h"
@@ -54,17 +55,14 @@ void testBasic2D() {
       std::make_unique<xfdtd::Material>(air_material)}};
 
   objects.emplace_back(std::make_shared<xfdtd::Object>(std::move(free_space)));
-//   objects.emplace_back(std::make_shared<xfdtd::Object>(
-//       "objectA",
-//       std::make_unique<xfdtd::Cylinder>(
-//           xfdtd::PointVector{cylinder_x, cylinder_y, 0}, cylinder_radius, 0),
-//       std::make_unique<xfdtd::Material>(pec_material)));
+  objects.emplace_back(std::make_shared<xfdtd::Object>(
+      "objectA",
+      std::make_unique<xfdtd::Cylinder>(
+          xfdtd::PointVector{cylinder_x, cylinder_y, 0}, cylinder_radius, 0),
+      std::make_unique<xfdtd::Material>(pec_material)));
 
   auto cosine_modulated_gaussian_waveform{
       xfdtd::CosineModulatedGaussianWaveform{1, tau, t_0, center_frequency}};
-
-  auto nffft{xfdtd::NFFFT{40, 40, 0, xfdtd::constant::PI / 2,
-                          xfdtd::constant::PI * 1.25}};
 
   boundaries.emplace_back(
       std::make_shared<xfdtd::PML>(xfdtd::Orientation::XN, pml_size));
@@ -92,8 +90,10 @@ void testBasic2D() {
           50, 50, xfdtd::constant::PI * 0.25, 1,
           std::make_unique<xfdtd::CosineModulatedGaussianWaveform>(
               std::move(cosine_modulated_gaussian_waveform))),
-      std::make_unique<xfdtd::NFFFT>(std::move(nffft)), boundaries, monitors,
-      0.8}};
+      std::make_unique<xfdtd::NFFFT2DTEST>(40, 40, 0, xfdtd::constant::PI / 2,
+                                           xfdtd::constant::PI * 1.25,
+                                           "visualizing_data/"),
+      boundaries, monitors, 0.8}};
   auto t0{std::chrono::high_resolution_clock::now()};
   simulation.run(total_time_steps);
   for (auto &&e : monitors) {
