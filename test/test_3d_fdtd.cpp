@@ -1,4 +1,5 @@
 #include <cmath>
+#include <complex>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -36,7 +37,7 @@ void testBasic3D() {
   auto boundaries{xfdtd::BoundaryArray{}};
   auto monitors{xfdtd::MonitorArray{}};
 
-  constexpr size_t total_time_steps{800};
+  constexpr size_t total_time_steps{1400};
   constexpr double dl{7.5e-3};
 
   auto domain{
@@ -46,7 +47,7 @@ void testBasic3D() {
              Material{"air", 1, 1, 0, 0}}};
   auto scatter_object{
       Object{"a", std::make_unique<Sphere>(PointVector{0, 0, 0}, 0.1),
-             Material{"pec", 1, 1, 1e20, 0}}};
+             Material{"material_a", 3, 2, 0, 0}}};
 
   objects.emplace_back(std::make_shared<Object>(std::move(domain)));
   objects.emplace_back(std::make_shared<Object>(std::move(scatter_object)));
@@ -65,7 +66,7 @@ void testBasic3D() {
                                      PointVector{0.45, 0.45, dl}),
               xfdtd::PlaneType::XY, xfdtd::EMComponent::EZ,
               std::filesystem::path{"./visualizing_data/3d_movie_output"}, ""),
-          total_time_steps, 10}));
+          total_time_steps, 50}));
 
   xt::xarray<double> frequencies{1e9};
   xt::xarray<double> theta{M_PI / 2};
@@ -73,7 +74,7 @@ void testBasic3D() {
   auto simulation{std::make_unique<Simulation>(
       dl, std::move(objects), std::move(sources),
       std::make_unique<TFSF3D>(
-          15, 15, 15, 1, M_PI / 2, M_PI / 4, M_PI / 4,
+          15, 15, 15, 1, 0, 0, 0,
           std::make_unique<GaussianWaveform>(1, 2.501732435037432e-10,
                                              1.125779595766844e-09)),
       std::make_unique<NffftFd>(13, 13, 13, frequencies, theta, phi,
@@ -88,7 +89,8 @@ void testBasic3D() {
   auto incident_wave_power{
       xfdtd::dft(xt::adapt(waveform.getAllValues()), dt, frequencies)};
   for (auto i{0}; i < incident_wave_power.size(); ++i) {
-    ofs << frequencies(i) << " " << incident_wave_power(i) << std::endl;
+    ofs << frequencies(i) << " " << std::norm(incident_wave_power(i))
+        << std::endl;
     std::cout << frequencies(i) << " " << incident_wave_power(i).real()
               << std::endl;
   }

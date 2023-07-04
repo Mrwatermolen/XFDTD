@@ -100,7 +100,7 @@ void NffftFd::initDFT() {
     for (size_t t{0}; t < getTotalTimeSteps(); ++t) {
       _frequecy_transform_j(n, t) =
           dt * std::exp(-1i * 2.0 * constant::PI *
-                        (_frequencies(n) * (t + 0.5) * dt));
+                        (_frequencies(n) * (t - 0.5) * dt));
       _frequecy_transform_m(n, t) =
           dt * std::exp(-1i * 2.0 * constant::PI * (_frequencies(n) * t * dt));
     }
@@ -132,13 +132,13 @@ void NffftFd::updateXN(size_t current_time_step) {
       auto jz{-0.25 * (getHy(li, j + 1, k) + getHy(li, j, k) +
                        getHy(li - 1, j + 1, k) + getHy(li - 1, j, k))};
       for (int n{0}; n < _number_frequecies; ++n) {
-        _my_xn(n, j - lj, k - lk) =
+        _my_xn(n, j - lj, k - lk) +=
             my * _frequecy_transform_m(n, current_time_step);
-        _mz_xn(n, j - lj, k - lk) =
+        _mz_xn(n, j - lj, k - lk) +=
             mz * _frequecy_transform_m(n, current_time_step);
-        _jy_xn(n, j - lj, k - lk) =
+        _jy_xn(n, j - lj, k - lk) +=
             jy * _frequecy_transform_j(n, current_time_step);
-        _jz_xn(n, j - lj, k - lk) =
+        _jz_xn(n, j - lj, k - lk) +=
             jz * _frequecy_transform_j(n, current_time_step);
       }
     }
@@ -161,13 +161,13 @@ void NffftFd::updateXP(size_t current_time_step) {
       auto jz{0.25 * (getHy(ri, j + 1, k) + getHy(ri, j, k) +
                       getHy(ri - 1, j + 1, k) + getHy(ri - 1, j, k))};
       for (int n{0}; n < _number_frequecies; ++n) {
-        _my_xp(n, j - lj, k - lk) =
+        _my_xp(n, j - lj, k - lk) +=
             my * _frequecy_transform_m(n, current_time_step);
-        _mz_xp(n, j - lj, k - lk) =
+        _mz_xp(n, j - lj, k - lk) +=
             mz * _frequecy_transform_m(n, current_time_step);
-        _jy_xp(n, j - lj, k - lk) =
+        _jy_xp(n, j - lj, k - lk) +=
             jy * _frequecy_transform_j(n, current_time_step);
-        _jz_xp(n, j - lj, k - lk) =
+        _jz_xp(n, j - lj, k - lk) +=
             jz * _frequecy_transform_j(n, current_time_step);
       }
     }
@@ -190,13 +190,13 @@ void NffftFd::updateYN(size_t current_time_step) {
       auto jx{-0.25 * (getHz(i, lj, k + 1) + getHz(i, lj, k) +
                        getHz(i, lj - 1, k + 1) + getHz(i, lj - 1, k))};
       for (int n{0}; n < _number_frequecies; ++n) {
-        _mz_yn(n, k - lk, i - li) =
+        _mz_yn(n, k - lk, i - li) +=
             mz * _frequecy_transform_m(n, current_time_step);
-        _mx_yn(n, k - lk, i - li) =
+        _mx_yn(n, k - lk, i - li) +=
             mx * _frequecy_transform_m(n, current_time_step);
-        _jz_yn(n, k - lk, i - li) =
+        _jz_yn(n, k - lk, i - li) +=
             jz * _frequecy_transform_j(n, current_time_step);
-        _jx_yn(n, k - lk, i - li) =
+        _jx_yn(n, k - lk, i - li) +=
             jx * _frequecy_transform_j(n, current_time_step);
       }
     }
@@ -219,13 +219,13 @@ void NffftFd::updateYP(size_t current_time_step) {
       auto jx{0.25 * (getHz(i, rj, k + 1) + getHz(i, rj, k) +
                       getHz(i, rj - 1, k + 1) + getHz(i, rj - 1, k))};
       for (int n{0}; n < _number_frequecies; ++n) {
-        _mz_yp(n, k - lk, i - li) =
+        _mz_yp(n, k - lk, i - li) +=
             mz * _frequecy_transform_m(n, current_time_step);
-        _mx_yp(n, k - lk, i - li) =
+        _mx_yp(n, k - lk, i - li) +=
             mx * _frequecy_transform_m(n, current_time_step);
-        _jz_yp(n, k - lk, i - li) =
+        _jz_yp(n, k - lk, i - li) +=
             jz * _frequecy_transform_j(n, current_time_step);
-        _jx_yp(n, k - lk, i - li) =
+        _jx_yp(n, k - lk, i - li) +=
             jx * _frequecy_transform_j(n, current_time_step);
       }
     }
@@ -248,13 +248,13 @@ void NffftFd::updateZN(size_t current_time_step) {
       auto jy{-0.25 * (getHx(i + 1, j, lk) + getHx(i, j, lk) +
                        getHx(i + 1, j, lk - 1) + getHx(i, j, lk - 1))};
       for (int n{0}; n < _number_frequecies; ++n) {
-        _mx_zn(n, i - li, j - lj) =
+        _mx_zn(n, i - li, j - lj) +=
             mx * _frequecy_transform_m(n, current_time_step);
-        _my_zn(n, i - li, j - lj) =
+        _my_zn(n, i - li, j - lj) +=
             my * _frequecy_transform_m(n, current_time_step);
-        _jx_zn(n, i - li, j - lj) =
+        _jx_zn(n, i - li, j - lj) +=
             jx * _frequecy_transform_j(n, current_time_step);
-        _jy_zn(n, i - li, j - lj) =
+        _jy_zn(n, i - li, j - lj) +=
             jy * _frequecy_transform_j(n, current_time_step);
       }
     }
@@ -277,13 +277,13 @@ void NffftFd::updateZP(size_t current_time_step) {
       auto jy{0.25 * (getHx(i + 1, j, rk) + getHx(i, j, rk) +
                       getHx(i + 1, j, rk - 1) + getHx(i, j, rk - 1))};
       for (int n{0}; n < _number_frequecies; ++n) {
-        _mx_zp(n, i - li, j - lj) =
+        _mx_zp(n, i - li, j - lj) +=
             mx * _frequecy_transform_m(n, current_time_step);
-        _my_zp(n, i - li, j - lj) =
+        _my_zp(n, i - li, j - lj) +=
             my * _frequecy_transform_m(n, current_time_step);
-        _jx_zp(n, i - li, j - lj) =
+        _jx_zp(n, i - li, j - lj) +=
             jx * _frequecy_transform_j(n, current_time_step);
-        _jy_zp(n, i - li, j - lj) =
+        _jy_zp(n, i - li, j - lj) +=
             jy * _frequecy_transform_j(n, current_time_step);
       }
     }
@@ -360,14 +360,14 @@ void NffftFd::calculateFarfieldX(int n, int t, int p, double sin_t_cos_p,
                      (k - 0 + 0.5) * cos_t)};
       auto phase_delay_xp{std::exp(1i * delay_xp)};
 
-      sum_jy +=
-          _jy_xn(n, j, k) * phase_delay_xn + _jy_xp(n, j, k) * phase_delay_xp;
-      sum_jz +=
-          _jz_xn(n, j, k) * phase_delay_xn + _jz_xp(n, j, k) * phase_delay_xp;
-      sum_my +=
-          _my_xn(n, j, k) * phase_delay_xn + _my_xp(n, j, k) * phase_delay_xp;
-      sum_mz +=
-          _mz_xn(n, j, k) * phase_delay_xn + _mz_xp(n, j, k) * phase_delay_xp;
+      sum_jy += _jy_xn(n, j - lj, k - lk) * phase_delay_xn +
+                _jy_xp(n, j - lj, k - lk) * phase_delay_xp;
+      sum_jz += _jz_xn(n, j - lj, k - lk) * phase_delay_xn +
+                _jz_xp(n, j - lj, k - lk) * phase_delay_xp;
+      sum_my += _my_xn(n, j - lj, k - lk) * phase_delay_xn +
+                _my_xp(n, j - lj, k - lk) * phase_delay_xp;
+      sum_mz += _mz_xn(n, j - lj, k - lk) * phase_delay_xn +
+                _mz_xp(n, j - lj, k - lk) * phase_delay_xp;
     }
   }
   _a_y(n, t, p) += sum_jy * dy_dz;
@@ -404,14 +404,14 @@ void NffftFd::calculateFarfieldY(int n, int t, int p, double sin_t_cos_p,
                             (rj - 0) * sin_t_sin_p + (k - 0 + 0.5) * cos_t)};
       auto phase_delay_yp{std::exp(1i * delay_yp)};
 
-      sum_jz +=
-          _jz_yn(n, k, i) * phase_delay_yn + _jz_yp(n, k, i) * phase_delay_yp;
-      sum_jx +=
-          _jx_yn(n, k, i) * phase_delay_yn + _jx_yp(n, k, i) * phase_delay_yp;
-      sum_mz +=
-          _mz_yn(n, k, i) * phase_delay_yn + _mz_yp(n, k, i) * phase_delay_yp;
-      sum_mx +=
-          _mx_yn(n, k, i) * phase_delay_yn + _mx_yp(n, k, i) * phase_delay_yp;
+      sum_jz += _jz_yn(n, k - lk, i - left_i) * phase_delay_yn +
+                _jz_yp(n, k - lk, i - left_i) * phase_delay_yp;
+      sum_jx += _jx_yn(n, k - lk, i - left_i) * phase_delay_yn +
+                _jx_yp(n, k - lk, i - left_i) * phase_delay_yp;
+      sum_mz += _mz_yn(n, k - lk, i - left_i) * phase_delay_yn +
+                _mz_yp(n, k - lk, i - left_i) * phase_delay_yp;
+      sum_mx += _mx_yn(n, k - lk, i - left_i) * phase_delay_yn +
+                _mx_yp(n, k - lk, i - left_i) * phase_delay_yp;
     }
   }
   _a_z(n, t, p) += sum_jz * dz_dx;
@@ -448,14 +448,14 @@ void NffftFd::calculateFarfieldZ(int n, int t, int p, double sin_t_cos_p,
                             (j - 0 + 0.5) * sin_t_sin_p + (rk - 0) * cos_t)};
       auto phase_delay_zp{std::exp(1i * delay_zp)};
 
-      sum_jx +=
-          _jx_zn(n, i, j) * phase_delay_zn + _jx_zp(n, i, j) * phase_delay_zp;
-      sum_jy +=
-          _jy_zn(n, i, j) * phase_delay_zn + _jy_zp(n, i, j) * phase_delay_zp;
-      sum_mx +=
-          _mx_zn(n, i, j) * phase_delay_zn + _mx_zp(n, i, j) * phase_delay_zp;
-      sum_my +=
-          _my_zn(n, i, j) * phase_delay_zn + _my_zp(n, i, j) * phase_delay_zp;
+      sum_jx += _jx_zn(n, i - left_i, j - lj) * phase_delay_zn +
+                _jx_zp(n, i - left_i, j - lj) * phase_delay_zp;
+      sum_jy += _jy_zn(n, i - left_i, j - lj) * phase_delay_zn +
+                _jy_zp(n, i - left_i, j - lj) * phase_delay_zp;
+      sum_mx += _mx_zn(n, i - left_i, j - lj) * phase_delay_zn +
+                _mx_zp(n, i - left_i, j - lj) * phase_delay_zp;
+      sum_my += _my_zn(n, i - left_i, j - lj) * phase_delay_zn +
+                _my_zp(n, i - left_i, j - lj) * phase_delay_zp;
     }
   }
 
