@@ -134,7 +134,6 @@ void Simulation::initUpdateCoefficient() {
 
 void Simulation::initBondaryCondition() {
   for (auto& e : _boundaries) {
-    e->setEMFInstance(getEMFInstance());
     e->init(this);
   }
 }
@@ -169,7 +168,7 @@ void Simulation::caculateDomainSize() {
   }
 
   for (const auto& e : _objects) {
-    auto tmep{std::move(e->getWrappedBox())};
+    auto tmep{e->getWrappedBox()};
     auto box{dynamic_cast<Cube*>(tmep.get())};
     if (box == nullptr) {
       continue;
@@ -289,8 +288,6 @@ void Simulation::gridSimualtionSpace() {
     }
   }
 
-  // 为每个格子设置材料
-  // 允许材料覆盖
   for (auto&& c : _grid_space) {
     c->setMaterialIndex(0);
     int counter = 0;
@@ -348,9 +345,6 @@ void Simulation::caculateMaterialComponent() {
         }
         auto [eps, mu, sigma_e, sigma_m] =
             _objects[material_index]->getElectromagneticProperties();
-        // std::cout << "eps: " << eps << " mu: " << mu << " sigma_e: " <<
-        // sigma_e
-        //           << " sigma_m: " << sigma_m << std::endl;
         if (isLessOrEqual(sigma_e, min_sigma, constant::TOLERABLE_EPSILON)) {
           sigma_e = min_sigma;
         }

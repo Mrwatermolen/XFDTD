@@ -34,6 +34,8 @@ class TimeDomainFieldMonitor : public Monitor {
   void setYeeCells(YeeCellArray&& yee_cells) override;
 
   void update(size_t current_time_step) override;
+
+  // TODO(franzero): there are some errors when PlaneType is YZ.
   void outputData() override;
 
   inline void setPlaneType(PlaneType plane_type) { _plane_type = plane_type; }

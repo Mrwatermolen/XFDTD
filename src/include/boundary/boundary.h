@@ -9,6 +9,8 @@
 
 namespace xfdtd {
 class Simulation;
+
+// remove it later
 enum class Orientation { XN, XP, YN, YP, ZN, ZP };
 class Boundary {
  public:
@@ -19,21 +21,43 @@ class Boundary {
   Boundary &operator=(Boundary &&) noexcept = default;
   virtual ~Boundary() = default;
 
+  /**
+   * @brief Get the thickness of the PML
+   *
+   * @return SpatialIndex
+   */
   virtual SpatialIndex getSize() const = 0;
+
+  /**
+   * @brief Get the normal vector. (perhaps it is not necessary)
+   *
+   * @return Orientation
+   */
   virtual Orientation getOrientation() const = 0;
 
-  inline std::shared_ptr<EMF> getEMFInstance() const {
-    if (_emf == nullptr) {
-      throw std::runtime_error{"EMF is not set"};
-    }
-    return _emf;
-  }
-
-  void setEMFInstance(std::shared_ptr<EMF> emf) { _emf = std::move(emf); }
-
   virtual void init(Simulation *simulation) = 0;
+
+  /**
+   * @brief update the H field in the boundary
+   *
+   */
   virtual void updateH() = 0;
+
+  /**
+   * @brief update the E field in the boundary
+   *
+   */
   virtual void updateE() = 0;
+
+ protected:
+ /**
+  * @brief Initialize the boundary with the EMF instance.
+  * 
+  * @param _emf 
+  */
+  void defaultInit(std::shared_ptr<EMF> _emf);
+
+  inline std::shared_ptr<EMF> getEMFInstance() const { return _emf; }
 
  private:
   std::shared_ptr<EMF> _emf;

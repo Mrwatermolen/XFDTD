@@ -20,14 +20,14 @@ Object::Object(std::string_view name, std::unique_ptr<Shape> shape,
 Object::Object(const Object& other) {
   _name = other._name;
   _shape = other._shape->clone();
-  _material = other._material->clone();
+  _material = std::make_unique<Material>(*other._material);
 }
 
 Object& Object::operator=(const Object& other) {
   if (this != &other) {
     _name = other._name;
     _shape = other._shape->clone();
-    _material = other._material->clone();
+    _material = std::make_unique<Material>(*other._material);
   }
   return *this;
 }
@@ -39,7 +39,7 @@ Object::operator std::string() const {
 }
 
 std::unique_ptr<Object> Object::clone() const {
-  return std::make_unique<Object>(_name, _shape->clone(), _material->clone());
+  return std::make_unique<Object>(_name, _shape->clone(), *_material);
 }
 
 }  // namespace xfdtd

@@ -11,9 +11,31 @@
 #include "util/type_define.h"
 
 namespace xfdtd {
+/**
+ * @brief For each frequency of interest a running discrete Fourier transform
+ * (DFT) of the tangential fields (surface currents) on a closed surface is
+ * updated at each time step. The complex frequency-domain currents obtained
+ * from the DFT are then used to compute the far-zone fields at all observation
+ * angles through the frequency-domain transformation.
+ *
+ */
 class NffftFd : public NFFFT {
  public:
   // define this constructor in header file
+  /**
+   * @brief Construct a new Nffft Fd object
+   *
+   * @param distance_x The distance in x between the output boundary and the
+   * computational domain boundary
+   * @param distance_y The distance in y between the output boundary and the
+   * computational domain boundary
+   * @param distance_z The distance in z between the output boundary and the
+   * computational domain boundary
+   * @param frequencies The array contains the frequencies of interest
+   * @param theta
+   * @param phi
+   * @param output_dir_path
+   */
   NffftFd(SpatialIndex distance_x, SpatialIndex distance_y,
           SpatialIndex distance_z, xt::xarray<double> frequencies,
           xt::xarray<double> theta, xt::xarray<double> phi,
@@ -27,9 +49,9 @@ class NffftFd : public NFFFT {
         _number_theta{_theta.size()},
         _number_phi{_phi.size()} {}
   NffftFd(const NffftFd &) = delete;
-  NffftFd(NffftFd &&) = delete;
+  NffftFd(NffftFd &&) = default;
   NffftFd &operator=(const NffftFd &) = delete;
-  NffftFd &operator=(NffftFd &&) = delete;
+  NffftFd &operator=(NffftFd &&) = default;
   ~NffftFd() override = default;
 
   void init(std::unique_ptr<GridBox> output_box, std::shared_ptr<EMF> emf,

@@ -51,6 +51,11 @@ void TFSF3D::init(double dx, double dy, double dz, double dt,
   const auto diagonal_length{
       sqrt(pow(getNx(), 2) + pow(getNy(), 2) + sqrt(pow(getNz(), 2))) *
       ratio_delta};
+
+  // TODO(franzero): The additional 6-fold increase in diagonal length is due to
+  // the poor absorption performance of the currently used absorption boundary,
+  // using a compromise method that does not allow wave propagation to the
+  // boundary until the end of the calculation
   _auxiliary_array_size =
       static_cast<size_t>(std::ceil(diagonal_length)) * 6 + 4 + 1;
   _e_inc.resize({_auxiliary_array_size});
@@ -151,7 +156,7 @@ void TFSF3D::init(double dx, double dy, double dz, double dt,
 void TFSF3D::updateIncidentField(size_t current_time_step) {
   auto dt{getDt()};
   _e_inc[0] = getIncidentFieldWaveformValueByTime(current_time_step * getDt());
-  // 1D Mur Absorbing Boundary Condition
+  // 1D Mur Absorbing Boundary Condition. TODO(franzero): poor performance
   for (auto i{1}; i < _e_inc.size() - 1; ++i) {
     _e_inc[i] = _ceie * _e_inc[i] + _ceihi * (_h_inc[i] - _h_inc[i - 1]);
   }

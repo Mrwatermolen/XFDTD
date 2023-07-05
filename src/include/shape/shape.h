@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <string>
-#include <string_view>
+
 #include "util/type_define.h"
 
 namespace xfdtd {
@@ -21,8 +21,12 @@ class Shape {
    */
   virtual bool isPointInside(const PointVector& point) const = 0;
 
+  /**
+   * @brief Get the Wrapped Box object. The wrapped box is a cube.
+   *
+   * @return std::unique_ptr<Shape>
+   */
   virtual std::unique_ptr<Shape> getWrappedBox() const = 0;
-  // virtual bool
 };
 
 }  // namespace xfdtd

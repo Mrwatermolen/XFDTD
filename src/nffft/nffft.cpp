@@ -18,10 +18,10 @@
 namespace xfdtd {
 
 NFFFT::NFFFT(SpatialIndex distance_x, SpatialIndex distance_y,
-             SpatialIndex direction_z, std::filesystem::path output_dir_path)
+             SpatialIndex distance_z, std::filesystem::path output_dir_path)
     : _distance_x{distance_x},
       _distance_y{distance_y},
-      _distance_z{direction_z},
+      _distance_z{distance_z},
       _output_dir_path{std::move(output_dir_path)} {}
 
 void NFFFT::defaultInit(std::unique_ptr<GridBox> output_box,

@@ -30,18 +30,18 @@ void PML::init(double dl, double dt, SpatialIndex start_index, int na, int nb,
   _na = na;
   _nb = nb;
   _start_index = start_index;
-  _rho_e = std::move(allocateDoubleArray1D(_thickness));
-  _rho_m = std::move(allocateDoubleArray1D(_thickness));
-  _sigma_e = std::move(allocateDoubleArray1D(_thickness));
-  _sigma_m = std::move(allocateDoubleArray1D(_thickness));
-  _alpha_e = std::move(allocateDoubleArray1D(_thickness));
-  _alpha_m = std::move(allocateDoubleArray1D(_thickness));
-  _kappa_e = std::move(allocateDoubleArray1D(_thickness));
-  _kappa_m = std::move(allocateDoubleArray1D(_thickness));
-  _cpml_a_e = std::move(allocateDoubleArray1D(_thickness));
-  _cpml_b_e = std::move(allocateDoubleArray1D(_thickness));
-  _cpml_a_m = std::move(allocateDoubleArray1D(_thickness));
-  _cpml_b_m = std::move(allocateDoubleArray1D(_thickness));
+  _rho_e = allocateDoubleArray1D(_thickness);
+  _rho_m = allocateDoubleArray1D(_thickness);
+  _sigma_e = allocateDoubleArray1D(_thickness);
+  _sigma_m = allocateDoubleArray1D(_thickness);
+  _alpha_e = allocateDoubleArray1D(_thickness);
+  _alpha_m = allocateDoubleArray1D(_thickness);
+  _kappa_e = allocateDoubleArray1D(_thickness);
+  _kappa_m = allocateDoubleArray1D(_thickness);
+  _cpml_a_e = allocateDoubleArray1D(_thickness);
+  _cpml_b_e = allocateDoubleArray1D(_thickness);
+  _cpml_a_m = allocateDoubleArray1D(_thickness);
+  _cpml_b_m = allocateDoubleArray1D(_thickness);
 
   if (isOrientatingPositive()) {
     initP(ceahb, cebha, chaeb, chbea);
@@ -85,6 +85,8 @@ void PML::init(Simulation* simulation) {
     throw std::runtime_error("simulation is nullptr");
   }
 
+  defaultInit(simulation->getEMFInstance());
+
   auto ori{getOrientation()};
   auto dt{simulation->getDt()};
   auto dx{simulation->getDx()};
@@ -106,9 +108,7 @@ void PML::init(Simulation* simulation) {
   auto& chxey{simulation->getChxey()};
   auto& chyex{simulation->getChyex()};
   if (ori == Orientation::XN) {
-    init(simulation->getDx(), simulation->getDt(), 0, simulation->getNy(),
-         simulation->getNz(), simulation->getCeyhz(), simulation->getCezhy(),
-         simulation->getChyez(), simulation->getChzey());
+    init(dx, dt, 0, ny, nz, ceyhz, cezhy, chyez, chzey);
     return;
   }
   if (ori == Orientation::YN) {
@@ -447,17 +447,6 @@ void PML::updateH(EFTA& ea, EFTA& eb, EFTA& ha, EFTA& hb) {
   }
 
   if (_orientation == Orientation::ZN) {
-    // if ((_na == 1 && _nb == 1)) {
-    //   for (int k = 0; k < _thickness; ++k) {
-    //     _psi_hb(0, 0, k) = _cpml_b_m(k) * _psi_hb(0, 0, k) +
-    //                        _cpml_a_m(k) * (ea(0, 0, _start_index + k + 1) -
-    //                                        ea(0, 0, _start_index + k));
-    //     hb(0, 0, _start_index + k) =
-    //         hb(0, 0, _start_index + k) + _c_psi_hb(0, 0, k) * _psi_hb(0, 0,
-    //         k);
-    //   }
-    //   return;
-    // }
     for (int k = 0; k < _thickness; ++k) {
       for (int i = 0; i < _na; ++i) {
         for (int j = 0; j < _nb + 1; ++j) {
@@ -527,17 +516,6 @@ void PML::updateH(EFTA& ea, EFTA& eb, EFTA& ha, EFTA& hb) {
   }
 
   if (_orientation == Orientation::ZP) {
-    // if ((_na == 1 && _nb == 1)) {
-    //   for (int k = 0; k < _thickness; ++k) {
-    //     _psi_hb(0, 0, k) = _cpml_b_m(k) * _psi_hb(0, 0, k) +
-    //                        _cpml_a_m(k) * (ea(0, 0, _start_index + k + 1) -
-    //                                        ea(0, 0, _start_index + k));
-    //     hb(0, 0, _start_index + k) =
-    //         hb(0, 0, _start_index + k) + _c_psi_hb(0, 0, k) * _psi_hb(0, 0,
-    //         k);
-    //   }
-    //   return;
-    // }
     for (int k = 0; k < _thickness; ++k) {
       for (int i = 0; i < _na; ++i) {
         for (int j = 0; j < _nb + 1; ++j) {
@@ -613,17 +591,6 @@ void PML::updateE(EFTA& ea, EFTA& eb, EFTA& ha, EFTA& hb) {
   }
 
   if (_orientation == Orientation::ZN) {
-    // if (_na == 1 && _nb == 1) {
-    //   for (int k = 0; k < _thickness; ++k) {
-    //     _psi_ea(0, 0, k) = _cpml_b_e(k) * _psi_ea(0, 0, k) +
-    //                        _cpml_a_e(k) * (hb(0, 0, _start_index + k + 1) -
-    //                                        hb(0, 0, _start_index + k));
-    //     ea(0, 0, _start_index + k + 1) = ea(0, 0, _start_index + k + 1) +
-    //                                      _c_psi_ea(0, 0, k) * _psi_ea(0, 0,
-    //                                      k);
-    //   }
-    //   return;
-    // }
     for (int k = 0; k < _thickness; ++k) {
       for (int i = 0; i < _na; ++i) {
         for (int j = 0; j < _nb + 1; ++j) {
@@ -695,18 +662,6 @@ void PML::updateE(EFTA& ea, EFTA& eb, EFTA& ha, EFTA& hb) {
   }
 
   if (_orientation == Orientation::ZP) {
-    // if (_na == 1 && _nb == 1) {
-    //   for (int k = 0; k < _thickness; ++k) {
-    //     _psi_ea(0, 0, k) = _cpml_b_e(k) * _psi_ea(0, 0, k) +
-    //                        _cpml_a_e(k) * (hb(0, 0, _start_index + k) -
-    //                                        hb(0, 0, _start_index + k - 1));
-    //     ea(0, 0, _start_index + k) =
-    //         ea(0, 0, _start_index + k) + _c_psi_ea(0, 0, k) * _psi_ea(0, 0,
-    //         k);
-    //   }
-    //   return;
-    // }
-
     for (int k = 0; k < _thickness; ++k) {
       for (int i = 0; i < _na; ++i) {
         for (int j = 0; j < _nb + 1; ++j) {

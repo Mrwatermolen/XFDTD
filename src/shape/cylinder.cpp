@@ -18,6 +18,7 @@ Cylinder::Cylinder(PointVector center, double raduis, double height)
 std::unique_ptr<Shape> Cylinder::clone() const {
   return std::make_unique<Cylinder>(*this);
 }
+
 bool Cylinder::isPointInside(const PointVector& point) const {
   if (!getWrappedBox()->isPointInside(point)) {
     return false;

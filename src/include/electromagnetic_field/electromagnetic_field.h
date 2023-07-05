@@ -6,6 +6,11 @@
 namespace xfdtd {
 
 enum class EMComponent { EX, EY, EZ, HX, HY, HZ };
+
+/**
+ * @brief A class for storing electromagnetic fields.
+ *
+ */
 class EMF {
  public:
   EMF() = default;

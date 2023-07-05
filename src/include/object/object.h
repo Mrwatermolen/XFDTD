@@ -41,10 +41,6 @@ class Object {
     return _material->getElectromagneticProperties();
   }
 
-  std::unique_ptr<Material> getMaterial() const {
-    return std::make_unique<Material>(*_material);
-  }
-
  private:
   std::string _name;
   std::unique_ptr<Shape> _shape;

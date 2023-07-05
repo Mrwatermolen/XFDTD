@@ -15,10 +15,6 @@ Material::Material(std::string_view name, float eps_r, float mu_r,
       _sigma_m{sigma_m},
       _is_dispersion{is_dispersion} {}
 
-std::unique_ptr<Material> Material::clone() const {
-  return std::make_unique<Material>(*this);
-}
-
 Material::operator std::string() const {
   return std::string("Material: ") + _name + "\n" +
          "eps_r: " + std::to_string(_eps_r) + "\n" +

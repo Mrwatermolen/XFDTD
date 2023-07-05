@@ -18,8 +18,6 @@ class Material {
 
   explicit operator std::string() const;
 
-  std::unique_ptr<Material> clone() const;
-
   inline double getPermittivityE() { return _eps; }
   inline double getPermeabilityM() { return _mu; }
   inline double getElectricalConductivity() { return _sigma_e; }

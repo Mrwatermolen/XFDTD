@@ -3,32 +3,32 @@
 namespace xfdtd {
 void EMF::allocateEx(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
                      double default_value) {
-  _ex = std::move(allocateDoubleArray3D(nx, ny, nz, default_value));
+  _ex = allocateDoubleArray3D(nx, ny, nz, default_value);
 }
 
 void EMF::allocateEy(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
                      double default_value) {
-  _ey = std::move(allocateDoubleArray3D(nx, ny, nz, default_value));
+  _ey = allocateDoubleArray3D(nx, ny, nz, default_value);
 }
 
 void EMF::allocateEz(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
                      double default_value) {
-  _ez = std::move(allocateDoubleArray3D(nx, ny, nz, default_value));
+  _ez = allocateDoubleArray3D(nx, ny, nz, default_value);
 }
 
 void EMF::allocateHx(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
                      double default_value) {
-  _hx = std::move(allocateDoubleArray3D(nx, ny, nz, default_value));
+  _hx = allocateDoubleArray3D(nx, ny, nz, default_value);
 }
 
 void EMF::allocateHy(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
                      double default_value) {
-  _hy = std::move(allocateDoubleArray3D(nx, ny, nz, default_value));
+  _hy = allocateDoubleArray3D(nx, ny, nz, default_value);
 }
 
 void EMF::allocateHz(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
                      double default_value) {
-  _hz = std::move(allocateDoubleArray3D(nx, ny, nz, default_value));
+  _hz = allocateDoubleArray3D(nx, ny, nz, default_value);
 }
 
 EFTA& EMF::getEMComponent(EMComponent c) {

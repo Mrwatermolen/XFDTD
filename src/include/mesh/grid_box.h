@@ -19,6 +19,9 @@ class GridBox {
   inline SpatialIndex getNx() const { return _nx; }
   inline SpatialIndex getNy() const { return _ny; }
   inline SpatialIndex getNz() const { return _nz; }
+  inline SpatialIndex getCenterIndexX() const { return _start_x + _nx / 2; }
+  inline SpatialIndex getCenterIndexY() const { return _start_y + _ny / 2; }
+  inline SpatialIndex getCenterIndexZ() const { return _start_z + _nz / 2; }
 
  private:
   SpatialIndex _start_x;
