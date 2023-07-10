@@ -44,7 +44,7 @@ void TFSF2D::init(double dx, double dy, double dz, double dt,
       sqrt(pow(getNx(), 2) + pow(getNy(), 2) + sqrt(pow(getNz(), 2))) *
       ratio_delta};
   _auxiliary_array_size =
-      static_cast<size_t>(std::ceil(diagonal_length)) * 4 + 4 + 1;
+      static_cast<size_t>(std::ceil(diagonal_length)) + 4 + 1;
   _e_inc.resize({_auxiliary_array_size});
   _h_inc.resize({_auxiliary_array_size - 1});
 
@@ -119,14 +119,23 @@ void TFSF2D::init(double dx, double dy, double dz, double dt,
 void TFSF2D::updateIncidentField(size_t current_time_step) {
   auto dt{getDt()};
   _e_inc[0] = getIncidentFieldWaveformValueByTime(current_time_step * getDt());
-  // 1D Mur Absorbing Boundary Condition
+  // 2D Mur Absorbing Boundary Condition
+  auto x{_e_inc[_e_inc.size() - 2]};
+  auto y{_e_inc[_e_inc.size() - 1]};
   for (auto i{1}; i < _e_inc.size() - 1; ++i) {
     _e_inc[i] = _ceie * _e_inc[i] + _ceihi * (_h_inc[i] - _h_inc[i - 1]);
   }
+  auto coff_1{(constant::C_0 * dt - _scaled_dl) /
+              (constant::C_0 * dt + _scaled_dl)};
+  auto coff_2{2 * _scaled_dl / (constant::C_0 * dt + _scaled_dl)};
   _e_inc[_e_inc.size() - 1] =
-      _e_inc[_e_inc.size() - 1] -
-      (constant::C_0 * dt / _scaled_dl) *
-          (_e_inc[_e_inc.size() - 1] - _e_inc[_e_inc.size() - 2]);
+      -_a + coff_1 * (_e_inc[_e_inc.size() - 2] + _b) + coff_2 * (x + y);
+  _a = x;
+  _b = y;
+  // _e_inc[_e_inc.size() - 1] =
+  //     _e_inc[_e_inc.size() - 1] -
+  //     (constant::C_0 * dt / _scaled_dl) *
+  //         (_e_inc[_e_inc.size() - 1] - _e_inc[_e_inc.size() - 2]);
 
   for (auto i{0}; i < _h_inc.size(); ++i) {
     _h_inc[i] = _chih * _h_inc[i] + _chiei * (_e_inc[i + 1] - _e_inc[i]);

@@ -45,6 +45,8 @@ class TFSF2D : public TFSF {
   xt::xarray<double> _projection_x_half;
   xt::xarray<double> _projection_y_half;
 
+  double _a{0}, _b{0};
+
   double getIncidentHx(int i, int j, int k);
   double getIncidentHy(int i, int j, int k);
   double getIncidentEz(int i, int j, int k);
