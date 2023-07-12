@@ -320,6 +320,8 @@ void NffftFd::calculateFarfield() {
     }
   }
   using namespace std::complex_literals;
+  auto coff{pow(_wave_number, 2) /
+            (32 * constant::PI * constant::PI * constant::ETA_0)};
   _e_theta = (-1i * _wave_number) * (constant::ETA_0 * _a_theta + _f_phi) /
              (4 * constant::PI);
   _e_phi = (1i * _wave_number) * (-constant::ETA_0 * _a_phi + _f_theta) /
@@ -328,6 +330,8 @@ void NffftFd::calculateFarfield() {
              (4 * constant::PI);
   _h_phi = (-1i * _wave_number) * (_a_theta + _f_phi / constant::ETA_0) /
            (4 * constant::PI);
+  _power_theta = coff * pow(abs(constant::ETA_0 * _a_theta + _f_phi), 2);
+  _power_phi = coff * pow(abs(-constant::ETA_0 * _a_phi + _f_theta), 2);
 }
 
 void NffftFd::calculateFarfieldX(int n, int t, int p, double sin_t_cos_p,
@@ -516,8 +520,13 @@ void NffftFd::outputData() {
     std::ofstream e_phi_data{path / ("e_phi_.dat")};
     std::ofstream h_theta_data{path / ("h_theta.dat")};
     std::ofstream h_phi_data{path / ("h_phi_.dat")};
+    std::ofstream n_theta_data{path / ("n_theta.dat")};
+    std::ofstream n_phi_data{path / ("n_phi_.dat")};
+    std::ofstream l_theta_data{path / ("l_theta.dat")};
+    std::ofstream l_phi_data{path / ("l_phi.dat")};
     std::ofstream power_theta_data{path / ("power_theta.dat")};
-    std::ofstream power_phi_data{path / ("power_phi_.dat")};
+    std::ofstream power_phi_data{path / ("power_phi.dat")};
+    std::ofstream test_data{path / ("test.dat")};
 
     for (int t{0}; t < _number_theta; ++t) {
       for (int p{0}; p < _number_phi; ++p) {
@@ -525,18 +534,24 @@ void NffftFd::outputData() {
         e_phi_data << _e_phi(n, t, p) << "\t";
         h_theta_data << _h_theta(n, t, p) << "\t";
         h_phi_data << _h_phi(n, t, p) << "\t";
+        n_theta_data << _a_theta(n, t, p) << "\t";
+        n_phi_data << _a_phi(n, t, p) << "\t";
+        l_theta_data << _f_theta(n, t, p) << "\t";
+        l_phi_data << _f_phi(n, t, p) << "\t";
+        test_data << abs(constant::ETA_0 * _a_theta(n, t, p) + _f_phi(n, t, p))
+                  << "\t";
 
-        power_theta_data
-            << 0.5 * (_e_theta(n, t, p) * std::conj(_h_phi(n, t, p))).real()
-            << "\t";
-        power_phi_data
-            << 0.5 * (_e_phi(n, t, p) * std::conj(_h_theta(n, t, p))).real()
-            << "\t";
+        power_theta_data << _power_theta(n, t, p) << "\t";
+        power_phi_data << _power_phi(n, t, p) << "\t";
       }
       e_theta_data << std::endl;
       e_phi_data << std::endl;
       h_theta_data << std::endl;
       h_phi_data << std::endl;
+      n_theta_data << std::endl;
+      n_phi_data << std::endl;
+      l_theta_data << std::endl;
+      l_phi_data << std::endl;
       power_theta_data << std::endl;
       power_phi_data << std::endl;
     }

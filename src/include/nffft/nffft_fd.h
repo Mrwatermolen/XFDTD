@@ -66,6 +66,7 @@ class NffftFd : public NFFFT {
 
   EFFA _e_theta, _e_phi, _h_theta, _h_phi;
   EFFA _f_theta, _f_phi, _a_theta, _a_phi;
+  EFTA _power_theta, _power_phi;
 
   EFFA _a_x, _a_y, _a_z;
   EFFA _f_x, _f_y, _f_z;

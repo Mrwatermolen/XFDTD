@@ -170,8 +170,8 @@ void Simulation::run(size_t time_steps) {
     updateE();
     updateTFSFE();
     updateBoundaryE();
-    updateH();
     updateTFSFIncidentField();
+    updateH();
     updateTFSFH();
     updateBoundaryH();
     updateNFFFT();

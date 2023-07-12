@@ -289,6 +289,7 @@ void Simulation::gridSimualtionSpace() {
   }
 
   for (auto&& c : _grid_space) {
+    // assume that the material is air.
     c->setMaterialIndex(0);
     int counter = 0;
 

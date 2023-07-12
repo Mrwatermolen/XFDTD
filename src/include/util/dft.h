@@ -13,8 +13,6 @@ inline xt::xarray<std::complex<double>> dft(
     const xt::xarray<double> &frequencies) {
   using namespace std::complex_literals;
   xt::xarray<std::complex<double>> res;
-  std::cout << "time_domain_data.shape(): " << time_domain_data.size()
-            << std::endl;
   res.resize({frequencies.size()});
   for (size_t i{0}; i < frequencies.size(); ++i) {
     std::complex<double> sum{0.0, 0.0};

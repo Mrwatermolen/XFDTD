@@ -14,6 +14,7 @@
 #include "monitor/movie_monitor.h"
 #include "nffft/nffft.h"
 #include "nffft/nffft_2d_test.h"
+#include "nffft/nffft_broadband.h"
 #include "object/object.h"
 #include "shape/cylinder.h"
 #include "simulation/simulation.h"
@@ -90,9 +91,9 @@ void testBasic2D() {
           50, 50, xfdtd::constant::PI * 0.25, 1,
           std::make_unique<xfdtd::CosineModulatedGaussianWaveform>(
               std::move(cosine_modulated_gaussian_waveform))),
-      std::make_unique<xfdtd::NFFFT2DTEST>(40, 40, 0, xfdtd::constant::PI / 2,
-                                           xfdtd::constant::PI * 1.25,
-                                           "visualizing_data/"),
+      std::make_unique<xfdtd::NffftBroadBand>(
+          40, 40, 0, xfdtd::constant::PI / 2, xfdtd::constant::PI * 1.25,
+          "visualizing_data/"),
       boundaries, monitors, 0.8}};
   auto t0{std::chrono::high_resolution_clock::now()};
   simulation.run(total_time_steps);
