@@ -21,7 +21,7 @@ void CosineModulatedGaussianWaveform::init(
 
 double CosineModulatedGaussianWaveform::getValueByTime(double time) const {
   return _amplitude *
-         std::cos(2 * constant::PI * _modulation_frequency * time) *
+         std::cos(2 * constant::PI * _modulation_frequency * (time - _t_0)) *
          std::exp(-4 * constant::PI * pow((time - _t_0) / _tau, 2));
 }
 }  // namespace xfdtd

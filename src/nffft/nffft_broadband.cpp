@@ -358,8 +358,9 @@ void NffftBroadBand::calculateLNXYZ() {
     auto i_range{xt::arange<double>(li, ri, 1)};
     auto j_range{xt::arange<double>(lj, rj, 1)};
     auto k_range{xt::arange<double>(lk, rk, 1)};
-    auto [x, y, z]{xt::meshgrid(i_range + offset_x, j_range + offset_y,
-                                k_range + offset_z)};
+    auto [x, y, z]{xt::meshgrid(i_range + offset_x - getCenterIndexX(),
+                                j_range + offset_y - getCenterIndexY(),
+                                k_range + offset_z - getCenterIndexZ())};
     auto x_r{x * _farfield_vector(0) * dx};
     auto y_r{y * _farfield_vector(1) * dy};
     auto z_r{z * _farfield_vector(2) * dz};
@@ -422,10 +423,9 @@ void NffftBroadBand::calculateAuxiliary(EFFA &n_a, EFFA &n_b, EFFA &l_a,
 void NffftBroadBand::outputFarFieldParamertes() {
   std::ofstream far_field_paramerter_writer{getOutputDirPath() /
                                             "far_field_parameter.dat"};
-  far_field_paramerter_writer << "Frequencies:" << std::endl;
-  for (const auto &e : _frequencies) {
-    far_field_paramerter_writer << e << "\t";
-  }
+  far_field_paramerter_writer << "Fs:\t" << 1 / getDt() << std::endl;
+  far_field_paramerter_writer << "number of samples:\t" << _number_samples
+                              << std::endl;
   far_field_paramerter_writer << std::endl;
   far_field_paramerter_writer << "Theta:\n" << _theta << std::endl;
   far_field_paramerter_writer << "Phi:\n" << _phi << std::endl;
