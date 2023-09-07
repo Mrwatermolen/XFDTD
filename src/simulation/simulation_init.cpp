@@ -43,6 +43,17 @@ void Simulation::initMaterialGrid() {
   gridSimualtionSpace();
   allocateArray();
   caculateMaterialComponent();
+  if (_is_exist_dispersive_material) {
+    _emf->allocateExPrev(_nx, _ny + 1, _nz + 1);
+    _emf->allocateEyPrev(_nx + 1, _ny, _nz + 1);
+    _emf->allocateEzPrev(_nx + 1, _ny + 1, _nz);
+    _emf->allocateJx(_nx, _ny + 1, _nz + 1);
+    _emf->allocateJy(_nx + 1, _ny, _nz + 1);
+    _emf->allocateJz(_nx + 1, _ny + 1, _nz);
+    _emf->allocateJxPrev(_nx, _ny + 1, _nz + 1);
+    _emf->allocateJyPrev(_nx + 1, _ny, _nz + 1);
+    _emf->allocateJzPrev(_nx + 1, _ny + 1, _nz);
+  }
 }
 
 void Simulation::initSource() {
@@ -255,6 +266,7 @@ void Simulation::caculateDomainSize() {
 
 void Simulation::gridSimualtionSpace() {
   auto total_grid{_nx * _ny * _nz};
+  _grid_space.clear();
 
   auto min_x{_simulation_box->getXmin()};
   auto min_y{_simulation_box->getYmin()};
@@ -291,6 +303,9 @@ void Simulation::gridSimualtionSpace() {
   for (auto&& c : _grid_space) {
     // assume that the material is air.
     c->setMaterialIndex(0);
+    if (c->getMaterialIndex() != 0) {
+      std::cout << "no zero. " << std::endl;
+    }
     int counter = 0;
 
     for (const auto& e : _objects) {
@@ -298,7 +313,19 @@ void Simulation::gridSimualtionSpace() {
         ++counter;
         continue;
       }
+      if (c->getMaterialIndex() != 0) {
+        std::cout << "no zero. object counter:" << counter << std::endl;
+      }
       c->setMaterialIndex(counter);
+      if (_objects.size() <= c->getMaterialIndex()) {
+        c->setMaterialIndex(counter);
+        std::cout << "current counter:" << counter << std::endl;
+        std::cerr << "Error: material index is exceeded. index:"
+                  << c->getMaterialIndex() << std::endl;
+        c->setMaterialIndex(counter);
+        std::cerr << "print index:" << c->getMaterialIndex() << std::endl;
+        exit(-1);
+      }
       ++counter;
     }
   }
@@ -333,6 +360,18 @@ void Simulation::allocateArray() {
 }
 
 void Simulation::caculateMaterialComponent() {
+  _is_exist_dispersive_material_array.resize({_objects.size()});
+  _is_exist_dispersive_material_array.fill(false);
+  int counter_tmp{0};
+  for (auto&& e : _objects) {
+    e->init(_dt, _dx, getEMFInstance());
+    if (e->isDispersion()) {
+      _is_exist_dispersive_material = true;
+      _is_exist_dispersive_material_array(counter_tmp) = true;
+    }
+    ++counter_tmp;
+  }
+
   auto min_sigma{std::numeric_limits<double>::epsilon() / 1000.0};
 
   for (SpatialIndex i{0}; i < _nx; ++i) {
@@ -342,6 +381,14 @@ void Simulation::caculateMaterialComponent() {
             _grid_space[i * _ny * _nz + j * _nz + k]->getMaterialIndex()};
         if (material_index == -1) {
           std::cerr << "Error: material index is -1" << std::endl;
+          exit(-1);
+        }
+        if (_objects.size() <= material_index) {
+          std::cerr << "Error: material index is exceeded. index:"
+                    << material_index << std::endl;
+          _grid_space[i * _ny * _nz + j * _nz + k]->getMaterialIndex();
+          auto material_index1{
+              _grid_space[i * _ny * _nz + j * _nz + k]->getMaterialIndex()};
           exit(-1);
         }
         auto [eps, mu, sigma_e, sigma_m] =

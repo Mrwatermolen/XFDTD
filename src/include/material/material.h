@@ -1,9 +1,13 @@
 #ifndef _MATERIAL_H_
 #define _MATERIAL_H_
 
+#include <memory>
 #include <string>
 #include <string_view>
 #include <tuple>
+
+#include "electromagnetic_field/electromagnetic_field.h"
+#include "util/type_define.h"
 
 namespace xfdtd {
 class Material {
@@ -17,6 +21,11 @@ class Material {
   ~Material() = default;
 
   explicit operator std::string() const;
+
+  virtual void init(double dt, double dl, const std::shared_ptr<EMF>& emf){};
+  virtual void updateEx(int i, int j, int k){};
+  virtual void updateEy(int i, int j, int k){};
+  virtual void updateEz(int i, int j, int k){};
 
   inline double getPermittivityE() { return _eps; }
   inline double getPermeabilityM() { return _mu; }
@@ -33,6 +42,8 @@ class Material {
     return {getPermittivityE(), getPermeabilityM(), getElectricalConductivity(),
             getMagneticConductivity()};
   }
+
+  inline bool isDispersion() { return _is_dispersion; }
 
  private:
   std::string _name;

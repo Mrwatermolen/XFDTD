@@ -98,9 +98,10 @@ void NffftFd::initDFT() {
   const auto dt{getDt()};
   for (int n{0}; n < _number_frequecies; ++n) {
     for (size_t t{0}; t < getTotalTimeSteps(); ++t) {
+      // TODO(franzero): add or subtract 0.5?
       _frequecy_transform_j(n, t) =
           dt * std::exp(-1i * 2.0 * constant::PI *
-                        (_frequencies(n) * (t - 0.5) * dt));
+                        (_frequencies(n) * (t + 0.5) * dt));
       _frequecy_transform_m(n, t) =
           dt * std::exp(-1i * 2.0 * constant::PI * (_frequencies(n) * t * dt));
     }

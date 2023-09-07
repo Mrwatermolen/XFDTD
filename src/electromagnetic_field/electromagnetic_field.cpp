@@ -31,6 +31,51 @@ void EMF::allocateHz(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
   _hz = allocateDoubleArray3D(nx, ny, nz, default_value);
 }
 
+void EMF::allocateExPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                         double default_value) {
+  _ex_prev = allocateDoubleArray3D(nx, ny, nz, default_value);
+}
+
+void EMF::allocateEyPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                         double default_value) {
+  _ey_prev = allocateDoubleArray3D(nx, ny, nz, default_value);
+}
+
+void EMF::allocateEzPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                         double default_value) {
+  _ez_prev = allocateDoubleArray3D(nx, ny, nz, default_value);
+}
+
+void EMF::allocateJx(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                     double default_value) {
+  _jx = allocateDoubleArray3D(nx, ny, nz, default_value);
+}
+
+void EMF::allocateJy(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                     double default_value) {
+  _jy = allocateDoubleArray3D(nx, ny, nz, default_value);
+}
+
+void EMF::allocateJz(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                     double default_value) {
+  _jz = allocateDoubleArray3D(nx, ny, nz, default_value);
+}
+
+void EMF::allocateJxPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                         double default_value) {
+  _jx_prev = allocateDoubleArray3D(nx, ny, nz, default_value);
+}
+
+void EMF::allocateJyPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                         double default_value) {
+  _jy_prev = allocateDoubleArray3D(nx, ny, nz, default_value);
+}
+
+void EMF::allocateJzPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                         double default_value) {
+  _jz_prev = allocateDoubleArray3D(nx, ny, nz, default_value);
+}
+
 EFTA& EMF::getEMComponent(EMComponent c) {
   switch (c) {
     case EMComponent::EX:

@@ -5,6 +5,7 @@
 #include <string_view>
 #include <tuple>
 
+#include "material/dispersive_material.h"
 #include "material/material.h"
 #include "shape/shape.h"
 
@@ -32,6 +33,8 @@ class Object {
     return _shape->getWrappedBox();
   }
 
+  inline bool isDispersion() { return _material->isDispersion(); }
+
   /**
    * @brief get the electromagnetic properties of the Material
    * @return a tuple of (epsilon, mu, sigma, conductivity)
@@ -40,6 +43,17 @@ class Object {
   getElectromagneticProperties() {
     return _material->getElectromagneticProperties();
   }
+
+  void init(double dt, double dl, const std::shared_ptr<EMF>& emf) {
+    if (isDispersion()) {
+      auto m{_material.get()};
+      m->init(dt, dl, emf);
+    }
+  }
+
+  void updateEx(int i, int j, int k) { _material->updateEx(i, j, k); }
+  void updateEy(int i, int j, int k) { _material->updateEy(i, j, k); }
+  void updateEz(int i, int j, int k) { _material->updateEz(i, j, k); }
 
  private:
   std::string _name;

@@ -20,6 +20,15 @@ class TFSF2D;
 class Simulation {
  public:
   inline static constexpr float DEFAULT_CFL{0.99};
+  Simulation() : _emf{std::make_shared<EMF>()} {}
+
+  explicit Simulation(double cell_size, float cfl = DEFAULT_CFL);
+  Simulation(double cell_size, ObjectArray objects, BoundaryArray boundaries,
+             std::unique_ptr<TFSF> tfsf, float cfl = DEFAULT_CFL);
+  Simulation(double cell_size, ObjectArray objects, BoundaryArray boundaries,
+             std::unique_ptr<TFSF> tfsf, std::unique_ptr<NFFFT> nffft,
+             float cfl = DEFAULT_CFL);
+
   Simulation(double cell_size, ObjectArray objects, SourceArray sources = {},
              std::unique_ptr<TFSF> tfsf = {}, std::unique_ptr<NFFFT> nffft = {},
              BoundaryArray boundaries = {}, MonitorArray _monitors = {},
@@ -27,6 +36,12 @@ class Simulation {
   Simulation(double cell_size, ObjectArray objects, SourceArray sources = {},
              BoundaryArray boundaries = {}, MonitorArray _monitors = {},
              float cfl = DEFAULT_CFL);
+
+  void setCellSize(double cell_size);
+  void addObject(std::unique_ptr<Object> object);
+  void addTFSFSource(std::unique_ptr<TFSF> tfsf);
+  void addNFFFT(std::unique_ptr<NFFFT> nffft);
+  void addMonitor(std::unique_ptr<Monitor> monitor);
 
   void checkRun(size_t time_steps);
   void run(size_t time_steps);
@@ -152,6 +167,18 @@ class Simulation {
   EFTA _sigma_m_y;
   EFTA _sigma_m_z;
 
+  bool _is_exist_dispersive_material{false};
+  xt::xarray<bool> _is_exist_dispersive_material_array;
+  EFTA _e_prev_x;
+  EFTA _e_prev_y;
+  EFTA _e_prev_z;
+  EFTA _j_x;
+  EFTA _j_y;
+  EFTA _j_z;
+  EFTA _j_prev_x;
+  EFTA _j_prev_y;
+  EFTA _j_prev_z;
+
   void init();
   void initMaterialGrid();
   void initSource();
@@ -176,6 +203,7 @@ class Simulation {
   void updateBoundaryE();
   void updateNFFFT();
   void updateMonitor();
+  void updateEWithDispersiveMaterial();
 
   void handleHardPointSource(Source* source);
   void handlePMLBoundaryH(std::shared_ptr<Boundary>& boundary);

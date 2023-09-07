@@ -1,5 +1,6 @@
 #include "waveform/gaussian_waveform.h"
 
+#include <cmath>
 namespace xfdtd {
 
 GaussianWaveform::GaussianWaveform(double amplitude, double tau, double t_0)

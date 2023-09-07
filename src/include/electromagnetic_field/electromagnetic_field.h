@@ -20,6 +20,15 @@ class EMF {
   inline EFTA& getHx() { return _hx; }
   inline EFTA& getHy() { return _hy; }
   inline EFTA& getHz() { return _hz; }
+  inline EFTA& getExPrev() { return _ex_prev; }
+  inline EFTA& getEyPrev() { return _ey_prev; }
+  inline EFTA& getEzPrev() { return _ez_prev; }
+  inline EFTA& getJx() { return _jx; }
+  inline EFTA& getJy() { return _jy; }
+  inline EFTA& getJz() { return _jz; }
+  inline EFTA& getJxPrev() { return _jx_prev; }
+  inline EFTA& getJyPrev() { return _jy_prev; }
+  inline EFTA& getJzPrev() { return _jz_prev; }
   inline double& getEx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
     return _ex(i, j, k);
   }
@@ -38,6 +47,33 @@ class EMF {
   inline double& getHz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
     return _hz(i, j, k);
   }
+  inline double& getExPrev(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _ex_prev(i, j, k);
+  }
+  inline double& getEyPrev(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _ey_prev(i, j, k);
+  }
+  inline double& getEzPrev(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _ez_prev(i, j, k);
+  }
+  inline double& getJx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _jx(i, j, k);
+  }
+  inline double& getJy(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _jy(i, j, k);
+  }
+  inline double& getJz(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _jz(i, j, k);
+  }
+  inline double& getJxPrev(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _jx_prev(i, j, k);
+  }
+  inline double& getJyPrev(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _jy_prev(i, j, k);
+  }
+  inline double& getJzPrev(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
+    return _jz_prev(i, j, k);
+  }
   inline double getEx(SpatialIndex i, SpatialIndex j, SpatialIndex k) const {
     return _ex(i, j, k);
   }
@@ -55,6 +91,39 @@ class EMF {
   }
   inline double getHz(SpatialIndex i, SpatialIndex j, SpatialIndex k) const {
     return _hz(i, j, k);
+  }
+  inline double getExPrev(SpatialIndex i, SpatialIndex j,
+                          SpatialIndex k) const {
+    return _ex_prev(i, j, k);
+  }
+  inline double getEyPrev(SpatialIndex i, SpatialIndex j,
+                          SpatialIndex k) const {
+    return _ey_prev(i, j, k);
+  }
+  inline double getEzPrev(SpatialIndex i, SpatialIndex j,
+                          SpatialIndex k) const {
+    return _ez_prev(i, j, k);
+  }
+  inline double getJx(SpatialIndex i, SpatialIndex j, SpatialIndex k) const {
+    return _jx(i, j, k);
+  }
+  inline double getJy(SpatialIndex i, SpatialIndex j, SpatialIndex k) const {
+    return _jy(i, j, k);
+  }
+  inline double getJz(SpatialIndex i, SpatialIndex j, SpatialIndex k) const {
+    return _jz(i, j, k);
+  }
+  inline double getJxPrev(SpatialIndex i, SpatialIndex j,
+                          SpatialIndex k) const {
+    return _jx_prev(i, j, k);
+  }
+  inline double getJyPrev(SpatialIndex i, SpatialIndex j,
+                          SpatialIndex k) const {
+    return _jy_prev(i, j, k);
+  }
+  inline double getJzPrev(SpatialIndex i, SpatialIndex j,
+                          SpatialIndex k) const {
+    return _jz_prev(i, j, k);
   }
 
   EFTA& getEMComponent(EMComponent c);
@@ -78,6 +147,27 @@ class EMF {
   void allocateHz(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
                   double default_value = 0.0);
 
+  void allocateExPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                      double default_value = 0.0);
+  void allocateEyPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                      double default_value = 0.0);
+  void allocateEzPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                      double default_value = 0.0);
+
+  void allocateJx(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                  double default_value = 0.0);
+  void allocateJy(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                  double default_value = 0.0);
+  void allocateJz(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                  double default_value = 0.0);
+
+  void allocateJxPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                      double default_value = 0.0);
+  void allocateJyPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                      double default_value = 0.0);
+  void allocateJzPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
+                      double default_value = 0.0);
+
  private:
   EFTA _ex;
   EFTA _ey;
@@ -85,6 +175,12 @@ class EMF {
   EFTA _hx;
   EFTA _hy;
   EFTA _hz;
+  // polarization current
+  EFTA _jx, _jy, _jz;
+  // polarization current arrays at previous time step
+  EFTA _jx_prev, _jy_prev, _jz_prev;
+  // E-field (at previous time step) for Lorentz only.
+  EFTA _ex_prev, _ey_prev, _ez_prev;
 };
 }  // namespace xfdtd
 
