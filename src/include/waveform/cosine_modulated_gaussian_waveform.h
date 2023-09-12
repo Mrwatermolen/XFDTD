@@ -1,7 +1,5 @@
-#ifndef __COSINE_MODULATED_GAUSSIAN_WAVEFORM_H__
-#define __COSINE_MODULATED_GAUSSIAN_WAVEFORM_H__
-
-#include <vector>
+#ifndef _XFDTD_COSINE_MODULATED_GAUSSIAN_WAVEFORM_H_
+#define _XFDTD_COSINE_MODULATED_GAUSSIAN_WAVEFORM_H_
 
 #include "waveform/waveform.h"
 namespace xfdtd {
@@ -11,7 +9,6 @@ class CosineModulatedGaussianWaveform : public Waveform {
                                   double modulation_frequency);
   ~CosineModulatedGaussianWaveform() override = default;
   double getValueByTime(double time) const override;
-  void init(const std::vector<double>& time_array) override;
 
  private:
   double _amplitude;
@@ -21,4 +18,4 @@ class CosineModulatedGaussianWaveform : public Waveform {
 };
 }  // namespace xfdtd
 
-#endif  // __COSINE_MODULATED_GAUSSIAN_WAVEFORM_H__
+#endif  // _XFDTD_COSINE_MODULATED_GAUSSIAN_WAVEFORM_H_

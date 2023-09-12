@@ -1,12 +1,10 @@
 #include <chrono>
 #include <cmath>
 #include <complex>
-#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <memory>
 #include <utility>
-#include <xtensor/xadapt.hpp>
 
 #include "boundary/perfect_match_layer.h"
 #include "material/dispersive_material.h"
@@ -90,7 +88,7 @@ void testPECSphereMonostaticRCS() {
 
   constexpr size_t total_time_steps{1200};
   Simulation simulation(dl, objects, boundaries, std::move(tfsf),
-                        std::move(mono_rcs),  0.98);
+                        std::move(mono_rcs), 0.98);
   simulation.run(total_time_steps);
 }
 
@@ -152,11 +150,18 @@ void testPECSphereBistaticRCS() {
   simulation.run(total_time_steps);
   auto waveform{xfdtd::CosineModulatedGaussianWaveform{1, tau, t_0, 1e9}};
   auto dt{simulation.getDt()};
-  waveform.init(simulation.getTimeArray());
+  xt::xarray<double> a;
+  a.resize({total_time_steps});
+  for (auto i{0}; i < total_time_steps; ++i) {
+    a(i) = waveform.getValueByTime((i + 0.5) * dt);
+  }
+  xt::xarray<double> values{xt::make_lambda_xfunction(
+      [&waveform](double t) { return waveform.getValueByTime(t); },
+      xt::linspace<double>(0.5 * dt, (total_time_steps - 0.5) * dt,
+                           total_time_steps))};
   std::ofstream ofs{"./visualizing_data/bistatic_rcs/incident_power.dat"};
   std::cout << simulation.getDt();
-  auto incident_wave_power{
-      xfdtd::dft(xt::adapt(waveform.getAllValues()), dt, frequencies)};
+  auto incident_wave_power{xfdtd::dft(values, dt, frequencies)};
   for (auto i{0}; i < incident_wave_power.size(); ++i) {
     ofs << std::norm(incident_wave_power(i)) << "\t";
   }
@@ -326,7 +331,7 @@ void testDebySphereMonostaticRCS() {
 
 int main() {
   auto t0{std::chrono::high_resolution_clock::now()};
-  testLorentzSphereMonostaticRCS();
+  testPECSphereBistaticRCS();
   auto t1{std::chrono::high_resolution_clock::now()};
   std::cout
       << "Simulation takes "

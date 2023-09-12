@@ -1,5 +1,5 @@
-#ifndef __SINUSOIDAL_WAVEFORM_H__
-#define __SINUSOIDAL_WAVEFORM_H__
+#ifndef _XFDTD_SINUSOIDAL_WAVEFORM_H_
+#define _XFDTD_SINUSOIDAL_WAVEFORM_H_
 
 #include "waveform/waveform.h"
 namespace xfdtd {
@@ -13,7 +13,6 @@ class SinusoidalWaveform : public Waveform {
   ~SinusoidalWaveform() override = default;
 
   double getValueByTime(double time) const override;
-  void init(const std::vector<double>& time_array) override;
 
  private:
   double _amplitude;
@@ -22,4 +21,4 @@ class SinusoidalWaveform : public Waveform {
 };
 }  // namespace xfdtd
 
-#endif
+#endif // _XFDTD_SINUSOIDAL_WAVEFORM_H_

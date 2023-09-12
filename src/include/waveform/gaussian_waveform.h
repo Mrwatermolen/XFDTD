@@ -1,3 +1,6 @@
+#ifndef _XFDTD_GAUSSIAN_WAVEFORM_H_
+#define _XFDTD_GAUSSIAN_WAVEFORM_H_
+
 #include "waveform/waveform.h"
 
 namespace xfdtd {
@@ -11,7 +14,6 @@ class GaussianWaveform : public Waveform {
   ~GaussianWaveform() override = default;
 
   double getValueByTime(double time) const override;
-  void init(const std::vector<double>& time_array) override;
 
  private:
   double _amplitude;
@@ -19,3 +21,5 @@ class GaussianWaveform : public Waveform {
   double _t_0;
 };
 }  // namespace xfdtd
+
+#endif  // _XFDTD_GAUSSIAN_WAVEFORM_H_

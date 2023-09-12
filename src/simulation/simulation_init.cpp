@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <xtensor/xadapt.hpp>
 
-
 #include "boundary/boundary.h"
 #include "mesh/grid_box.h"
 #include "monitor/field_monitor.h"
@@ -21,10 +20,6 @@ void Simulation::init() {
         (constant::C_0 *
          std::sqrt(1.0 / (_dx * _dx) + 1.0 / (_dy * _dy) + 1.0 / (_dz * _dz)));
   _current_time_step = 0;
-
-  for (size_t i = 0; i < _time_steps; ++i) {
-    _time_array.emplace_back((i + 0.5) * _dt);
-  }
 
   initMaterialGrid();
   initTFSF();
@@ -273,7 +268,6 @@ void Simulation::gridSimulationSpace() {
       }
     }
   }
-
 }
 
 void Simulation::allocateArray() {
@@ -285,53 +279,53 @@ void Simulation::allocateArray() {
   allocateHy(_nx, _ny + 1, _nz);
   allocateHz(_nx, _ny, _nz + 1);
 
-  _eps_x = allocateDoubleArray3D(_nx, _ny, _nz, constant::EPSILON_0);
-  _sigma_e_x = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
+  auto eps_x = allocateDoubleArray3D(_nx, _ny, _nz, constant::EPSILON_0);
+  auto sigma_e_x = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-  _mu_x = allocateDoubleArray3D(_nx, _ny, _nz, constant::MU_0);
-  _sigma_m_x = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
+  auto mu_x = allocateDoubleArray3D(_nx, _ny, _nz, constant::MU_0);
+  auto sigma_m_x = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-  _eps_y = allocateDoubleArray3D(_nx, _ny, _nz, constant::EPSILON_0);
-  _sigma_e_y = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
+  auto eps_y = allocateDoubleArray3D(_nx, _ny, _nz, constant::EPSILON_0);
+  auto sigma_e_y = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-  _mu_y = allocateDoubleArray3D(_nx, _ny, _nz, constant::MU_0);
-  _sigma_m_y = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
+  auto mu_y = allocateDoubleArray3D(_nx, _ny, _nz, constant::MU_0);
+  auto sigma_m_y = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-  _eps_z = allocateDoubleArray3D(_nx, _ny, _nz, constant::EPSILON_0);
-  _sigma_e_z = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
+  auto eps_z = allocateDoubleArray3D(_nx, _ny, _nz, constant::EPSILON_0);
+  auto sigma_e_z = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-  _mu_z = allocateDoubleArray3D(_nx, _ny, _nz, constant::MU_0);
-  _sigma_m_z = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
+  auto mu_z = allocateDoubleArray3D(_nx, _ny, _nz, constant::MU_0);
+  auto sigma_m_z = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-  _cexe = (2 * _eps_x - _dt * _sigma_e_x) / (2 * _eps_x + _dt * _sigma_e_x);
-  _cexhz = (2 * _dt / _dy) / (2 * _eps_x + _dt * _sigma_e_x);
-  _cexhy = -(2 * _dt / _dz) / (2 * _eps_x + _dt * _sigma_e_x);
-  _cexje = -(2 * _dt) / (2 * _eps_x + _dt * _sigma_e_x);
+  _cexe = (2 * eps_x - _dt * sigma_e_x) / (2 * eps_x + _dt * sigma_e_x);
+  _cexhz = (2 * _dt / _dy) / (2 * eps_x + _dt * sigma_e_x);
+  _cexhy = -(2 * _dt / _dz) / (2 * eps_x + _dt * sigma_e_x);
+  _cexje = -(2 * _dt) / (2 * eps_x + _dt * sigma_e_x);
 
-  _ceye = (2 * _eps_y - _dt * _sigma_e_y) / (2 * _eps_y + _dt * _sigma_e_y);
-  _ceyhx = (2 * _dt / _dz) / (2 * _eps_y + _dt * _sigma_e_y);
-  _ceyhz = -(2 * _dt / _dx) / (2 * _eps_y + _dt * _sigma_e_y);
-  _ceyje = -(2 * _dt) / (2 * _eps_y + _dt * _sigma_e_y);
+  _ceye = (2 * eps_y - _dt * sigma_e_y) / (2 * eps_y + _dt * sigma_e_y);
+  _ceyhx = (2 * _dt / _dz) / (2 * eps_y + _dt * sigma_e_y);
+  _ceyhz = -(2 * _dt / _dx) / (2 * eps_y + _dt * sigma_e_y);
+  _ceyje = -(2 * _dt) / (2 * eps_y + _dt * sigma_e_y);
 
-  _ceze = (2 * _eps_z - _dt * _sigma_e_z) / (2 * _eps_z + _dt * _sigma_e_z);
-  _cezhy = (2 * _dt / _dx) / (2 * _eps_z + _dt * _sigma_e_z);
-  _cezhx = -(2 * _dt / _dy) / (2 * _eps_z + _dt * _sigma_e_z);
-  _cezje = -(2 * _dt) / (2 * _eps_z + _dt * _sigma_e_z);
+  _ceze = (2 * eps_z - _dt * sigma_e_z) / (2 * eps_z + _dt * sigma_e_z);
+  _cezhy = (2 * _dt / _dx) / (2 * eps_z + _dt * sigma_e_z);
+  _cezhx = -(2 * _dt / _dy) / (2 * eps_z + _dt * sigma_e_z);
+  _cezje = -(2 * _dt) / (2 * eps_z + _dt * sigma_e_z);
 
-  _chxh = (2 * _mu_x - _dt * _sigma_m_x) / (2 * _mu_x + _dt * _sigma_m_x);
-  _chxey = (2 * _dt / _dz) / (2 * _mu_x + _dt * _sigma_m_x);
-  _chxez = -(2 * _dt / _dy) / (2 * _mu_x + _dt * _sigma_m_x);
-  _chxjm = -(2 * _dt) / (2 * _mu_x + _dt * _sigma_m_x);
+  _chxh = (2 * mu_x - _dt * sigma_m_x) / (2 * mu_x + _dt * sigma_m_x);
+  _chxey = (2 * _dt / _dz) / (2 * mu_x + _dt * sigma_m_x);
+  _chxez = -(2 * _dt / _dy) / (2 * mu_x + _dt * sigma_m_x);
+  _chxjm = -(2 * _dt) / (2 * mu_x + _dt * sigma_m_x);
 
-  _chyh = (2 * _mu_y - _dt * _sigma_m_y) / (2 * _mu_y + _dt * _sigma_m_y);
-  _chyez = (2 * _dt / _dx) / (2 * _mu_y + _dt * _sigma_m_y);
-  _chyex = -(2 * _dt / _dz) / (2 * _mu_y + _dt * _sigma_m_y);
-  _chyjm = -(2 * _dt) / (2 * _mu_y + _dt * _sigma_m_y);
+  _chyh = (2 * mu_y - _dt * sigma_m_y) / (2 * mu_y + _dt * sigma_m_y);
+  _chyez = (2 * _dt / _dx) / (2 * mu_y + _dt * sigma_m_y);
+  _chyex = -(2 * _dt / _dz) / (2 * mu_y + _dt * sigma_m_y);
+  _chyjm = -(2 * _dt) / (2 * mu_y + _dt * sigma_m_y);
 
-  _chzh = (2 * _mu_z - _dt * _sigma_m_z) / (2 * _mu_z + _dt * _sigma_m_z);
-  _chzex = (2 * _dt / _dy) / (2 * _mu_z + _dt * _sigma_m_z);
-  _chzey = -(2 * _dt / _dx) / (2 * _mu_z + _dt * _sigma_m_z);
-  _chzjm = -(2 * _dt) / (2 * _mu_z + _dt * _sigma_m_z);
+  _chzh = (2 * mu_z - _dt * sigma_m_z) / (2 * mu_z + _dt * sigma_m_z);
+  _chzex = (2 * _dt / _dy) / (2 * mu_z + _dt * sigma_m_z);
+  _chzey = -(2 * _dt / _dx) / (2 * mu_z + _dt * sigma_m_z);
+  _chzjm = -(2 * _dt) / (2 * mu_z + _dt * sigma_m_z);
 }
 
 }  // namespace xfdtd

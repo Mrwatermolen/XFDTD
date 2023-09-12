@@ -37,8 +37,6 @@ class Simulation {
   void checkRun(size_t time_steps);
   void run(size_t time_steps);
 
-  inline auto getTimeArray() { return _time_array; }
-
   inline double getDx() const { return _dx; }
   inline double getDy() const { return _dy; }
   inline double getDz() const { return _dz; }
@@ -110,7 +108,6 @@ class Simulation {
   double _dt;
   size_t _time_steps;
   size_t _current_time_step;
-  std::vector<double> _time_array;  // doubt that it is necessary
 
   xt::xarray<std::shared_ptr<YeeCell>> _grid_space;
   std::unique_ptr<Cube> _simulation_box;
@@ -143,31 +140,8 @@ class Simulation {
   EFTA _chzey;
   EFTA _chzjm;
 
-  EFTA _eps_x;
-  EFTA _eps_y;
-  EFTA _eps_z;
-  EFTA _sigma_e_x;
-  EFTA _sigma_e_y;
-  EFTA _sigma_e_z;
-
-  EFTA _mu_x;
-  EFTA _mu_y;
-  EFTA _mu_z;
-  EFTA _sigma_m_x;
-  EFTA _sigma_m_y;
-  EFTA _sigma_m_z;
-
   bool _is_exist_dispersive_material{false};
   xt::xarray<bool> _is_exist_dispersive_material_array;
-  EFTA _e_prev_x;
-  EFTA _e_prev_y;
-  EFTA _e_prev_z;
-  EFTA _j_x;
-  EFTA _j_y;
-  EFTA _j_z;
-  EFTA _j_prev_x;
-  EFTA _j_prev_y;
-  EFTA _j_prev_z;
 
   void init();
   void initMaterialGrid();

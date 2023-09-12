@@ -12,13 +12,6 @@ CosineModulatedGaussianWaveform::CosineModulatedGaussianWaveform(
       _t_0{t_0},
       _modulation_frequency{modulation_frequency} {}
 
-void CosineModulatedGaussianWaveform::init(
-    const std::vector<double> &time_array) {
-  for (const auto &t : time_array) {
-    getAllValues().emplace_back(getValueByTime(t));
-  }
-}
-
 double CosineModulatedGaussianWaveform::getValueByTime(double time) const {
   return _amplitude *
          std::cos(2 * constant::PI * _modulation_frequency * (time - _t_0)) *

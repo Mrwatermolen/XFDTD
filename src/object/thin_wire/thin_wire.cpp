@@ -13,6 +13,5 @@ ThinWire::ThinWire(PointVector center, double radius, double height, Axis axis,
              std::make_unique<Material>("PEC", 1, 1, 1e10, 0)) {}
 
 void ThinWire::init() {
-  auto
 }
 }  // namespace xfdtd
