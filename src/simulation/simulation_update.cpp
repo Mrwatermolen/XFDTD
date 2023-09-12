@@ -1,5 +1,3 @@
-#include "additive_source/hard_point_source.h"
-#include "additive_source/source.h"
 #include "simulation/simulation.h"
 #include "simulation/yee_cell.h"
 
@@ -32,36 +30,6 @@ void Simulation::run(size_t time_steps) {
   }
   std::cout << "\n"
             << "Simulation finished." << std::endl;
-}
-
-void Simulation::updateAddtiveSource() {
-  for (auto& source : _sources) {
-    handleHardPointSource(source.get());
-  }
-}
-
-void Simulation::handleHardPointSource(Source* source) {
-  auto point{dynamic_cast<HardPonitSource*>(source)};
-  if (point == nullptr) {
-    return;
-  }
-  auto p{point->getPoint()};
-  // TODO(franzero):错误的计算
-  auto i{static_cast<SpatialIndex>(
-      std::round((p(0) - _simulation_box->getXmin()) / _dx))};
-  auto j{static_cast<SpatialIndex>(
-      std::round((p(1) - _simulation_box->getYmin()) / _dy))};
-  auto k{static_cast<SpatialIndex>(
-      std::round((p(2) - _simulation_box->getZmin()) / _dz))};
-  if (_nx == 1 && _ny == 1) {
-    getEx(0, 0, k) =
-        getEx(0, 0, k) +
-        _cezje(0, 0, k) *
-            point->getValue(_current_time_step);  // the 1d point for TFSF
-  } else {
-    getEz(i, j, k) =
-        getEz(i, j, k) + _cezje(i, j, k) * point->getValue(_current_time_step);
-  }
 }
 
 void Simulation::updateTFSFIncidentField() {
@@ -218,8 +186,7 @@ void Simulation::updateEWithDispersiveMaterial() {
   for (SpatialIndex i{0}; i < _nx; ++i) {
     for (SpatialIndex j{1}; j < _ny; ++j) {
       for (SpatialIndex k{1}; k < _nz; ++k) {
-        auto material_index{
-            _grid_space[(i * (_ny * _nz) + j * _nz + k)]->getMaterialIndex()};
+        auto material_index{_grid_space(i, j, k)->getMaterialIndex()};
         if (_is_exist_dispersive_material_array(material_index)) {
           _objects[material_index]->updateEx(i, j, k);
           continue;
@@ -233,8 +200,7 @@ void Simulation::updateEWithDispersiveMaterial() {
   for (SpatialIndex j{0}; j < _ny; ++j) {
     for (SpatialIndex k{1}; k < _nz; ++k) {
       for (SpatialIndex i{1}; i < _nx; ++i) {
-        auto material_index{
-            _grid_space[(i * (_ny * _nz) + j * _nz + k)]->getMaterialIndex()};
+        auto material_index{_grid_space(i, j, k)->getMaterialIndex()};
         if (_is_exist_dispersive_material_array(material_index)) {
           _objects[material_index]->updateEy(i, j, k);
           continue;
@@ -248,8 +214,7 @@ void Simulation::updateEWithDispersiveMaterial() {
   for (SpatialIndex k{0}; k < _nz; ++k) {
     for (SpatialIndex i{1}; i < _nx; ++i) {
       for (SpatialIndex j{1}; j < _ny; ++j) {
-        auto material_index{
-            _grid_space[(i * (_ny * _nz) + j * _nz + k)]->getMaterialIndex()};
+        auto material_index{_grid_space(i, j, k)->getMaterialIndex()};
         if (_is_exist_dispersive_material_array(material_index)) {
           _objects[material_index]->updateEz(i, j, k);
           continue;

@@ -1,4 +1,3 @@
-add_executable(test_1d_fdtd test_1d_fdtd.cpp)
 add_executable(test_shape test_shape.cpp)
 add_executable(test_source test_source.cpp)
 add_executable(example_fdtd_1d_cpml example_fdtd_1d_cpml.cpp)
@@ -7,7 +6,6 @@ add_executable(test_fftw test_fftw.cpp)
 add_executable(test_3d_fdtd test_3d_fdtd.cpp)
 add_executable(test_xtensor test_xtensor.cpp)
 
-target_link_libraries(test_1d_fdtd PRIVATE xfdtd)
 target_link_libraries(test_shape PRIVATE xfdtd)
 target_link_libraries(test_source PRIVATE xfdtd)
 target_link_libraries(example_fdtd_1d_cpml PRIVATE xfdtd)

@@ -35,7 +35,6 @@ using EFFA = ElectromagneticFieldFrequencydomainArray;
 
 using SpatialIndex = int;
 
-using SourceArray = std::vector<std::shared_ptr<Source>>;
 using ObjectArray = std::vector<std::shared_ptr<Object>>;
 using BoundaryArray = std::vector<std::shared_ptr<Boundary>>;
 using YeeCellArray = std::vector<std::shared_ptr<YeeCell>>;

@@ -6,8 +6,6 @@
 
 #include "tfsf/tfsf.h"
 #include "util/constant.h"
-#include "util/float_compare.h"
-#include "util/type_define.h"
 #include "xtensor-blas/xlinalg.hpp"
 
 namespace xfdtd {

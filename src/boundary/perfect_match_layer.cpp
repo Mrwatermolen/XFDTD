@@ -6,7 +6,6 @@
 #include <utility>
 
 #include "boundary/boundary.h"
-#include "shape/cube.h"
 #include "simulation/simulation.h"
 #include "util/constant.h"
 #include "util/type_define.h"

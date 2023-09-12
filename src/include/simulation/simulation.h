@@ -5,7 +5,6 @@
 #include <memory>
 #include <vector>
 
-#include "additive_source/source.h"
 #include "boundary/boundary.h"
 #include "electromagnetic_field/electromagnetic_field.h"
 #include "monitor/monitor.h"
@@ -27,14 +26,6 @@ class Simulation {
              std::unique_ptr<TFSF> tfsf, float cfl = DEFAULT_CFL);
   Simulation(double cell_size, ObjectArray objects, BoundaryArray boundaries,
              std::unique_ptr<TFSF> tfsf, std::unique_ptr<NFFFT> nffft,
-             float cfl = DEFAULT_CFL);
-
-  Simulation(double cell_size, ObjectArray objects, SourceArray sources = {},
-             std::unique_ptr<TFSF> tfsf = {}, std::unique_ptr<NFFFT> nffft = {},
-             BoundaryArray boundaries = {}, MonitorArray _monitors = {},
-             float cfl = DEFAULT_CFL);
-  Simulation(double cell_size, ObjectArray objects, SourceArray sources = {},
-             BoundaryArray boundaries = {}, MonitorArray _monitors = {},
              float cfl = DEFAULT_CFL);
 
   void setCellSize(double cell_size);
@@ -108,7 +99,6 @@ class Simulation {
   float _cfl{DEFAULT_CFL};
 
   ObjectArray _objects;
-  SourceArray _sources;
   BoundaryArray _boundaries;
   std::unique_ptr<TFSF> _tfsf;
   std::unique_ptr<NFFFT> _nffft;
@@ -122,7 +112,7 @@ class Simulation {
   size_t _current_time_step;
   std::vector<double> _time_array;  // doubt that it is necessary
 
-  YeeCellArray _grid_space;
+  xt::xarray<std::shared_ptr<YeeCell>> _grid_space;
   std::unique_ptr<Cube> _simulation_box;
 
   std::shared_ptr<EMF> _emf;
@@ -181,19 +171,17 @@ class Simulation {
 
   void init();
   void initMaterialGrid();
-  void initSource();
   void initTFSF();
   void initNFFFT();
   void initUpdateCoefficient();
-  void initBondaryCondition();
+  void initBoundaryCondition();
+  // TODO(franzero): fix it
   void initMonitor();
 
-  void caculateDomainSize();
-  void gridSimualtionSpace();
+  void calculateDomainSize();
+  void gridSimulationSpace();
   void allocateArray();
-  void caculateMaterialComponent();
 
-  void updateAddtiveSource();
   void updateTFSFIncidentField();
   void updateH();
   void updateTFSFH();
@@ -204,10 +192,6 @@ class Simulation {
   void updateNFFFT();
   void updateMonitor();
   void updateEWithDispersiveMaterial();
-
-  void handleHardPointSource(Source* source);
-  void handlePMLBoundaryH(std::shared_ptr<Boundary>& boundary);
-  void handlePMLBoundaryE(std::shared_ptr<Boundary>& boundary);
 
   inline void allocateEx(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
     _emf->allocateEx(nx, ny, nz);

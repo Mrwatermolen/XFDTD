@@ -8,8 +8,6 @@
 #include <utility>
 #include <xtensor/xadapt.hpp>
 
-#include "additive_source/hard_point_source.h"
-#include "additive_source/source.h"
 #include "boundary/perfect_match_layer.h"
 #include "material/dispersive_material.h"
 #include "material/material.h"
@@ -42,8 +40,6 @@ using xfdtd::TFSF3D;
 using xfdtd::TimeDomainFieldMonitor;
 
 void testPECSphereMonostaticRCS() {
-  auto sources{xfdtd::SourceArray{}};
-
   // Grid
   constexpr double dl = 2e-2;
 
@@ -92,17 +88,13 @@ void testPECSphereMonostaticRCS() {
       incident_theta + M_PI, incident_phi + M_PI,
       std::filesystem::path{"./visualizing_data/mie"})};
 
-  auto monitors{xfdtd::MonitorArray{}};
-
-  constexpr size_t total_time_steps{2000};
-  Simulation simulation(dl, objects, sources, std::move(tfsf),
-                        std::move(mono_rcs), boundaries, monitors, 0.98);
+  constexpr size_t total_time_steps{1200};
+  Simulation simulation(dl, objects, boundaries, std::move(tfsf),
+                        std::move(mono_rcs),  0.98);
   simulation.run(total_time_steps);
 }
 
 void testPECSphereBistaticRCS() {
-  auto sources{xfdtd::SourceArray{}};
-
   // Grid
   constexpr double dl = 7.5e-3;
 
@@ -154,11 +146,9 @@ void testPECSphereBistaticRCS() {
       frequencies, theta, phi,
       std::filesystem::path{"./visualizing_data/bistatic_rcs"})};
 
-  auto monitors{xfdtd::MonitorArray{}};
-
   constexpr size_t total_time_steps{1000};
-  Simulation simulation(dl, objects, sources, std::move(tfsf),
-                        std::move(bistatic_rcs), boundaries, monitors, 0.98);
+  Simulation simulation(dl, objects, boundaries, std::move(tfsf),
+                        std::move(bistatic_rcs), 0.98);
   simulation.run(total_time_steps);
   auto waveform{xfdtd::CosineModulatedGaussianWaveform{1, tau, t_0, 1e9}};
   auto dt{simulation.getDt()};
@@ -180,7 +170,6 @@ void testLorentzSphereMonostaticRCS() {
   constexpr double domain_orign_point{-domain_size / 2};
   constexpr double domain_cell_x{domain_size / dl};
   auto objects{xfdtd::ObjectArray{}};
-  auto sources{xfdtd::SourceArray{}};
   objects.emplace_back(std::make_shared<Object>(
       "domain",
       std::make_unique<Cube>(
@@ -221,9 +210,8 @@ void testLorentzSphereMonostaticRCS() {
       incident_theta + M_PI, incident_phi + M_PI,
       std::filesystem::path{"./visualizing_data/mono_rcs"})};
 
-  auto monitors{xfdtd::MonitorArray{}};
-  Simulation simulation(dl, objects, sources, std::move(tfsf),
-                        std::move(mono_rcs), boundaries, monitors);
+  Simulation simulation(dl, objects, boundaries, std::move(tfsf),
+                        std::move(mono_rcs));
   constexpr size_t total_time_steps{1000};
   simulation.run(total_time_steps);
 }
@@ -235,7 +223,6 @@ void testDrudeSphereMonostaticRCS() {
   constexpr double domain_orign_point{-domain_size / 2};
   constexpr double domain_cell_x{domain_size / dl};
   auto objects{xfdtd::ObjectArray{}};
-  auto sources{xfdtd::SourceArray{}};
   objects.emplace_back(std::make_shared<Object>(
       "domain",
       std::make_unique<Cube>(
@@ -339,7 +326,7 @@ void testDebySphereMonostaticRCS() {
 
 int main() {
   auto t0{std::chrono::high_resolution_clock::now()};
-  testDebySphereMonostaticRCS();
+  testLorentzSphereMonostaticRCS();
   auto t1{std::chrono::high_resolution_clock::now()};
   std::cout
       << "Simulation takes "

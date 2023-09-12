@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include "additive_source/hard_point_source.h"
 #include "util/constant.h"
 #include "waveform/gaussian_waveform.h"
 

@@ -11,7 +11,7 @@ LorentzMedium::LorentzMedium(std::string_view name, double eps_s,
     : LinearDispersiveMaterial(name, 1, 1, sigma_e, sigma_m),
       _eps_s{eps_s},
       _eps_inf{eps_inf},
-      _detla_eps{_eps_s - _eps_inf},
+      _delta_eps{_eps_s - _eps_inf},
       _omega_p{omega_p},
       _nv{nv} {}
 
@@ -20,12 +20,12 @@ void LorentzMedium::init(double dt, double dl,
   LinearDispersiveMaterial::init(dt, dl, emf);
   auto eps_0{constant::EPSILON_0};
   auto sigma_e{getElectricalConductivity()};
-  auto tmep_coff_0{_nv * dt + 1};
+  auto temp_coff_0{_nv * dt + 1};
 
-  _coff_alpha = (2 - _omega_p * _omega_p * dt * dt) / tmep_coff_0;
-  _coff_xi = (_nv * dt - 1) / tmep_coff_0;
+  _coff_alpha = (2 - _omega_p * _omega_p * dt * dt) / temp_coff_0;
+  _coff_xi = (_nv * dt - 1) / temp_coff_0;
   _coff_gamma =
-      (eps_0 * _detla_eps * _omega_p * _omega_p * dt * dt) / tmep_coff_0;
+      (eps_0 * _delta_eps * _omega_p * _omega_p * dt * dt) / temp_coff_0;
 
   auto temp_coff_1{4 * eps_0 * _eps_inf + _coff_gamma + 2 * sigma_e * dt};
   _coff_ca = (4 * eps_0 * _eps_inf - 2 * sigma_e * dt) / (temp_coff_1);
@@ -139,7 +139,6 @@ void DrudeMedium::init(double dt, double dl, const std::shared_ptr<EMF> &emf) {
 void DrudeMedium::updateEx(int i, int j, int k) {
   auto emf{getEMF()};
   auto dl{getDl()};
-  auto dt{getDt()};
   auto &hy{emf->getHy()};
   auto &hz{emf->getHz()};
 
@@ -157,7 +156,6 @@ void DrudeMedium::updateEx(int i, int j, int k) {
 void DrudeMedium::updateEy(int i, int j, int k) {
   auto emf{getEMF()};
   auto dl{getDl()};
-  auto dt{getDt()};
   auto &hx{emf->getHx()};
   auto &hz{emf->getHz()};
 
@@ -175,7 +173,6 @@ void DrudeMedium::updateEy(int i, int j, int k) {
 void DrudeMedium::updateEz(int i, int j, int k) {
   auto emf{getEMF()};
   auto dl{getDl()};
-  auto dt{getDt()};
   auto &hx{emf->getHx()};
   auto &hy{emf->getHy()};
 
@@ -195,7 +192,7 @@ DebyMedium::DebyMedium(std::string_view name, double eps_s, double eps_inf,
     : LinearDispersiveMaterial(name, 1, 1, sigma_e, sigma_m),
       _eps_s{eps_s},
       _eps_inf{eps_inf},
-      _detla_eps{eps_s - eps_inf},
+      _delta_eps{eps_s - eps_inf},
       _tau{tau} {}
 
 void DebyMedium::init(double dt, double dl, const std::shared_ptr<EMF> &emf) {
@@ -204,13 +201,13 @@ void DebyMedium::init(double dt, double dl, const std::shared_ptr<EMF> &emf) {
   auto sigma_e{getElectricalConductivity()};
 
   _coff_k = (2 * _tau - dt) / (2 * _tau + dt);
-  _coff_beta = (2 * _detla_eps * eps_0 * dt) / (2 * _tau + dt);
+  _coff_beta = (2 * _delta_eps * eps_0 * dt) / (2 * _tau + dt);
 
-  auto tmep_coff_1{2 * eps_0 * _eps_inf + _coff_beta + sigma_e * dt};
+  auto temp_coff_1{2 * eps_0 * _eps_inf + _coff_beta + sigma_e * dt};
 
-  _coff_ca = (2 * eps_0 * _eps_inf + _coff_beta - sigma_e * dt) / (tmep_coff_1);
+  _coff_ca = (2 * eps_0 * _eps_inf + _coff_beta - sigma_e * dt) / (temp_coff_1);
 
-  _coff_cb = (2 * dt) / ((tmep_coff_1)*dl);
+  _coff_cb = (2 * dt) / ((temp_coff_1)*dl);
 }
 
 void DebyMedium::updateEx(int i, int j, int k) {

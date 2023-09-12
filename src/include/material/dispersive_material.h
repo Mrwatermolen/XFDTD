@@ -73,11 +73,11 @@ class LorentzMedium : public LinearDispersiveMaterial {
   inline double getCoffCc() { return _coff_cc; }
 
  private:
-  double _eps_s;    // the static or zero-frequncy relative permittivity
+  double _eps_s;    // the static or zero-frequency relative permittivity
   double _eps_inf;  // the relative permittivity at infinite frequency
   double _omega_p;  // the frequency of the pole pair
   double _nv;       // the pole relaxation time
-  double _detla_eps;
+  double _delta_eps;
   double _coff_alpha, _coff_xi, _coff_gamma, _coff_ca, _coff_cb, _coff_cc;
 };
 
@@ -133,9 +133,9 @@ class DebyMedium : public LinearDispersiveMaterial {
   double getCoffCb() { return _coff_cb; }
 
  private:
-  double _eps_s;    // the static or zero-frequncy relative permittivity
+  double _eps_s;    // the static or zero-frequency relative permittivity
   double _eps_inf;  // the relative permittivity at infinite frequency
-  double _detla_eps;
+  double _delta_eps;
   double _tau;  // the pole relaxation time
   double _coff_k, _coff_beta, _coff_ca, _coff_cb;
 };

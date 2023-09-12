@@ -20,13 +20,14 @@ class Object {
   Object(Object&& other) noexcept = default;
   Object& operator=(const Object& other);
   Object& operator=(Object&& other) noexcept = default;
+  virtual ~Object() = default;
 
   explicit operator std::string() const;
 
   std::unique_ptr<Object> clone() const;
 
-  inline bool isPointInside(const PointVector& ponit) {
-    return _shape->isPointInside(ponit);
+  inline bool isPointInside(const PointVector& point) {
+    return _shape->isPointInside(point);
   }
 
   inline std::unique_ptr<Shape> getWrappedBox() const {
@@ -50,6 +51,17 @@ class Object {
       m->init(dt, dl, emf);
     }
   }
+
+  virtual void correctCece(xt::xarray<bool>& mask, EFTA& cece, double dt);
+  virtual void correctCecha(xt::xarray<bool>& mask, EFTA& cecha, double db,
+                            double dt);
+  virtual void correctCechb(xt::xarray<bool>& mask, EFTA& ceahb, double da,
+                            double dt);
+  virtual void correctChch(xt::xarray<bool>& mask, EFTA& chch, double dt);
+  virtual void correctChcea(xt::xarray<bool>& mask, EFTA& chaha, double db,
+                            double dt);
+  virtual void correctChceb(xt::xarray<bool>& mask, EFTA& chahb, double da,
+                            double dt);
 
   void updateEx(int i, int j, int k) { _material->updateEx(i, j, k); }
   void updateEy(int i, int j, int k) { _material->updateEy(i, j, k); }

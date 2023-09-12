@@ -102,7 +102,7 @@ class PML : public Boundary {
   void init(double dl, double dt, SpatialIndex start_index, int na, int nb,
             EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea);
 
-  // TODO(franzeor): These two functions can be combined.
+  // TODO(franzero): These two functions can be combined.
   void initP(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea);
   void initN(EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea);
 

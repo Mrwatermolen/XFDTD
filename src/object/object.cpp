@@ -1,9 +1,11 @@
 #include "object/object.h"
 
 #include <memory>
+#include <xtensor/xindex_view.hpp>
 
 #include "material/material.h"
 #include "shape/shape.h"
+#include "util/type_define.h"
 
 namespace xfdtd {
 
@@ -40,6 +42,46 @@ Object::operator std::string() const {
 
 std::unique_ptr<Object> Object::clone() const {
   return std::make_unique<Object>(_name, _shape->clone(), *_material);
+}
+
+void Object::correctCece(xt::xarray<bool>& mask, EFTA& cece, double dt) {
+  auto eps = _material->getPermittivityE();
+  auto sigma_e = _material->getElectricalConductivity();
+  xt::filter(cece, mask) = (2 * eps - dt * sigma_e) / (2 * eps + dt * sigma_e);
+}
+
+void Object::correctCecha(xt::xarray<bool>& mask, EFTA& cecha, double db,
+                          double dt) {
+  auto eps = _material->getPermittivityE();
+  auto sigma_e = _material->getElectricalConductivity();
+  xt::filter(cecha, mask) = -(2 * dt / db) / (2 * eps + dt * sigma_e);
+}
+
+void Object::correctCechb(xt::xarray<bool>& mask, EFTA& ceahb, double da,
+                          double dt) {
+  auto eps = _material->getPermittivityE();
+  auto sigma_e = _material->getElectricalConductivity();
+  xt::filter(ceahb, mask) = (2 * dt / da) / (2 * eps + dt * sigma_e);
+}
+
+void Object::correctChch(xt::xarray<bool>& mask, EFTA& chch, double dt) {
+  auto mu{_material->getPermeabilityM()};
+  auto sigma_m{_material->getMagneticConductivity()};
+  xt::filter(chch, mask) = (2 * mu - dt * sigma_m) / (2 * mu + dt * sigma_m);
+}
+
+void Object::correctChcea(xt::xarray<bool>& mask, EFTA& chaha, double db,
+                          double dt) {
+  auto mu{_material->getPermeabilityM()};
+  auto sigma_m{_material->getMagneticConductivity()};
+  xt::filter(chaha, mask) = (2 * dt / db) / (2 * mu + dt * sigma_m);
+}
+
+void Object::correctChceb(xt::xarray<bool>& mask, EFTA& chahb, double da,
+                          double dt) {
+  auto mu{_material->getPermeabilityM()};
+  auto sigma_m{_material->getMagneticConductivity()};
+  xt::filter(chahb, mask) = -(2 * dt / da) / (2 * mu + dt * sigma_m);
 }
 
 }  // namespace xfdtd

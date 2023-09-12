@@ -4,6 +4,7 @@
 #include <random>
 #include <vector>
 #include <xtensor-blas/xlinalg.hpp>
+#include <xtensor.hpp>
 #include <xtensor/xadapt.hpp>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xfixed.hpp>
@@ -17,8 +18,9 @@ void exampleForReducerDiff();
 void exampleForResize();
 void exampleForStack();
 void exampleForMeshgrid();
+void exampleForFind();
 
-int main() { exampleForMeshgrid(); }
+int main() { exampleForFind(); }
 
 void exampleForDotProduct() {
   std::cout << "Xtensor: dot product for two vectors" << std::endl;
@@ -126,4 +128,23 @@ void exampleForMeshgrid() {
 
   auto res{xt::linalg::dot(matrix, r)};
   std::cout << "Result:\n" << res << std::endl;
+}
+
+void exampleForFind() {
+  // 创建一个 3x3 的 xtensor 数组
+  xt::xarray<int> arr{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+  xt::xarray<int> coff{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+
+  // 使用一个 n 维的 std::vector 作为索引来修改元素
+  std::vector<std::size_t> index = {1, 2};
+  xt::xarray<bool> mask = arr > 3;
+  xt::filter(coff, mask) = 0;
+
+  // 打印修改后的数组
+  std::cout << arr << std::endl;
+  std::cout << coff << std::endl;
+  for (auto e : arr) {
+    std::cout << e << "\t";
+  }
+  std::cout << std::endl;
 }

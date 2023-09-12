@@ -61,35 +61,6 @@ Simulation::Simulation(double cell_size, ObjectArray objects,
       _nffft{std::move(nffft)},
       _emf{std::make_shared<EMF>()} {};
 
-Simulation::Simulation(double cell_size, ObjectArray objects,
-                       SourceArray sources, std::unique_ptr<TFSF> tfsf,
-                       std::unique_ptr<NFFFT> nffft, BoundaryArray boundaries,
-                       MonitorArray monitors, float cfl)
-    : _dx{cell_size},
-      _dy{cell_size},
-      _dz{cell_size},
-      _cfl{cfl},
-      _objects{std::move(objects)},
-      _sources{std::move(sources)},
-      _tfsf{std::move(tfsf)},
-      _nffft{std::move(nffft)},
-      _boundaries{std::move(boundaries)},
-      _monitors{std::move(monitors)},
-      _emf{std::make_shared<EMF>()} {}
-
-Simulation::Simulation(double cell_size, ObjectArray objects,
-                       SourceArray sources, BoundaryArray boundaries,
-                       MonitorArray monitors, float cfl)
-    : _dx{cell_size},
-      _dy{cell_size},
-      _dz{cell_size},
-      _cfl{cfl},
-      _objects{std::move(objects)},
-      _sources{std::move(sources)},
-      _tfsf{nullptr},
-      _boundaries{std::move(boundaries)},
-      _monitors{std::move(monitors)},
-      _emf{std::make_shared<EMF>()} {}
 
 void Simulation::checkRun(size_t time_steps) {
   std::cout << "Simulation Check:" << std::endl;

@@ -53,9 +53,9 @@ class Boundary {
  /**
   * @brief Initialize the boundary with the EMF instance.
   * 
-  * @param _emf 
+  * @param emf
   */
-  void defaultInit(std::shared_ptr<EMF> _emf);
+  void defaultInit(std::shared_ptr<EMF> emf);
 
   inline std::shared_ptr<EMF> getEMFInstance() const { return _emf; }
 

@@ -12,15 +12,12 @@
 #include "material/material.h"
 #include "monitor/field_monitor.h"
 #include "monitor/movie_monitor.h"
-#include "nffft/nffft.h"
-#include "nffft/nffft_2d_test.h"
 #include "nffft/nffft_broadband.h"
 #include "object/object.h"
 #include "shape/cylinder.h"
 #include "simulation/simulation.h"
 #include "tfsf/tfsf_2d.h"
 #include "util/constant.h"
-#include "util/type_define.h"
 #include "waveform/cosine_modulated_gaussian_waveform.h"
 
 void testBasic2D() {
@@ -43,7 +40,6 @@ void testBasic2D() {
   double cylinder_radius{0.03};
 
   auto objects{xfdtd::ObjectArray{}};
-  auto sources{xfdtd::SourceArray{}};
   auto boundaries{xfdtd::BoundaryArray{}};
   auto monitors{xfdtd::MonitorArray{}};
 
@@ -74,19 +70,19 @@ void testBasic2D() {
   boundaries.emplace_back(
       std::make_shared<xfdtd::PML>(xfdtd::Orientation::YP, pml_size));
 
-  auto monitor{xfdtd::TimeDomainFieldMonitor{
-      std::make_unique<xfdtd::Cube>(
-          xfdtd::PointVector{0, 0, 0},
-          xfdtd::PointVector{total_nx * dx, total_ny * dy, 0}),
-      xfdtd::PlaneType::XY, xfdtd::EMComponent::EZ,
-      std::filesystem::absolute("visualizing_data/2d_movie_output"), ""}};
-  auto movie_monitor{xfdtd::MovieMonitor{
-      std::make_unique<xfdtd::TimeDomainFieldMonitor>(std::move(monitor)),
-      total_time_steps, 10}};
-  monitors.emplace_back(
-      std::make_shared<xfdtd::MovieMonitor>(std::move(movie_monitor)));
+  //   auto monitor{xfdtd::TimeDomainFieldMonitor{
+  //       std::make_unique<xfdtd::Cube>(
+  //           xfdtd::PointVector{0, 0, 0},
+  //           xfdtd::PointVector{total_nx * dx, total_ny * dy, 0}),
+  //       xfdtd::PlaneType::XY, xfdtd::EMComponent::EZ,
+  //       std::filesystem::absolute("visualizing_data/2d_movie_output"), ""}};
+  //   auto movie_monitor{xfdtd::MovieMonitor{
+  //       std::make_unique<xfdtd::TimeDomainFieldMonitor>(std::move(monitor)),
+  //       total_time_steps, 10}};
+  //   monitors.emplace_back(
+  //       std::make_shared<xfdtd::MovieMonitor>(std::move(movie_monitor)));
   auto simulation{xfdtd::Simulation{
-      dx, objects, sources,
+      dx, objects, boundaries,
       std::make_unique<xfdtd::TFSF2D>(
           50, 50, xfdtd::constant::PI * 0.25, 1,
           std::make_unique<xfdtd::CosineModulatedGaussianWaveform>(
@@ -94,7 +90,7 @@ void testBasic2D() {
       std::make_unique<xfdtd::NffftBroadBand>(
           40, 40, 0, xfdtd::constant::PI / 2, xfdtd::constant::PI * 1.25,
           "visualizing_data/"),
-      boundaries, monitors, 0.8}};
+      0.8}};
   auto t0{std::chrono::high_resolution_clock::now()};
   simulation.run(total_time_steps);
   for (auto &&e : monitors) {

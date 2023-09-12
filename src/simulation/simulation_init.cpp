@@ -1,14 +1,11 @@
-#include <algorithm>
 #include <cmath>
-#include <cstdlib>
-#include <exception>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <xtensor/xadapt.hpp>
 
+
 #include "boundary/boundary.h"
-#include "boundary/perfect_match_layer.h"
 #include "mesh/grid_box.h"
 #include "monitor/field_monitor.h"
 #include "simulation/simulation.h"
@@ -30,19 +27,28 @@ void Simulation::init() {
   }
 
   initMaterialGrid();
-  initSource();
   initTFSF();
   initNFFFT();
   initUpdateCoefficient();
-  initBondaryCondition();
+  initBoundaryCondition();
   initMonitor();
 }
 
 void Simulation::initMaterialGrid() {
-  caculateDomainSize();
-  gridSimualtionSpace();
+  calculateDomainSize();
+  gridSimulationSpace();
   allocateArray();
-  caculateMaterialComponent();
+  _is_exist_dispersive_material_array.resize({_objects.size()});
+  _is_exist_dispersive_material_array.fill(false);
+  int counter_tmp{0};
+  for (auto&& e : _objects) {
+    e->init(_dt, _dx, getEMFInstance());
+    if (e->isDispersion()) {
+      _is_exist_dispersive_material = true;
+      _is_exist_dispersive_material_array(counter_tmp) = true;
+    }
+    ++counter_tmp;
+  }
   if (_is_exist_dispersive_material) {
     _emf->allocateExPrev(_nx, _ny + 1, _nz + 1);
     _emf->allocateEyPrev(_nx + 1, _ny, _nz + 1);
@@ -53,12 +59,6 @@ void Simulation::initMaterialGrid() {
     _emf->allocateJxPrev(_nx, _ny + 1, _nz + 1);
     _emf->allocateJyPrev(_nx + 1, _ny, _nz + 1);
     _emf->allocateJzPrev(_nx + 1, _ny + 1, _nz);
-  }
-}
-
-void Simulation::initSource() {
-  for (const auto& e : _sources) {
-    e->init(_time_array);
   }
 }
 
@@ -90,60 +90,42 @@ void Simulation::initNFFFT() {
 }
 
 void Simulation::initUpdateCoefficient() {
-  _cexe = (2 * _eps_x - _dt * _sigma_e_x) / (2 * _eps_x + _dt * _sigma_e_x);
-  _cexhz = (2 * _dt / _dy) / (2 * _eps_x + _dt * _sigma_e_x);
-  _cexhy = -(2 * _dt / _dz) / (2 * _eps_x + _dt * _sigma_e_x);
-  _cexje = -(2 * _dt) / (2 * _eps_x + _dt * _sigma_e_x);
-  // _cexe.fill(1);
-  // _cexhz.fill(_dt / (_dx * constant::EPSILON_0));
-  // _cexhy.fill(-_dt / (_dx * constant::EPSILON_0));
+  int material_counter{0};
+  for (auto&& e : _objects) {
+    xt::xarray<bool> mask{xt::make_lambda_xfunction(
+        [&e, &material_counter](std::shared_ptr<YeeCell>& a) {
+          auto flag{e->isPointInside(a->getCenter())};
+          if (flag) {
+            a->setMaterialIndex(material_counter);
+          }
+          return flag;
+        },
+        _grid_space)};
+    ++material_counter;
+    e->correctCece(mask, _cexe, _dt);
+    e->correctChch(mask, _chxh, _dt);
+    e->correctCecha(mask, _cexhy, _dz, _dt);
+    e->correctChcea(mask, _chxey, _dz, _dt);
+    e->correctCechb(mask, _cexhz, _dy, _dt);
+    e->correctChceb(mask, _chxez, _dy, _dt);
 
-  // _ey
-  _ceye = (2 * _eps_y - _dt * _sigma_e_y) / (2 * _eps_y + _dt * _sigma_e_y);
-  _ceyhx = (2 * _dt / _dz) / (2 * _eps_y + _dt * _sigma_e_y);
-  _ceyhz = -(2 * _dt / _dx) / (2 * _eps_y + _dt * _sigma_e_y);
-  _ceyje = -(2 * _dt) / (2 * _eps_y + _dt * _sigma_e_y);
-  // _ceye.fill(1);
-  // _ceyhx.fill(_dt / (_dz * constant::EPSILON_0));
-  // _ceyhz.fill(-_dt / (_dz * constant::EPSILON_0));
+    e->correctCece(mask, _ceye, _dt);
+    e->correctChch(mask, _chyh, _dt);
+    e->correctCecha(mask, _ceyhz, _dx, _dt);
+    e->correctChcea(mask, _chyez, _dx, _dt);
+    e->correctCechb(mask, _ceyhx, _dz, _dt);
+    e->correctChceb(mask, _chyex, _dz, _dt);
 
-  // _ez
-  _ceze = (2 * _eps_z - _dt * _sigma_e_z) / (2 * _eps_z + _dt * _sigma_e_z);
-  _cezhy = (2 * _dt / _dx) / (2 * _eps_z + _dt * _sigma_e_z);
-  _cezhx = -(2 * _dt / _dy) / (2 * _eps_z + _dt * _sigma_e_z);
-  _cezje = -(2 * _dt) / (2 * _eps_z + _dt * _sigma_e_z);
-  // _ceze.fill(1);
-  // _cezhy.fill(_dt / (_dx * constant::EPSILON_0));
-  // _cezhx.fill(-_dt / (_dx * constant::EPSILON_0));
-
-  _chxh = (2 * _mu_x - _dt * _sigma_m_x) / (2 * _mu_x + _dt * _sigma_m_x);
-  _chxey = (2 * _dt / _dz) / (2 * _mu_x + _dt * _sigma_m_x);
-  _chxez = -(2 * _dt / _dy) / (2 * _mu_x + _dt * _sigma_m_x);
-  _chxjm = -(2 * _dt) / (2 * _mu_x + _dt * _sigma_m_x);
-  // _chxh.fill(1);
-  // _chxey.fill(_dt / (_dx * constant::MU_0));
-  // _chxez.fill(-_dt / (_dx * constant::MU_0));
-
-  // _hy
-  _chyh = (2 * _mu_y - _dt * _sigma_m_y) / (2 * _mu_y + _dt * _sigma_m_y);
-  _chyez = (2 * _dt / _dx) / (2 * _mu_y + _dt * _sigma_m_y);
-  _chyex = -(2 * _dt / _dz) / (2 * _mu_y + _dt * _sigma_m_y);
-  _chyjm = -(2 * _dt) / (2 * _mu_y + _dt * _sigma_m_y);
-  // _chyh.fill(1);
-  // _chyez.fill(_dt / (_dx * constant::MU_0));
-  // _chyex.fill(-_dt / (_dx * constant::MU_0));
-
-  // _hz
-  _chzh = (2 * _mu_z - _dt * _sigma_m_z) / (2 * _mu_z + _dt * _sigma_m_z);
-  _chzex = (2 * _dt / _dy) / (2 * _mu_z + _dt * _sigma_m_z);
-  _chzey = -(2 * _dt / _dx) / (2 * _mu_z + _dt * _sigma_m_z);
-  _chzjm = -(2 * _dt) / (2 * _mu_z + _dt * _sigma_m_z);
-  // _chzh.fill(1);
-  // _chzex.fill(_dt / (_dy * constant::MU_0));
-  // _chzey.fill(-_dt / (_dx * constant::MU_0));
+    e->correctCece(mask, _ceze, _dt);
+    e->correctChch(mask, _chzh, _dt);
+    e->correctCecha(mask, _cezhx, _dy, _dt);
+    e->correctChcea(mask, _chzex, _dy, _dt);
+    e->correctCechb(mask, _cezhy, _dx, _dt);
+    e->correctChceb(mask, _chzey, _dx, _dt);
+  }
 }
 
-void Simulation::initBondaryCondition() {
+void Simulation::initBoundaryCondition() {
   for (auto& e : _boundaries) {
     e->init(this);
   }
@@ -157,16 +139,16 @@ void Simulation::initMonitor() {
       continue;
     }
     YeeCellArray temp;
-    for (const auto& e : _grid_space) {
-      if (shape->isPointInside(e->getCenter())) {
-        temp.emplace_back(e);
+    for (const auto& ee : _grid_space) {
+      if (shape->isPointInside(ee->getCenter())) {
+        temp.emplace_back(ee);
       }
     }
     e->setYeeCells(std::move(temp));
   }
 }
 
-void Simulation::caculateDomainSize() {
+void Simulation::calculateDomainSize() {
   double min_x = std::numeric_limits<double>::max();
   double max_x = std::numeric_limits<double>::min();
   double min_y = std::numeric_limits<double>::max();
@@ -179,8 +161,8 @@ void Simulation::caculateDomainSize() {
   }
 
   for (const auto& e : _objects) {
-    auto tmep{e->getWrappedBox()};
-    auto box{dynamic_cast<Cube*>(tmep.get())};
+    auto temp{e->getWrappedBox()};
+    auto box{dynamic_cast<Cube*>(temp.get())};
     if (box == nullptr) {
       continue;
     }
@@ -209,7 +191,6 @@ void Simulation::caculateDomainSize() {
     if (isGreaterOrEqual(t, max_z, constant::TOLERABLE_EPSILON)) {
       max_z = t;
     }
-    // tmep.release();  // For Debug
   }
 
   for (auto& e : _boundaries) {
@@ -244,12 +225,12 @@ void Simulation::caculateDomainSize() {
   double size_x = _nx * _dx;
   double size_y = _ny * _dy;
   double size_z = _nz * _dz;
-  max_x = min_x + size_x;
-  max_y = min_y + size_y;
-  max_z = min_z + size_z;
-  _simulation_box = std::make_unique<Cube>(
-      PointVector{min_x, min_y, min_z},
-      PointVector{max_x - min_x, max_y - min_y, max_z - min_z});
+  // IMPORTANT: There is a memory error while running the program with other
+  // platforms.
+  auto origin_point{PointVector{min_x, min_y, min_z}};
+  auto box_size{PointVector{size_x, size_y, size_z}};
+  _simulation_box =
+      std::make_unique<Cube>(std::move(origin_point), std::move(box_size));
   if (_nx == 0) {
     _nx = 1;
     _dx = 1;
@@ -264,71 +245,35 @@ void Simulation::caculateDomainSize() {
   }
 }
 
-void Simulation::gridSimualtionSpace() {
-  auto total_grid{_nx * _ny * _nz};
-  _grid_space.clear();
-
+void Simulation::gridSimulationSpace() {
+  _grid_space.resize({static_cast<size_t>(_nx), static_cast<size_t>(_ny),
+                      static_cast<size_t>(_nz)});
   auto min_x{_simulation_box->getXmin()};
   auto min_y{_simulation_box->getYmin()};
   auto min_z{_simulation_box->getZmin()};
   if (_nx == 1 && _ny == 1) {
     for (SpatialIndex k{0}; k < _nz; ++k) {
-      auto index{0 * _ny * _nz + 0 * _nz + k};
-      _grid_space.emplace_back(
-          std::make_shared<YeeCell>(PointVector{min_x, min_y, min_z + k * _dz},
-                                    PointVector{0, 0, _dz}, -1, 0, 0, k));
+      _grid_space(0, 0, k) =
+          std::make_shared<YeeCell>(-1, -1, k, _dz, min_x, min_y, min_z);
     }
   } else if (_nz == 1) {
     for (SpatialIndex i{0}; i < _nx; ++i) {
       for (SpatialIndex j{0}; j < _ny; ++j) {
-        auto index{i * _ny + j};
-        _grid_space.emplace_back(std::make_shared<YeeCell>(
-            PointVector{min_x + i * _dx, min_y + j * _dy, 0},
-            PointVector{_dx, _dy, 0}, -1, i, j, 0));
+        _grid_space(i, j, 0) =
+            std::make_shared<YeeCell>(i, j, -1, _dx, min_x, min_y, min_z);
       }
     }
   } else {
     for (SpatialIndex i{0}; i < _nx; ++i) {
       for (SpatialIndex j{0}; j < _ny; ++j) {
         for (SpatialIndex k{0}; k < _nz; ++k) {
-          auto index{i * _ny * _nz + j * _nz + k};
-          _grid_space.emplace_back(std::make_shared<YeeCell>(
-              PointVector{min_x + i * _dx, min_y + j * _dy, min_z + k * _dz},
-              PointVector{_dx, _dy, _dz}, -1, i, j, k));
+          _grid_space(i, j, k) =
+              std::make_shared<YeeCell>(i, j, k, _dx, min_x, min_y, min_z);
         }
       }
     }
   }
 
-  for (auto&& c : _grid_space) {
-    // assume that the material is air.
-    c->setMaterialIndex(0);
-    if (c->getMaterialIndex() != 0) {
-      std::cout << "no zero. " << std::endl;
-    }
-    int counter = 0;
-
-    for (const auto& e : _objects) {
-      if (!e->isPointInside(c->getCenter())) {
-        ++counter;
-        continue;
-      }
-      if (c->getMaterialIndex() != 0) {
-        std::cout << "no zero. object counter:" << counter << std::endl;
-      }
-      c->setMaterialIndex(counter);
-      if (_objects.size() <= c->getMaterialIndex()) {
-        c->setMaterialIndex(counter);
-        std::cout << "current counter:" << counter << std::endl;
-        std::cerr << "Error: material index is exceeded. index:"
-                  << c->getMaterialIndex() << std::endl;
-        c->setMaterialIndex(counter);
-        std::cerr << "print index:" << c->getMaterialIndex() << std::endl;
-        exit(-1);
-      }
-      ++counter;
-    }
-  }
 }
 
 void Simulation::allocateArray() {
@@ -340,81 +285,53 @@ void Simulation::allocateArray() {
   allocateHy(_nx, _ny + 1, _nz);
   allocateHz(_nx, _ny, _nz + 1);
 
-  _eps_x = allocateDoubleArray3D(_nx, _ny + 1, _nz + 1, constant::EPSILON_0);
-  _sigma_e_x = allocateDoubleArray3D(_nx, _ny + 1, _nz + 1, min_sigma);
+  _eps_x = allocateDoubleArray3D(_nx, _ny, _nz, constant::EPSILON_0);
+  _sigma_e_x = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-  _mu_x = allocateDoubleArray3D(_nx + 1, _ny, _nz, constant::MU_0);
-  _sigma_m_x = allocateDoubleArray3D(_nx + 1, _ny, _nz, min_sigma);
+  _mu_x = allocateDoubleArray3D(_nx, _ny, _nz, constant::MU_0);
+  _sigma_m_x = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-  _eps_y = allocateDoubleArray3D(_nx + 1, _ny, _nz + 1, constant::EPSILON_0);
-  _sigma_e_y = allocateDoubleArray3D(_nx + 1, _ny, _nz + 1, min_sigma);
+  _eps_y = allocateDoubleArray3D(_nx, _ny, _nz, constant::EPSILON_0);
+  _sigma_e_y = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-  _mu_y = allocateDoubleArray3D(_nx, _ny + 1, _nz, constant::MU_0);
-  _sigma_m_y = allocateDoubleArray3D(_nx, _ny + 1, _nz, min_sigma);
+  _mu_y = allocateDoubleArray3D(_nx, _ny, _nz, constant::MU_0);
+  _sigma_m_y = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-  _eps_z = allocateDoubleArray3D(_nx + 1, _ny + 1, _nz, constant::EPSILON_0);
-  _sigma_e_z = allocateDoubleArray3D(_nx + 1, _ny + 1, _nz, min_sigma);
+  _eps_z = allocateDoubleArray3D(_nx, _ny, _nz, constant::EPSILON_0);
+  _sigma_e_z = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-  _mu_z = allocateDoubleArray3D(_nx, _ny, _nz + 1, constant::MU_0);
-  _sigma_m_z = allocateDoubleArray3D(_nx, _ny, _nz + 1, min_sigma);
-}
+  _mu_z = allocateDoubleArray3D(_nx, _ny, _nz, constant::MU_0);
+  _sigma_m_z = allocateDoubleArray3D(_nx, _ny, _nz, min_sigma);
 
-void Simulation::caculateMaterialComponent() {
-  _is_exist_dispersive_material_array.resize({_objects.size()});
-  _is_exist_dispersive_material_array.fill(false);
-  int counter_tmp{0};
-  for (auto&& e : _objects) {
-    e->init(_dt, _dx, getEMFInstance());
-    if (e->isDispersion()) {
-      _is_exist_dispersive_material = true;
-      _is_exist_dispersive_material_array(counter_tmp) = true;
-    }
-    ++counter_tmp;
-  }
+  _cexe = (2 * _eps_x - _dt * _sigma_e_x) / (2 * _eps_x + _dt * _sigma_e_x);
+  _cexhz = (2 * _dt / _dy) / (2 * _eps_x + _dt * _sigma_e_x);
+  _cexhy = -(2 * _dt / _dz) / (2 * _eps_x + _dt * _sigma_e_x);
+  _cexje = -(2 * _dt) / (2 * _eps_x + _dt * _sigma_e_x);
 
-  auto min_sigma{std::numeric_limits<double>::epsilon() / 1000.0};
+  _ceye = (2 * _eps_y - _dt * _sigma_e_y) / (2 * _eps_y + _dt * _sigma_e_y);
+  _ceyhx = (2 * _dt / _dz) / (2 * _eps_y + _dt * _sigma_e_y);
+  _ceyhz = -(2 * _dt / _dx) / (2 * _eps_y + _dt * _sigma_e_y);
+  _ceyje = -(2 * _dt) / (2 * _eps_y + _dt * _sigma_e_y);
 
-  for (SpatialIndex i{0}; i < _nx; ++i) {
-    for (SpatialIndex j{0}; j < _ny; ++j) {
-      for (SpatialIndex k{0}; k < _nz; ++k) {
-        auto material_index{
-            _grid_space[i * _ny * _nz + j * _nz + k]->getMaterialIndex()};
-        if (material_index == -1) {
-          std::cerr << "Error: material index is -1" << std::endl;
-          exit(-1);
-        }
-        if (_objects.size() <= material_index) {
-          std::cerr << "Error: material index is exceeded. index:"
-                    << material_index << std::endl;
-          _grid_space[i * _ny * _nz + j * _nz + k]->getMaterialIndex();
-          auto material_index1{
-              _grid_space[i * _ny * _nz + j * _nz + k]->getMaterialIndex()};
-          exit(-1);
-        }
-        auto [eps, mu, sigma_e, sigma_m] =
-            _objects[material_index]->getElectromagneticProperties();
-        if (isLessOrEqual(sigma_e, min_sigma, constant::TOLERABLE_EPSILON)) {
-          sigma_e = min_sigma;
-        }
-        if (isLessOrEqual(sigma_m, min_sigma, constant::TOLERABLE_EPSILON)) {
-          sigma_m = min_sigma;
-        }
-        _eps_x(i, j, k) = eps;
-        _sigma_e_x(i, j, k) = sigma_e;
-        _mu_x(i, j, k) = mu;
-        _sigma_m_x(i, j, k) = sigma_m;
-        _eps_y(i, j, k) = eps;
-        _mu_y(i, j, k) = mu;
-        _sigma_e_y(i, j, k) = sigma_e;
-        _sigma_m_y(i, j, k) = sigma_m;
-        _eps_z(i, j, k) = eps;
-        _mu_z(i, j, k) = mu;
-        _sigma_e_z(i, j, k) = sigma_e;
-        _sigma_m_z(i, j, k) = sigma_m;
-      }
-    }
-  }
-  // TODO(franzero): 注意这里忘记给边界赋值了
+  _ceze = (2 * _eps_z - _dt * _sigma_e_z) / (2 * _eps_z + _dt * _sigma_e_z);
+  _cezhy = (2 * _dt / _dx) / (2 * _eps_z + _dt * _sigma_e_z);
+  _cezhx = -(2 * _dt / _dy) / (2 * _eps_z + _dt * _sigma_e_z);
+  _cezje = -(2 * _dt) / (2 * _eps_z + _dt * _sigma_e_z);
+
+  _chxh = (2 * _mu_x - _dt * _sigma_m_x) / (2 * _mu_x + _dt * _sigma_m_x);
+  _chxey = (2 * _dt / _dz) / (2 * _mu_x + _dt * _sigma_m_x);
+  _chxez = -(2 * _dt / _dy) / (2 * _mu_x + _dt * _sigma_m_x);
+  _chxjm = -(2 * _dt) / (2 * _mu_x + _dt * _sigma_m_x);
+
+  _chyh = (2 * _mu_y - _dt * _sigma_m_y) / (2 * _mu_y + _dt * _sigma_m_y);
+  _chyez = (2 * _dt / _dx) / (2 * _mu_y + _dt * _sigma_m_y);
+  _chyex = -(2 * _dt / _dz) / (2 * _mu_y + _dt * _sigma_m_y);
+  _chyjm = -(2 * _dt) / (2 * _mu_y + _dt * _sigma_m_y);
+
+  _chzh = (2 * _mu_z - _dt * _sigma_m_z) / (2 * _mu_z + _dt * _sigma_m_z);
+  _chzex = (2 * _dt / _dy) / (2 * _mu_z + _dt * _sigma_m_z);
+  _chzey = -(2 * _dt / _dx) / (2 * _mu_z + _dt * _sigma_m_z);
+  _chzjm = -(2 * _dt) / (2 * _mu_z + _dt * _sigma_m_z);
 }
 
 }  // namespace xfdtd
