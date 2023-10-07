@@ -8,6 +8,7 @@
 #include <xtensor-fftw/basic_double.hpp>
 #include <xtensor-fftw/helper.hpp>
 #include <xtensor/xadapt.hpp>
+#include <xtensor/xnpy.hpp>
 
 #include "nffft/nffft.h"
 #include "util/constant.h"
@@ -21,8 +22,8 @@ NffftBroadBand::NffftBroadBand(SpatialIndex distance_x, SpatialIndex distance_y,
     : NFFFT(distance_x, distance_y, distance_z, std::move(output_dir_path)),
       _theta{theta},
       _phi{phi},
-      _farfield_vector{sin(theta) * cos(phi), sin(theta) * sin(phi),
-                       cos(theta)} {}
+      _fairfield_vector{sin(theta) * cos(phi), sin(theta) * sin(phi),
+                        cos(theta)} {}
 
 void NffftBroadBand::init(std::unique_ptr<GridBox> output_box,
                           std::shared_ptr<EMF> emf, size_t total_time_steps,
@@ -30,7 +31,7 @@ void NffftBroadBand::init(std::unique_ptr<GridBox> output_box,
   defaultInit(std::move(output_box), std::move(emf), total_time_steps, dt, dx,
               dy, dz);
   _number_samples = getTotalTimeSteps() * 2 - 1;  // make sure it is odd number
-  _smaple_rate = 1 / getDt();
+  _sample_rate = 1 / getDt();
 
   _jy_xn.resize({_number_samples, 1, static_cast<size_t>(getNy()),
                  static_cast<size_t>(getNz())});
@@ -97,7 +98,7 @@ void NffftBroadBand::update(size_t current_time_step) {
 }
 
 void NffftBroadBand::outputData() {
-  calculateFarfield();
+  calculateFarField();
   const auto output_dir_path{getOutputDirPath()};
   if (!std::filesystem::exists(output_dir_path) ||
       !std::filesystem::is_directory(output_dir_path)) {
@@ -105,47 +106,47 @@ void NffftBroadBand::outputData() {
       std::filesystem::create_directory(output_dir_path);
     } catch (std::exception e) {
       std::cerr << "Error: cannot create directory " << output_dir_path
-                << "\t Error:" << e.what() << std::endl;
+                << "\t Error:" << e.what() << '\n';
       return;
     }
   }
 
-  outputFarFieldParamertes();
+  outputFarFieldParameters();
   using namespace std::complex_literals;
   if (getNz() == 1) {
     // Debug
     auto far_ez{0.5 * xt::sqrt(1i * _wave_number) *
                 (_l_phi + constant::ETA_0 * _n_theta)};
-    auto mangitude{xt::abs(far_ez)};
-    std::ofstream fout;
-    fout.open(output_dir_path / "far_ez.dat");
-    for (auto &&e : mangitude) {
-      fout << e << " ";
-    }
-    fout.close();
+    xt::dump_npy(output_dir_path / "EZ.npy", far_ez);
     return;
   }
-  std::ofstream e_theta_data{output_dir_path / ("e_theta.dat")};
-  std::ofstream e_phi_data{output_dir_path / ("e_phi_.dat")};
-  std::ofstream h_theta_data{output_dir_path / ("h_theta.dat")};
-  std::ofstream h_phi_data{output_dir_path / ("h_phi_.dat")};
-  std::ofstream power_theta_data{output_dir_path / ("power_theta.dat")};
-  std::ofstream power_phi_data{output_dir_path / ("power_phi.dat")};
+  // std::ofstream e_theta_data{output_dir_path / ("e_theta.dat")};
+  // std::ofstream e_phi_data{output_dir_path / ("e_phi.dat")};
+  // std::ofstream h_theta_data{output_dir_path / ("h_theta.dat")};
+  // std::ofstream h_phi_data{output_dir_path / ("h_phi_.dat")};
+  // std::ofstream power_theta_data{output_dir_path / ("power_theta.dat")};
+  // std::ofstream power_phi_data{output_dir_path / ("power_phi.dat")};
+  xt::dump_npy(output_dir_path / "e_theta.npy", _e_theta);
+  xt::dump_npy(output_dir_path / "e_phi.npy", _e_phi);
+  xt::dump_npy(output_dir_path / "h_theta.npy", _h_theta);
+  xt::dump_npy(output_dir_path / "h_phi.npy", _h_phi);
+  xt::dump_npy(output_dir_path / "power_theta.npy", _power_theta);
+  xt::dump_npy(output_dir_path / "power_phi.npy", _power_phi);
 
-  for (size_t i{0}; i < _number_samples; ++i) {
-    e_theta_data << _e_theta(i) << " ";
-    e_phi_data << _e_phi(i) << " ";
-    h_theta_data << _h_theta(i) << " ";
-    h_phi_data << _h_phi(i) << " ";
-    power_theta_data << _power_theta(i) << " ";
-    power_phi_data << _power_phi(i) << " ";
-  }
-  e_theta_data << std::endl;
-  e_phi_data << std::endl;
-  h_theta_data << std::endl;
-  h_phi_data << std::endl;
-  power_theta_data << std::endl;
-  power_phi_data << std::endl;
+  // for (size_t i{0}; i < _number_samples; ++i) {
+  //   e_theta_data << _e_theta(i) << " ";
+  //   e_phi_data << _e_phi(i) << " ";
+  //   h_theta_data << _h_theta(i) << " ";
+  //   h_phi_data << _h_phi(i) << " ";
+  //   power_theta_data << _power_theta(i) << " ";
+  //   power_phi_data << _power_phi(i) << " ";
+  // }
+  // e_theta_data << std::endl;
+  // e_phi_data << std::endl;
+  // h_theta_data << std::endl;
+  // h_phi_data << std::endl;
+  // power_theta_data << std::endl;
+  // power_phi_data << std::endl;
 }
 
 void NffftBroadBand::updateXN(size_t current_time_step) {
@@ -293,8 +294,8 @@ void NffftBroadBand::updateZP(size_t current_time_step) {
   }
 }
 
-void NffftBroadBand::calculateFarfield() {
-  std::cout << "Start calculating farfield" << std::endl;
+void NffftBroadBand::calculateFarField() {
+  std::cout << "Start calculating far field" << '\n';
   const auto fs{1 / getDt()};
   _frequencies = xt::linspace(-fs / 2, fs / 2, _number_samples);
   _wave_number = 2 * constant::PI * _frequencies / constant::C_0;
@@ -325,7 +326,7 @@ void NffftBroadBand::calculateFarfield() {
             (32 * constant::PI * constant::PI * constant::ETA_0)};
   _power_theta = coff * pow(abs(constant::ETA_0 * _n_theta + _l_phi), 2);
   _power_phi = coff * pow(abs(-constant::ETA_0 * _n_phi + _l_theta), 2);
-  std::cout << "Finish calculating farfield" << std::endl;
+  std::cout << "Finish calculating far field" << '\n';
 }
 
 void NffftBroadBand::calculateLNXYZ() {
@@ -361,9 +362,9 @@ void NffftBroadBand::calculateLNXYZ() {
     auto [x, y, z]{xt::meshgrid(i_range + offset_x - getCenterIndexX(),
                                 j_range + offset_y - getCenterIndexY(),
                                 k_range + offset_z - getCenterIndexZ())};
-    auto x_r{x * _farfield_vector(0) * dx};
-    auto y_r{y * _farfield_vector(1) * dy};
-    auto z_r{z * _farfield_vector(2) * dz};
+    auto x_r{x * _fairfield_vector(0) * dx};
+    auto y_r{y * _fairfield_vector(1) * dy};
+    auto z_r{z * _fairfield_vector(2) * dz};
 
     return {(x_r + y_r + z_r)};
   };
@@ -420,16 +421,15 @@ void NffftBroadBand::calculateAuxiliary(EFFA &n_a, EFFA &n_b, EFFA &l_a,
   }
 }
 
-void NffftBroadBand::outputFarFieldParamertes() {
-  std::ofstream far_field_paramerter_writer{getOutputDirPath() /
-                                            "far_field_parameter.dat"};
-  far_field_paramerter_writer << "Fs:\t" << 1 / getDt() << std::endl;
-  far_field_paramerter_writer << "number of samples:\t" << _number_samples
-                              << std::endl;
-  far_field_paramerter_writer << std::endl;
-  far_field_paramerter_writer << "Theta:\n" << _theta << std::endl;
-  far_field_paramerter_writer << "Phi:\n" << _phi << std::endl;
-  far_field_paramerter_writer.close();
+void NffftBroadBand::outputFarFieldParameters() {
+  std::ofstream far_field_parameter_writer{getOutputDirPath() /
+                                           "far_field_parameter.dat"};
+  far_field_parameter_writer << "Fs:\t" << 1 / getDt() << '\n';
+  far_field_parameter_writer << "number of samples:\t" << _number_samples
+                             << '\n';
+  far_field_parameter_writer << "Theta:\n" << _theta << '\n';
+  far_field_parameter_writer << "Phi:\n" << _phi << '\n';
+  far_field_parameter_writer.close();
 }
 
 }  // namespace xfdtd

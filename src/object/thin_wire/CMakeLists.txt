@@ -1,1 +1,0 @@
-add_library(xfdtd_thin_wire thin_wire.cpp)

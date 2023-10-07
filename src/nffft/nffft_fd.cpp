@@ -5,13 +5,10 @@
 #include <cstddef>
 #include <exception>
 #include <filesystem>
-#include <fstream>
-#include <sstream>
-#include <tuple>
 #include <utility>
 #include <xtensor/xadapt.hpp>
+#include <xtensor/xnpy.hpp>
 
-#include "nffft/nffft.h"
 #include "util/constant.h"
 #include "util/type_define.h"
 
@@ -23,69 +20,69 @@ void NffftFd::init(std::unique_ptr<GridBox> output_box,
   defaultInit(std::move(output_box), std::move(emf), total_time_steps, dt, dx,
               dy, dz);
 
-  _f_theta.resize({_number_frequecies, _number_theta, _number_phi});
-  _f_phi.resize({_number_frequecies, _number_theta, _number_phi});
-  _a_theta.resize({_number_frequecies, _number_theta, _number_phi});
-  _a_phi.resize({_number_frequecies, _number_theta, _number_phi});
-  _a_x.resize({_number_frequecies, _number_theta, _number_phi});
-  _a_y.resize({_number_frequecies, _number_theta, _number_phi});
-  _a_z.resize({_number_frequecies, _number_theta, _number_phi});
-  _f_x.resize({_number_frequecies, _number_theta, _number_phi});
-  _f_y.resize({_number_frequecies, _number_theta, _number_phi});
-  _f_z.resize({_number_frequecies, _number_theta, _number_phi});
+  _f_theta.resize({_number_frequencies, _number_theta, _number_phi});
+  _f_phi.resize({_number_frequencies, _number_theta, _number_phi});
+  _a_theta.resize({_number_frequencies, _number_theta, _number_phi});
+  _a_phi.resize({_number_frequencies, _number_theta, _number_phi});
+  _a_x.resize({_number_frequencies, _number_theta, _number_phi});
+  _a_y.resize({_number_frequencies, _number_theta, _number_phi});
+  _a_z.resize({_number_frequencies, _number_theta, _number_phi});
+  _f_x.resize({_number_frequencies, _number_theta, _number_phi});
+  _f_y.resize({_number_frequencies, _number_theta, _number_phi});
+  _f_z.resize({_number_frequencies, _number_theta, _number_phi});
 
-  _jy_xn.resize({_number_frequecies, static_cast<size_t>(getNy()),
+  _jy_xn.resize({_number_frequencies, static_cast<size_t>(getNy()),
                  static_cast<size_t>(getNz())});
-  _jy_xp.resize({_number_frequecies, static_cast<size_t>(getNy()),
+  _jy_xp.resize({_number_frequencies, static_cast<size_t>(getNy()),
                  static_cast<size_t>(getNz())});
-  _jz_xn.resize({_number_frequecies, static_cast<size_t>(getNy()),
+  _jz_xn.resize({_number_frequencies, static_cast<size_t>(getNy()),
                  static_cast<size_t>(getNz())});
-  _jz_xp.resize({_number_frequecies, static_cast<size_t>(getNy()),
-                 static_cast<size_t>(getNz())});
-
-  _jz_yn.resize({_number_frequecies, static_cast<size_t>(getNz()),
-                 static_cast<size_t>(getNx())});
-  _jz_yp.resize({_number_frequecies, static_cast<size_t>(getNz()),
-                 static_cast<size_t>(getNx())});
-  _jx_yn.resize({_number_frequecies, static_cast<size_t>(getNz()),
-                 static_cast<size_t>(getNx())});
-  _jx_yp.resize({_number_frequecies, static_cast<size_t>(getNz()),
-                 static_cast<size_t>(getNx())});
-
-  _jx_zn.resize({_number_frequecies, static_cast<size_t>(getNx()),
-                 static_cast<size_t>(getNy())});
-  _jx_zp.resize({_number_frequecies, static_cast<size_t>(getNx()),
-                 static_cast<size_t>(getNy())});
-  _jy_zn.resize({_number_frequecies, static_cast<size_t>(getNx()),
-                 static_cast<size_t>(getNy())});
-  _jy_zp.resize({_number_frequecies, static_cast<size_t>(getNx()),
-                 static_cast<size_t>(getNy())});
-
-  _my_xn.resize({_number_frequecies, static_cast<size_t>(getNy()),
-                 static_cast<size_t>(getNz())});
-  _my_xp.resize({_number_frequecies, static_cast<size_t>(getNy()),
-                 static_cast<size_t>(getNz())});
-  _mz_xn.resize({_number_frequecies, static_cast<size_t>(getNy()),
-                 static_cast<size_t>(getNz())});
-  _mz_xp.resize({_number_frequecies, static_cast<size_t>(getNy()),
+  _jz_xp.resize({_number_frequencies, static_cast<size_t>(getNy()),
                  static_cast<size_t>(getNz())});
 
-  _mz_yn.resize({_number_frequecies, static_cast<size_t>(getNz()),
+  _jz_yn.resize({_number_frequencies, static_cast<size_t>(getNz()),
                  static_cast<size_t>(getNx())});
-  _mz_yp.resize({_number_frequecies, static_cast<size_t>(getNz()),
+  _jz_yp.resize({_number_frequencies, static_cast<size_t>(getNz()),
                  static_cast<size_t>(getNx())});
-  _mx_yn.resize({_number_frequecies, static_cast<size_t>(getNz()),
+  _jx_yn.resize({_number_frequencies, static_cast<size_t>(getNz()),
                  static_cast<size_t>(getNx())});
-  _mx_yp.resize({_number_frequecies, static_cast<size_t>(getNz()),
+  _jx_yp.resize({_number_frequencies, static_cast<size_t>(getNz()),
                  static_cast<size_t>(getNx())});
 
-  _mx_zn.resize({_number_frequecies, static_cast<size_t>(getNx()),
+  _jx_zn.resize({_number_frequencies, static_cast<size_t>(getNx()),
                  static_cast<size_t>(getNy())});
-  _mx_zp.resize({_number_frequecies, static_cast<size_t>(getNx()),
+  _jx_zp.resize({_number_frequencies, static_cast<size_t>(getNx()),
                  static_cast<size_t>(getNy())});
-  _my_zn.resize({_number_frequecies, static_cast<size_t>(getNx()),
+  _jy_zn.resize({_number_frequencies, static_cast<size_t>(getNx()),
                  static_cast<size_t>(getNy())});
-  _my_zp.resize({_number_frequecies, static_cast<size_t>(getNx()),
+  _jy_zp.resize({_number_frequencies, static_cast<size_t>(getNx()),
+                 static_cast<size_t>(getNy())});
+
+  _my_xn.resize({_number_frequencies, static_cast<size_t>(getNy()),
+                 static_cast<size_t>(getNz())});
+  _my_xp.resize({_number_frequencies, static_cast<size_t>(getNy()),
+                 static_cast<size_t>(getNz())});
+  _mz_xn.resize({_number_frequencies, static_cast<size_t>(getNy()),
+                 static_cast<size_t>(getNz())});
+  _mz_xp.resize({_number_frequencies, static_cast<size_t>(getNy()),
+                 static_cast<size_t>(getNz())});
+
+  _mz_yn.resize({_number_frequencies, static_cast<size_t>(getNz()),
+                 static_cast<size_t>(getNx())});
+  _mz_yp.resize({_number_frequencies, static_cast<size_t>(getNz()),
+                 static_cast<size_t>(getNx())});
+  _mx_yn.resize({_number_frequencies, static_cast<size_t>(getNz()),
+                 static_cast<size_t>(getNx())});
+  _mx_yp.resize({_number_frequencies, static_cast<size_t>(getNz()),
+                 static_cast<size_t>(getNx())});
+
+  _mx_zn.resize({_number_frequencies, static_cast<size_t>(getNx()),
+                 static_cast<size_t>(getNy())});
+  _mx_zp.resize({_number_frequencies, static_cast<size_t>(getNx()),
+                 static_cast<size_t>(getNy())});
+  _my_zn.resize({_number_frequencies, static_cast<size_t>(getNx()),
+                 static_cast<size_t>(getNy())});
+  _my_zp.resize({_number_frequencies, static_cast<size_t>(getNx()),
                  static_cast<size_t>(getNy())});
 
   initDFT();
@@ -93,16 +90,16 @@ void NffftFd::init(std::unique_ptr<GridBox> output_box,
 
 void NffftFd::initDFT() {
   using namespace std::complex_literals;
-  _frequecy_transform_j.resize({_number_frequecies, getTotalTimeSteps()});
-  _frequecy_transform_m.resize({_number_frequecies, getTotalTimeSteps()});
+  _frequency_transform_j.resize({_number_frequencies, getTotalTimeSteps()});
+  _frequency_transform_m.resize({_number_frequencies, getTotalTimeSteps()});
   const auto dt{getDt()};
-  for (int n{0}; n < _number_frequecies; ++n) {
+  for (int n{0}; n < _number_frequencies; ++n) {
     for (size_t t{0}; t < getTotalTimeSteps(); ++t) {
       // TODO(franzero): add or subtract 0.5?
-      _frequecy_transform_j(n, t) =
+      _frequency_transform_j(n, t) =
           dt * std::exp(-1i * 2.0 * constant::PI *
                         (_frequencies(n) * (t + 0.5) * dt));
-      _frequecy_transform_m(n, t) =
+      _frequency_transform_m(n, t) =
           dt * std::exp(-1i * 2.0 * constant::PI * (_frequencies(n) * t * dt));
     }
   }
@@ -132,15 +129,15 @@ void NffftFd::updateXN(size_t current_time_step) {
                       getHz(li - 1, j, k + 1) + getHz(li - 1, j, k))};
       auto jz{-0.25 * (getHy(li, j + 1, k) + getHy(li, j, k) +
                        getHy(li - 1, j + 1, k) + getHy(li - 1, j, k))};
-      for (int n{0}; n < _number_frequecies; ++n) {
+      for (int n{0}; n < _number_frequencies; ++n) {
         _my_xn(n, j - lj, k - lk) +=
-            my * _frequecy_transform_m(n, current_time_step);
+            my * _frequency_transform_m(n, current_time_step);
         _mz_xn(n, j - lj, k - lk) +=
-            mz * _frequecy_transform_m(n, current_time_step);
+            mz * _frequency_transform_m(n, current_time_step);
         _jy_xn(n, j - lj, k - lk) +=
-            jy * _frequecy_transform_j(n, current_time_step);
+            jy * _frequency_transform_j(n, current_time_step);
         _jz_xn(n, j - lj, k - lk) +=
-            jz * _frequecy_transform_j(n, current_time_step);
+            jz * _frequency_transform_j(n, current_time_step);
       }
     }
   }
@@ -161,15 +158,15 @@ void NffftFd::updateXP(size_t current_time_step) {
                        getHz(ri - 1, j, k + 1) + getHz(ri - 1, j, k))};
       auto jz{0.25 * (getHy(ri, j + 1, k) + getHy(ri, j, k) +
                       getHy(ri - 1, j + 1, k) + getHy(ri - 1, j, k))};
-      for (int n{0}; n < _number_frequecies; ++n) {
+      for (int n{0}; n < _number_frequencies; ++n) {
         _my_xp(n, j - lj, k - lk) +=
-            my * _frequecy_transform_m(n, current_time_step);
+            my * _frequency_transform_m(n, current_time_step);
         _mz_xp(n, j - lj, k - lk) +=
-            mz * _frequecy_transform_m(n, current_time_step);
+            mz * _frequency_transform_m(n, current_time_step);
         _jy_xp(n, j - lj, k - lk) +=
-            jy * _frequecy_transform_j(n, current_time_step);
+            jy * _frequency_transform_j(n, current_time_step);
         _jz_xp(n, j - lj, k - lk) +=
-            jz * _frequecy_transform_j(n, current_time_step);
+            jz * _frequency_transform_j(n, current_time_step);
       }
     }
   }
@@ -190,15 +187,15 @@ void NffftFd::updateYN(size_t current_time_step) {
                       getHx(i + 1, lj - 1, k) + getHx(i, lj - 1, k))};
       auto jx{-0.25 * (getHz(i, lj, k + 1) + getHz(i, lj, k) +
                        getHz(i, lj - 1, k + 1) + getHz(i, lj - 1, k))};
-      for (int n{0}; n < _number_frequecies; ++n) {
+      for (int n{0}; n < _number_frequencies; ++n) {
         _mz_yn(n, k - lk, i - li) +=
-            mz * _frequecy_transform_m(n, current_time_step);
+            mz * _frequency_transform_m(n, current_time_step);
         _mx_yn(n, k - lk, i - li) +=
-            mx * _frequecy_transform_m(n, current_time_step);
+            mx * _frequency_transform_m(n, current_time_step);
         _jz_yn(n, k - lk, i - li) +=
-            jz * _frequecy_transform_j(n, current_time_step);
+            jz * _frequency_transform_j(n, current_time_step);
         _jx_yn(n, k - lk, i - li) +=
-            jx * _frequecy_transform_j(n, current_time_step);
+            jx * _frequency_transform_j(n, current_time_step);
       }
     }
   }
@@ -219,15 +216,15 @@ void NffftFd::updateYP(size_t current_time_step) {
                        getHx(i + 1, rj - 1, k) + getHx(i, rj - 1, k))};
       auto jx{0.25 * (getHz(i, rj, k + 1) + getHz(i, rj, k) +
                       getHz(i, rj - 1, k + 1) + getHz(i, rj - 1, k))};
-      for (int n{0}; n < _number_frequecies; ++n) {
+      for (int n{0}; n < _number_frequencies; ++n) {
         _mz_yp(n, k - lk, i - li) +=
-            mz * _frequecy_transform_m(n, current_time_step);
+            mz * _frequency_transform_m(n, current_time_step);
         _mx_yp(n, k - lk, i - li) +=
-            mx * _frequecy_transform_m(n, current_time_step);
+            mx * _frequency_transform_m(n, current_time_step);
         _jz_yp(n, k - lk, i - li) +=
-            jz * _frequecy_transform_j(n, current_time_step);
+            jz * _frequency_transform_j(n, current_time_step);
         _jx_yp(n, k - lk, i - li) +=
-            jx * _frequecy_transform_j(n, current_time_step);
+            jx * _frequency_transform_j(n, current_time_step);
       }
     }
   }
@@ -248,15 +245,15 @@ void NffftFd::updateZN(size_t current_time_step) {
                       getHy(i, j + 1, lk - 1) + getHy(i, j, lk))};
       auto jy{-0.25 * (getHx(i + 1, j, lk) + getHx(i, j, lk) +
                        getHx(i + 1, j, lk - 1) + getHx(i, j, lk - 1))};
-      for (int n{0}; n < _number_frequecies; ++n) {
+      for (int n{0}; n < _number_frequencies; ++n) {
         _mx_zn(n, i - li, j - lj) +=
-            mx * _frequecy_transform_m(n, current_time_step);
+            mx * _frequency_transform_m(n, current_time_step);
         _my_zn(n, i - li, j - lj) +=
-            my * _frequecy_transform_m(n, current_time_step);
+            my * _frequency_transform_m(n, current_time_step);
         _jx_zn(n, i - li, j - lj) +=
-            jx * _frequecy_transform_j(n, current_time_step);
+            jx * _frequency_transform_j(n, current_time_step);
         _jy_zn(n, i - li, j - lj) +=
-            jy * _frequecy_transform_j(n, current_time_step);
+            jy * _frequency_transform_j(n, current_time_step);
       }
     }
   }
@@ -277,22 +274,22 @@ void NffftFd::updateZP(size_t current_time_step) {
                        getHy(i, j + 1, rk - 1) + getHy(i, j, rk))};
       auto jy{0.25 * (getHx(i + 1, j, rk) + getHx(i, j, rk) +
                       getHx(i + 1, j, rk - 1) + getHx(i, j, rk - 1))};
-      for (int n{0}; n < _number_frequecies; ++n) {
+      for (int n{0}; n < _number_frequencies; ++n) {
         _mx_zp(n, i - li, j - lj) +=
-            mx * _frequecy_transform_m(n, current_time_step);
+            mx * _frequency_transform_m(n, current_time_step);
         _my_zp(n, i - li, j - lj) +=
-            my * _frequecy_transform_m(n, current_time_step);
+            my * _frequency_transform_m(n, current_time_step);
         _jx_zp(n, i - li, j - lj) +=
-            jx * _frequecy_transform_j(n, current_time_step);
+            jx * _frequency_transform_j(n, current_time_step);
         _jy_zp(n, i - li, j - lj) +=
-            jy * _frequecy_transform_j(n, current_time_step);
+            jy * _frequency_transform_j(n, current_time_step);
       }
     }
   }
 }
 
 void NffftFd::calculateFarfield() {
-  for (int n{0}; n < _number_frequecies; ++n) {
+  for (int n{0}; n < _number_frequencies; ++n) {
     for (int t{0}; t < _number_theta; ++t) {
       for (int p{0}; p < _number_phi; ++p) {
         auto cos_t{std::cos(_theta(t))};
@@ -500,91 +497,103 @@ void NffftFd::outputData() {
       std::filesystem::create_directory(output_dir_path);
     } catch (std::exception e) {
       std::cerr << "Error: cannot create directory " << output_dir_path
-                << "\t Error:" << e.what() << std::endl;
+                << "\t Error:" << e.what() << '\n';
       return;
     }
   }
-  outputFarFieldParamertes();
+  // outputFarFieldParameters();
 
-  for (int n{0}; n < _number_frequecies; ++n) {
-    auto ghz{(_frequencies(n) / 1e9)};
-    std::filesystem::path path{output_dir_path /
-                               ("far_field_" + std::to_string(ghz) + "GHz")};
-    try {
-      std::filesystem::create_directory(path);
-    } catch (std::exception e) {
-      std::cerr << "Error: cannot create directory " << path
-                << "\t Error:" << e.what() << std::endl;
-      return;
-    }
-    std::ofstream e_theta_data{path / ("e_theta.dat")};
-    std::ofstream e_phi_data{path / ("e_phi_.dat")};
-    std::ofstream h_theta_data{path / ("h_theta.dat")};
-    std::ofstream h_phi_data{path / ("h_phi_.dat")};
-    std::ofstream n_theta_data{path / ("n_theta.dat")};
-    std::ofstream n_phi_data{path / ("n_phi_.dat")};
-    std::ofstream l_theta_data{path / ("l_theta.dat")};
-    std::ofstream l_phi_data{path / ("l_phi.dat")};
-    std::ofstream power_theta_data{path / ("power_theta.dat")};
-    std::ofstream power_phi_data{path / ("power_phi.dat")};
-    std::ofstream test_data{path / ("test.dat")};
+  xt::dump_npy(output_dir_path / "frequencies.npy", _frequencies);
+  xt::dump_npy(output_dir_path / "theta.npy", _theta);
+  xt::dump_npy(output_dir_path / "phi.npy", _phi);
 
-    for (int t{0}; t < _number_theta; ++t) {
-      for (int p{0}; p < _number_phi; ++p) {
-        e_theta_data << _e_theta(n, t, p) << "\t";
-        e_phi_data << _e_phi(n, t, p) << "\t";
-        h_theta_data << _h_theta(n, t, p) << "\t";
-        h_phi_data << _h_phi(n, t, p) << "\t";
-        n_theta_data << _a_theta(n, t, p) << "\t";
-        n_phi_data << _a_phi(n, t, p) << "\t";
-        l_theta_data << _f_theta(n, t, p) << "\t";
-        l_phi_data << _f_phi(n, t, p) << "\t";
-        test_data << abs(constant::ETA_0 * _a_theta(n, t, p) + _f_phi(n, t, p))
-                  << "\t";
+  xt::dump_npy(output_dir_path / "e_theta.npy", _e_theta);
+  xt::dump_npy(output_dir_path / "e_phi.npy", _e_phi);
+  xt::dump_npy(output_dir_path / "h_theta.npy", _h_theta);
+  xt::dump_npy(output_dir_path / "h_phi.npy", _h_phi);
+  xt::dump_npy(output_dir_path / "n_theta.npy", _a_theta);
+  xt::dump_npy(output_dir_path / "n_phi.npy", _a_phi);
+  xt::dump_npy(output_dir_path / "l_theta.npy", _f_theta);
+  xt::dump_npy(output_dir_path / "l_phi.npy", _f_phi);
+  xt::dump_npy(output_dir_path / "power_theta.npy", _power_theta);
+  xt::dump_npy(output_dir_path / "power_phi.npy", _power_phi);
 
-        power_theta_data << _power_theta(n, t, p) << "\t";
-        power_phi_data << _power_phi(n, t, p) << "\t";
-      }
-      e_theta_data << std::endl;
-      e_phi_data << std::endl;
-      h_theta_data << std::endl;
-      h_phi_data << std::endl;
-      n_theta_data << std::endl;
-      n_phi_data << std::endl;
-      l_theta_data << std::endl;
-      l_phi_data << std::endl;
-      power_theta_data << std::endl;
-      power_phi_data << std::endl;
-    }
-    e_theta_data.close();
-    e_phi_data.close();
-    h_theta_data.close();
-    h_phi_data.close();
-    power_theta_data.close();
-    power_phi_data.close();
-  }
+  // for (int n{0}; n < _number_frequencies; ++n) {
+  //   auto ghz{(_frequencies(n) / 1e9)};
+  //   std::filesystem::path path{output_dir_path /
+  //                              ("far_field_" + std::to_string(ghz) + "GHz")};
+  //   try {
+  //     std::filesystem::create_directory(path);
+  //   } catch (std::exception e) {
+  //     std::cerr << "Error: cannot create directory " << path
+  //               << "\t Error:" << e.what() << '\n';
+  //     return;
+  //   }
+  //   std::ofstream e_theta_data{path / ("e_theta.dat")};
+  //   std::ofstream e_phi_data{path / ("e_phi_.dat")};
+  //   std::ofstream h_theta_data{path / ("h_theta.dat")};
+  //   std::ofstream h_phi_data{path / ("h_phi_.dat")};
+  //   std::ofstream n_theta_data{path / ("n_theta.dat")};
+  //   std::ofstream n_phi_data{path / ("n_phi_.dat")};
+  //   std::ofstream l_theta_data{path / ("l_theta.dat")};
+  //   std::ofstream l_phi_data{path / ("l_phi.dat")};
+  //   std::ofstream power_theta_data{path / ("power_theta.dat")};
+  //   std::ofstream power_phi_data{path / ("power_phi.dat")};
+
+  //   for (int t{0}; t < _number_theta; ++t) {
+  //     for (int p{0}; p < _number_phi; ++p) {
+  //       e_theta_data << _e_theta(n, t, p) << "\t";
+  //       e_phi_data << _e_phi(n, t, p) << "\t";
+  //       h_theta_data << _h_theta(n, t, p) << "\t";
+  //       h_phi_data << _h_phi(n, t, p) << "\t";
+  //       n_theta_data << _a_theta(n, t, p) << "\t";
+  //       n_phi_data << _a_phi(n, t, p) << "\t";
+  //       l_theta_data << _f_theta(n, t, p) << "\t";
+  //       l_phi_data << _f_phi(n, t, p) << "\t";
+
+  //       power_theta_data << _power_theta(n, t, p) << "\t";
+  //       power_phi_data << _power_phi(n, t, p) << "\t";
+  //     }
+  //     e_theta_data << std::endl;
+  //     e_phi_data << std::endl;
+  //     h_theta_data << std::endl;
+  //     h_phi_data << std::endl;
+  //     n_theta_data << std::endl;
+  //     n_phi_data << std::endl;
+  //     l_theta_data << std::endl;
+  //     l_phi_data << std::endl;
+  //     power_theta_data << std::endl;
+  //     power_phi_data << std::endl;
+  //   }
+  //   e_theta_data.close();
+  //   e_phi_data.close();
+  //   h_theta_data.close();
+  //   h_phi_data.close();
+  //   power_theta_data.close();
+  //   power_phi_data.close();
+  // }
 }
 
-void NffftFd::outputFarFieldParamertes() {
-  std::ofstream far_field_paramerter_writer{getOutputDirPath() /
-                                            "far_field_parameter.dat"};
-  far_field_paramerter_writer << "number of frequencies: " << _number_frequecies
-                              << "\n";
-  for (const auto& e : _frequencies) {
-    far_field_paramerter_writer << e << "\t";
-  }
-  far_field_paramerter_writer << std::endl;
-  far_field_paramerter_writer << "number of theta: " << _number_theta << "\n";
-  for (const auto& e : _theta) {
-    far_field_paramerter_writer << e << "\t";
-  }
-  far_field_paramerter_writer << std::endl;
-  far_field_paramerter_writer << "number of phi: " << _number_phi << "\n";
-  for (const auto& e : _phi) {
-    far_field_paramerter_writer << e << "\t";
-  }
-  far_field_paramerter_writer << "\nthe intrinsic impedance: "
-                              << constant::ETA_0;
-  far_field_paramerter_writer.close();
+void NffftFd::outputFarFieldParameters() {
+  // std::ofstream far_field_parameter_writer{getOutputDirPath() /
+  //                                          "far_field_parameter.dat"};
+  // far_field_parameter_writer << "number of frequencies: " << _number_frequencies
+  //                            << "\n";
+  // for (const auto& e : _frequencies) {
+  //   far_field_parameter_writer << e << "\t";
+  // }
+  // far_field_parameter_writer << std::endl;
+  // far_field_parameter_writer << "number of theta: " << _number_theta << "\n";
+  // for (const auto& e : _theta) {
+  //   far_field_parameter_writer << e << "\t";
+  // }
+  // far_field_parameter_writer << std::endl;
+  // far_field_parameter_writer << "number of phi: " << _number_phi << "\n";
+  // for (const auto& e : _phi) {
+  //   far_field_parameter_writer << e << "\t";
+  // }
+  // far_field_parameter_writer << "\nthe intrinsic impedance: "
+  //                            << constant::ETA_0;
+  // far_field_parameter_writer.close();
 }
 }  // namespace xfdtd

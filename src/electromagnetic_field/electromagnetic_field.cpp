@@ -1,6 +1,27 @@
 #include "electromagnetic_field/electromagnetic_field.h"
 
+#include "util/type_define.h"
+
 namespace xfdtd {
+
+const EFTA& EMF::getEx() const { return _ex; }
+
+const EFTA& EMF::getEy() const { return _ey; }
+
+const EFTA& EMF::getEz() const { return _ez; }
+
+const EFTA& EMF::getHx() const { return _hx; }
+
+const EFTA& EMF::getHy() const { return _hy; }
+
+const EFTA& EMF::getHz() const { return _hz; }
+
+const EFTA& EMF::getExPrev() const { return _ex_prev; }
+
+const EFTA& EMF::getEyPrev() const { return _ey_prev; }
+
+const EFTA& EMF::getEzPrev() const { return _ez_prev; }
+
 void EMF::allocateEx(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
                      double default_value) {
   _ex = allocateDoubleArray3D(nx, ny, nz, default_value);
@@ -74,6 +95,41 @@ void EMF::allocateJyPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
 void EMF::allocateJzPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
                          double default_value) {
   _jz_prev = allocateDoubleArray3D(nx, ny, nz, default_value);
+}
+
+const EFTA& EMF::getEMComponent(EMComponent c) const {
+  switch (c) {
+    case EMComponent::EX:
+      return getEx();
+    case EMComponent::EY:
+      return getEy();
+    case EMComponent::EZ:
+      return getEz();
+    case EMComponent::HX:
+      return getHx();
+    case EMComponent::HY:
+      return getHy();
+    case EMComponent::HZ:
+      return getHz();
+  }
+}
+
+double EMF::getEMComponent(EMComponent c, SpatialIndex i, SpatialIndex j,
+                           SpatialIndex k) const {
+  switch (c) {
+    case EMComponent::EX:
+      return getEx(i, j, k);
+    case EMComponent::EY:
+      return getEy(i, j, k);
+    case EMComponent::EZ:
+      return getEz(i, j, k);
+    case EMComponent::HX:
+      return getHx(i, j, k);
+    case EMComponent::HY:
+      return getHy(i, j, k);
+    case EMComponent::HZ:
+      return getHz(i, j, k);
+  }
 }
 
 EFTA& EMF::getEMComponent(EMComponent c) {

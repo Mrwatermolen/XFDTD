@@ -15,10 +15,10 @@
 
 namespace xfdtd {
 NFFFT2DTEST::NFFFT2DTEST(SpatialIndex distance_x, SpatialIndex distance_y,
-                         SpatialIndex direction_z, double far_tehta,
+                         SpatialIndex direction_z, double far_theta,
                          double far_phi, std::filesystem::path output_dir_path)
     : NFFFT(distance_x, distance_y, direction_z, std::move(output_dir_path)),
-      _farfield_theta{far_tehta},
+      _farfield_theta{far_theta},
       _farfield_phi{far_phi} {}
 
 void NFFFT2DTEST::init(std::unique_ptr<GridBox> output_box,

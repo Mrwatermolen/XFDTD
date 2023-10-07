@@ -7,7 +7,7 @@ namespace xfdtd {
 class NFFFT2DTEST : public NFFFT {
  public:
   NFFFT2DTEST(SpatialIndex distance_x, SpatialIndex distance_y,
-              SpatialIndex direction_z, double far_tehta, double far_phi,
+              SpatialIndex direction_z, double far_theta, double far_phi,
               std::filesystem::path output_dir_path);
   ~NFFFT2DTEST() override = default;
 

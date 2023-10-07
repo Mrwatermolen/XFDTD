@@ -5,7 +5,8 @@
 #include <string_view>
 #include <tuple>
 
-#include "material/dispersive_material.h"
+#include "fdtd_basic_coff/fdtd_basic_coff.h"
+#include "grid/grid_space.h"
 #include "material/material.h"
 #include "shape/shape.h"
 
@@ -26,13 +27,15 @@ class Object {
 
   std::unique_ptr<Object> clone() const;
 
-  inline bool isPointInside(const PointVector& point) {
+  virtual bool isPointInside(const PointVector& point) {
     return _shape->isPointInside(point);
   }
 
   inline std::unique_ptr<Shape> getWrappedBox() const {
     return _shape->getWrappedBox();
   }
+
+  std::unique_ptr<Shape> getShape() const { return _shape->clone(); }
 
   inline bool isDispersion() { return _material->isDispersion(); }
 
@@ -45,32 +48,43 @@ class Object {
     return _material->getElectromagneticProperties();
   }
 
-  void init(double dt, double dl, const std::shared_ptr<EMF>& emf) {
-    if (isDispersion()) {
-      auto m{_material.get()};
-      m->init(dt, dl, emf);
-    }
-  }
+  virtual void init(int index, std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+                    std::shared_ptr<GridSpace> grid_space,
+                    const std::shared_ptr<EMF>& emf);
 
-  virtual void correctCece(xt::xarray<bool>& mask, EFTA& cece, double dt);
-  virtual void correctCecha(xt::xarray<bool>& mask, EFTA& cecha, double db,
-                            double dt);
-  virtual void correctCechb(xt::xarray<bool>& mask, EFTA& ceahb, double da,
-                            double dt);
-  virtual void correctChch(xt::xarray<bool>& mask, EFTA& chch, double dt);
-  virtual void correctChcea(xt::xarray<bool>& mask, EFTA& chaha, double db,
-                            double dt);
-  virtual void correctChceb(xt::xarray<bool>& mask, EFTA& chahb, double da,
-                            double dt);
+  virtual void correctFDTDCoff();
 
-  void updateEx(int i, int j, int k) { _material->updateEx(i, j, k); }
-  void updateEy(int i, int j, int k) { _material->updateEy(i, j, k); }
-  void updateEz(int i, int j, int k) { _material->updateEz(i, j, k); }
+  void updateEx(size_t i, size_t j, size_t k);
+
+  void updateEy(size_t i, size_t j, size_t k);
+
+  void updateEz(size_t i, size_t j, size_t k);
+
+  void updateHx(size_t i, size_t j, size_t k);
+
+  void updateHy(size_t i, size_t j, size_t k);
+
+  void updateHz(size_t i, size_t j, size_t k);
+
+ protected:
+  void defaultInit(int index, std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+                   std::shared_ptr<GridSpace> grid_space,
+                   const std::shared_ptr<EMF>& emf);
+
+  std::shared_ptr<FDTDBasicCoff> getFDTDBasicCoff() const;
+
+  std::shared_ptr<GridSpace> getGridSpace() const;
+
+  Shape* getShapeRawPoint() const;
 
  private:
   std::string _name;
   std::unique_ptr<Shape> _shape;
   std::unique_ptr<Material> _material;
+  std::shared_ptr<FDTDBasicCoff> _fdtd_basic_coff;
+  std::shared_ptr<GridSpace> _grid_space;
+  double _dt;
+  double _dl;
 };
 
 }  // namespace xfdtd

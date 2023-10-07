@@ -2,7 +2,6 @@
 #define _PERFECT_MATCH_LAYER_H_
 
 #include <memory>
-#include <vector>
 
 #include "boundary/boundary.h"
 #include "shape/shape.h"
@@ -34,13 +33,16 @@ class PML : public Boundary {
   PML(Orientation orientation, int thickness, int order = 4,
       double sigma_ratio = 1, double alpha_min = 0, double alpha_max = 0.05,
       double kappa_max = 10);
-  PML(const PML& pml) = default;
-  PML& operator=(const PML& pml) = default;
+  PML(const PML& pml) = delete;
+  PML& operator=(const PML& pml) = delete;
   PML(PML&& pml) noexcept = default;
   PML& operator=(PML&& pml) noexcept = default;
   ~PML() override = default;
 
-  void init(Simulation* simulation) override;
+  void init(std::shared_ptr<EMF> emf,
+            std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+            std::shared_ptr<GridSpace> grid_space,
+            std::unique_ptr<Shape> shape) override;
 
   inline SpatialIndex getSize() const override { return _thickness; }
   inline Orientation getOrientation() const override { return _orientation; }
@@ -74,30 +76,30 @@ class PML : public Boundary {
   SpatialIndex _nb;
   SpatialIndex _start_index;
 
-  DoubleArrary1D _rho_e;
-  DoubleArrary1D _rho_m;
-  DoubleArrary1D _sigma_e;
-  DoubleArrary1D _sigma_m;
-  DoubleArrary1D _kappa_e;
-  DoubleArrary1D _kappa_m;
-  DoubleArrary1D _alpha_e;
-  DoubleArrary1D _alpha_m;
+  xt::xarray<double> _rho_e;
+  xt::xarray<double> _rho_m;
+  xt::xarray<double> _sigma_e;
+  xt::xarray<double> _sigma_m;
+  xt::xarray<double> _kappa_e;
+  xt::xarray<double> _kappa_m;
+  xt::xarray<double> _alpha_e;
+  xt::xarray<double> _alpha_m;
 
   // update parameters
-  DoubleArrary1D _cpml_a_e;
-  DoubleArrary1D _cpml_b_e;
-  DoubleArrary1D _cpml_a_m;
-  DoubleArrary1D _cpml_b_m;
+  xt::xarray<double> _cpml_a_e;
+  xt::xarray<double> _cpml_b_e;
+  xt::xarray<double> _cpml_a_m;
+  xt::xarray<double> _cpml_b_m;
 
-  DoubleArrary3D _psi_ea;
-  DoubleArrary3D _psi_eb;
-  DoubleArrary3D _psi_ha;
-  DoubleArrary3D _psi_hb;
+  xt::xtensor<double, 3> _psi_ea;
+  xt::xtensor<double, 3> _psi_eb;
+  xt::xtensor<double, 3> _psi_ha;
+  xt::xtensor<double, 3> _psi_hb;
 
-  DoubleArrary3D _c_psi_ea;
-  DoubleArrary3D _c_psi_eb;
-  DoubleArrary3D _c_psi_ha;
-  DoubleArrary3D _c_psi_hb;
+  xt::xtensor<double, 3> _c_psi_ea;
+  xt::xtensor<double, 3> _c_psi_eb;
+  xt::xtensor<double, 3> _c_psi_ha;
+  xt::xtensor<double, 3> _c_psi_hb;
 
   void init(double dl, double dt, SpatialIndex start_index, int na, int nb,
             EFTA& ceahb, EFTA& cebha, EFTA& chaeb, EFTA& chbea);

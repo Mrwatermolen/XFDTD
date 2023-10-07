@@ -1,50 +1,72 @@
-#ifndef __MONITOR_H__
-#define __MONITOR_H__
+#ifndef _XFDTD_MONITOR_H_
+#define _XFDTD_MONITOR_H_
 
 #include <filesystem>
 #include <memory>
 
 #include "electromagnetic_field/electromagnetic_field.h"
+#include "fdtd_basic_coff/fdtd_basic_coff.h"
+#include "grid/grid_space.h"
 #include "shape/shape.h"
-#include "util/type_define.h"
 namespace xfdtd {
 
 class Monitor {
  public:
   Monitor() = default;
+
   Monitor(std::unique_ptr<Shape> shape, std::filesystem::path output_dir_path,
           std::string output_file_name);
-  Monitor(const Monitor& other) = delete;
+
+  Monitor(const Monitor& other);
+
+  Monitor& operator=(const Monitor& other);
+
   Monitor(Monitor&& other) noexcept = default;
-  Monitor& operator=(const Monitor& other) = delete;
+
   Monitor& operator=(Monitor&& other) noexcept = default;
+
   virtual ~Monitor() = default;
 
-  virtual const std::unique_ptr<Shape>& getShape() const;
+  virtual std::unique_ptr<Monitor> clone() const = 0;
+
+  virtual void init(const std::shared_ptr<const FDTDBasicCoff>& fdtd_basic_coff,
+                    const std::shared_ptr<const GridSpace>& grid_space,
+                    const std::shared_ptr<const EMF>& emf) = 0;
+
+  virtual void update() = 0;
+
+  virtual void outputData() = 0;
+
   virtual const std::filesystem::path& getOutputPath() const;
+
   virtual const std::string& getOutputFileName() const;
 
   virtual void setOutputDirPath(const std::string& output_dir_path);
+
   virtual void setOutputFileName(const std::string& output_file_name);
 
-  virtual void setYeeCells(const YeeCellArray& yee_cells) = 0;
-  virtual void setYeeCells(YeeCellArray&& yee_cells) = 0;
-
-  virtual void setEMFInstance(std::shared_ptr<EMF> emf) { _emf = std::move(emf); };
-
-  virtual void update(size_t current_time_step) = 0;
-  virtual void outputData() = 0;
-
  protected:
-  inline std::shared_ptr<EMF> getEMFInstance() const { return _emf; }
+  void defaultInit(const std::shared_ptr<const FDTDBasicCoff>& fdtd_basic_coff,
+                   const std::shared_ptr<const GridSpace>& grid_space,
+                   const std::shared_ptr<const EMF>& emf);
+
+  virtual const Shape* getShape() const;
+
+  const GridSpace* getGridSpaceInstance() const;
+
+  const FDTDBasicCoff* getFDTDBasicCoffInstance() const;
+
+  const EMF* getEMFInstance() const;
 
  private:
   std::unique_ptr<Shape> _shape;
   std::filesystem::path _output_dir_path;
   std::string _output_file_name;
-  std::shared_ptr<EMF> _emf;
+  std::shared_ptr<const FDTDBasicCoff> _fdtd_basic_coff;
+  std::shared_ptr<const GridSpace> _grid_space;
+  std::shared_ptr<const EMF> _emf;
 };
 
 }  // namespace xfdtd
 
-#endif
+#endif  // _XFDTD_MONITOR_H_

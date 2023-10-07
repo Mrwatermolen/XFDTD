@@ -7,19 +7,25 @@
 
 #include "boundary/boundary.h"
 #include "electromagnetic_field/electromagnetic_field.h"
+#include "fdtd_basic_coff/fdtd_basic_coff.h"
+#include "grid/grid_space.h"
+#include "lumped_element/lumped_element.h"
 #include "monitor/monitor.h"
+#include "network/network.h"
 #include "nffft/nffft.h"
 #include "object/object.h"
-#include "shape/cube.h"
 #include "tfsf/tfsf.h"
 #include "util/type_define.h"
 
 namespace xfdtd {
-class TFSF2D;
+
+using ObjectArray = std::vector<std::shared_ptr<Object>>;
+using BoundaryArray = std::vector<std::shared_ptr<Boundary>>;
+using MonitorArray = std::vector<std::shared_ptr<Monitor>>;
+
 class Simulation {
  public:
   inline static constexpr float DEFAULT_CFL{0.99};
-  Simulation() : _emf{std::make_shared<EMF>()} {}
 
   explicit Simulation(double cell_size, float cfl = DEFAULT_CFL);
   Simulation(double cell_size, ObjectArray objects, BoundaryArray boundaries,
@@ -27,41 +33,56 @@ class Simulation {
   Simulation(double cell_size, ObjectArray objects, BoundaryArray boundaries,
              std::unique_ptr<TFSF> tfsf, std::unique_ptr<NFFFT> nffft,
              float cfl = DEFAULT_CFL);
+  Simulation(double cell_size, ObjectArray objects,
+             std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
+             BoundaryArray boundaries = {}, MonitorArray monitor = {},
+             float cfl = DEFAULT_CFL);
 
-  void setCellSize(double cell_size);
+  Simulation(double cell_size, ObjectArray objects,
+             std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
+             MonitorArray monitors = {}, float cfl = DEFAULT_CFL);
+
+  Simulation(double cell_size, ObjectArray objects, MonitorArray monitors = {},
+             float cfl = DEFAULT_CFL);
+
+  Simulation(double cell_size, ObjectArray objects,
+             std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
+             BoundaryArray boundaries, MonitorArray monitors,
+             std::unique_ptr<Network> network, float cfl = DEFAULT_CFL);
+
   void addObject(std::unique_ptr<Object> object);
   void addTFSFSource(std::unique_ptr<TFSF> tfsf);
   void addNFFFT(std::unique_ptr<NFFFT> nffft);
   void addMonitor(std::unique_ptr<Monitor> monitor);
 
-  void checkRun(size_t time_steps);
-  void run(size_t time_steps);
+  void checkRun(size_t total_time_steps);
+  void run(size_t total_time_steps);
 
-  inline double getDx() const { return _dx; }
-  inline double getDy() const { return _dy; }
-  inline double getDz() const { return _dz; }
-  inline double getDt() const { return _dt; }
-  inline SpatialIndex getNx() const { return _nx; }
-  inline SpatialIndex getNy() const { return _ny; }
-  inline SpatialIndex getNz() const { return _nz; }
-  inline EFTA& getCexe() { return _cexe; }
-  inline EFTA& getCexhy() { return _cexhy; }
-  inline EFTA& getCexhz() { return _cexhz; }
-  inline EFTA& getCeye() { return _ceye; }
-  inline EFTA& getCeyhz() { return _ceyhz; }
-  inline EFTA& getCeyhx() { return _ceyhx; }
-  inline EFTA& getCeze() { return _ceze; }
-  inline EFTA& getCezhx() { return _cezhx; }
-  inline EFTA& getCezhy() { return _cezhy; }
-  inline EFTA& getChxh() { return _chxh; }
-  inline EFTA& getChxey() { return _chxey; }
-  inline EFTA& getChxez() { return _chxez; }
-  inline EFTA& getChyh() { return _chyh; }
-  inline EFTA& getChyez() { return _chyez; }
-  inline EFTA& getChyex() { return _chyex; }
-  inline EFTA& getChzh() { return _chzh; }
-  inline EFTA& getChzex() { return _chzex; }
-  inline EFTA& getChzey() { return _chzey; }
+  inline double getDx() const { return _fdtd_basic_coff->getDx(); }
+  inline double getDy() const { return _fdtd_basic_coff->getDy(); }
+  inline double getDz() const { return _fdtd_basic_coff->getDz(); }
+  inline double getDt() const { return _fdtd_basic_coff->getDt(); }
+  inline SpatialIndex getNx() const { return _grid_space->getGridNumX(); }
+  inline SpatialIndex getNy() const { return _grid_space->getGridNumY(); }
+  inline SpatialIndex getNz() const { return _grid_space->getGridNumZ(); }
+  inline EFTA& getCexe() { return _fdtd_basic_coff->getCexe(); }
+  inline EFTA& getCexhy() { return _fdtd_basic_coff->getCexhy(); }
+  inline EFTA& getCexhz() { return _fdtd_basic_coff->getCexhz(); }
+  inline EFTA& getCeye() { return _fdtd_basic_coff->getCeye(); }
+  inline EFTA& getCeyhz() { return _fdtd_basic_coff->getCeyhz(); }
+  inline EFTA& getCeyhx() { return _fdtd_basic_coff->getCeyhx(); }
+  inline EFTA& getCeze() { return _fdtd_basic_coff->getCeze(); }
+  inline EFTA& getCezhx() { return _fdtd_basic_coff->getCezhx(); }
+  inline EFTA& getCezhy() { return _fdtd_basic_coff->getCezhy(); }
+  inline EFTA& getChxh() { return _fdtd_basic_coff->getChxh(); }
+  inline EFTA& getChxey() { return _fdtd_basic_coff->getChxey(); }
+  inline EFTA& getChxez() { return _fdtd_basic_coff->getChxez(); }
+  inline EFTA& getChyh() { return _fdtd_basic_coff->getChyh(); }
+  inline EFTA& getChyez() { return _fdtd_basic_coff->getChyez(); }
+  inline EFTA& getChyex() { return _fdtd_basic_coff->getChyex(); }
+  inline EFTA& getChzh() { return _fdtd_basic_coff->getChzh(); }
+  inline EFTA& getChzex() { return _fdtd_basic_coff->getChzex(); }
+  inline EFTA& getChzey() { return _fdtd_basic_coff->getChzey(); }
 
   inline std::shared_ptr<EMF> getEMFInstance() { return _emf; }
   inline EFTA& getEx() { return _emf->getEx(); }
@@ -90,71 +111,38 @@ class Simulation {
   }
 
  private:
-  // simulation parameter
-  double _dx;
-  double _dy;
-  double _dz;
-  float _cfl{DEFAULT_CFL};
-
   ObjectArray _objects;
   BoundaryArray _boundaries;
+  std::vector<std::shared_ptr<LumpedElement>> _lumped_elements;
   std::unique_ptr<TFSF> _tfsf;
   std::unique_ptr<NFFFT> _nffft;
   MonitorArray _monitors;
-
-  SpatialIndex _nx;
-  SpatialIndex _ny;
-  SpatialIndex _nz;
-  double _dt;
-  size_t _time_steps;
-  size_t _current_time_step;
-
-  xt::xarray<std::shared_ptr<YeeCell>> _grid_space;
-  std::unique_ptr<Cube> _simulation_box;
-
+  std::unique_ptr<Network> _network;
+  std::shared_ptr<GridSpace> _grid_space;
   std::shared_ptr<EMF> _emf;
+  std::shared_ptr<FDTDBasicCoff> _fdtd_basic_coff;
 
-  EFTA _cexe;
-  EFTA _cexhy;
-  EFTA _cexhz;
-  EFTA _cexje;
-  EFTA _ceye;
-  EFTA _ceyhz;
-  EFTA _ceyhx;
-  EFTA _ceyje;
-  EFTA _ceze;
-  EFTA _cezhx;
-  EFTA _cezhy;
-  EFTA _cezje;
-
-  EFTA _chxh;
-  EFTA _chxey;
-  EFTA _chxez;
-  EFTA _chxjm;
-  EFTA _chyh;
-  EFTA _chyez;
-  EFTA _chyex;
-  EFTA _chyjm;
-  EFTA _chzh;
-  EFTA _chzex;
-  EFTA _chzey;
-  EFTA _chzjm;
+  size_t _total_time_steps;
+  size_t _current_time_step;
+  size_t _nx, _ny, _nz;
 
   bool _is_exist_dispersive_material{false};
   xt::xarray<bool> _is_exist_dispersive_material_array;
 
   void init();
   void initMaterialGrid();
+  void initFDTDBasicCoff();
+  void initEMInstance();
   void initTFSF();
   void initNFFFT();
   void initUpdateCoefficient();
   void initBoundaryCondition();
   // TODO(franzero): fix it
   void initMonitor();
-
-  void calculateDomainSize();
-  void gridSimulationSpace();
-  void allocateArray();
+  void initObject();
+  void initGridSpace();
+  void initLumpedElement();
+  void initNetwork();
 
   void updateTFSFIncidentField();
   void updateH();
@@ -166,6 +154,12 @@ class Simulation {
   void updateNFFFT();
   void updateMonitor();
   void updateEWithDispersiveMaterial();
+
+  void correctE();
+
+  void correctH();
+
+  void outputData();
 
   inline void allocateEx(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
     _emf->allocateEx(nx, ny, nz);

@@ -8,7 +8,6 @@ project(
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(XTENSOR_USE_XSIMD 1)
 
 include("cmake/FindFFTW.cmake")
 find_package(xtl REQUIRED)
@@ -26,14 +25,8 @@ endif()
 set(XFDTD_XTENSOR_LIB_INCLUDE_DIR ${xtensor_INCLUDE_DIRS})
 
 include_directories(
-  src/include
-  ${FFTW_INCLUDE_DIR}
-  ${XFDTD_XTENSOR_LIB_INCLUDE_DIR}
-  ${xtensor-fftw_INCLUDE_DIRS}
-  xtensor::optimize
-  xtensor::use_xsimd
-  ${BLAS_LIBRARIES}
-  ${LAPACK_LIBRARIES})
+  src/include ${FFTW_INCLUDE_DIR} ${XFDTD_XTENSOR_LIB_INCLUDE_DIR}
+  ${xtensor-fftw_INCLUDE_DIRS} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 
 add_subdirectory(src)
 add_subdirectory(test)

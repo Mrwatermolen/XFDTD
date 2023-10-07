@@ -1,3 +1,4 @@
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
@@ -9,6 +10,7 @@
 #include <xtensor/xarray.hpp>
 #include <xtensor/xfixed.hpp>
 #include <xtensor/xio.hpp>
+#include <xtensor/xmasked_view.hpp>
 #include <xtensor/xnorm.hpp>
 #include <xtensor/xrandom.hpp>
 
@@ -19,8 +21,9 @@ void exampleForResize();
 void exampleForStack();
 void exampleForMeshgrid();
 void exampleForFind();
+void exampleForIndex();
 
-int main() { exampleForFind(); }
+int main() { exampleForIndex(); }
 
 void exampleForDotProduct() {
   std::cout << "Xtensor: dot product for two vectors" << std::endl;
@@ -98,7 +101,7 @@ void exampleForStack() {
 
 void exampleForMeshgrid() {
   auto [x_matrix, y_matrix, z_matrix] =
-      xt::meshgrid(xt::linspace(0.0, 1.0, 2), xt::arange<double>(1, 1, 1),
+      xt::meshgrid(xt::linspace(0.0, 1.0, 2), xt::arange<double>(1, 2, 1),
                    xt::linspace(0.0, 1.0, 2));
 
   std::cout << "X:\n" << x_matrix << std::endl;
@@ -131,20 +134,39 @@ void exampleForMeshgrid() {
 }
 
 void exampleForFind() {
-  // 创建一个 3x3 的 xtensor 数组
   xt::xarray<int> arr{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
   xt::xarray<int> coff{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
 
-  // 使用一个 n 维的 std::vector 作为索引来修改元素
   std::vector<std::size_t> index = {1, 2};
   xt::xarray<bool> mask = arr > 3;
   xt::filter(coff, mask) = 0;
+  auto a{xt::filter(coff, mask)};
+  std::cout << mask << std::endl;
+  auto dd = xt::masked_view(coff, mask);
+  a = 1;
+  dd += 100;
 
-  // 打印修改后的数组
   std::cout << arr << std::endl;
   std::cout << coff << std::endl;
-  for (auto e : arr) {
-    std::cout << e << "\t";
-  }
   std::cout << std::endl;
+}
+
+void exampleForIndex() {
+  xt::xarray<int> arr{xt::arange<int>(0, 27)};
+  arr.reshape({3, 3, 3});
+  std::cout << "Array:\n" << arr << std::endl;
+  auto range_x{xt::range(0, 2)};
+  auto range_y{xt::range(1, 3)};
+  auto range_z{xt::range(0, 3)};
+  auto sub_arr{xt::view(arr, range_x, range_y, range_z)};
+  std::cout << "Sub array:\n" << sub_arr << std::endl;
+  std::vector<std::array<size_t, 3>> indices;
+  for (size_t i = 0; i < 2; ++i) {
+    for (size_t j = 1; j < 3; ++j) {
+      for (size_t k = 0; k < 3; ++k) {
+        indices.push_back({i, j, k});
+      }
+    }
+  }
+  std::cout << "Values:\n" << xt::index_view(arr, indices) << std::endl;
 }

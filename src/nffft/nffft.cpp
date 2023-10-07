@@ -1,19 +1,13 @@
 #include "nffft/nffft.h"
 
-#include <complex>
-#include <fstream>
-#include <iostream>
 #include <utility>
-#include <vector>
 #include <xtensor-fftw/basic_double.hpp>
 #include <xtensor-fftw/helper.hpp>
 #include <xtensor/xadapt.hpp>
 #include <xtensor/xio.hpp>
 #include <xtensor/xview.hpp>
 
-#include "util/constant.h"
 #include "util/type_define.h"
-#include "waveform/cosine_modulated_gaussian_waveform.h"
 
 namespace xfdtd {
 

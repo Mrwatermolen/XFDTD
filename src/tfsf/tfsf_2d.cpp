@@ -109,7 +109,6 @@ void TFSF2D::init(double dx, double dy, double dz, double dt,
   for (SpatialIndex i{getStartIndexY()}; i < getEndIndexY() + 1; ++i) {
     getIncidentHy(getStartIndexX() - 1, i, 0);
   }
-  std::cout << std::endl;
 
   _scaled_dl = getDx() / ratio_delta;
   _ceihi = -(dt / (constant::EPSILON_0 * _scaled_dl));

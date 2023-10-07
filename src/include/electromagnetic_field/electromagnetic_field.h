@@ -14,6 +14,18 @@ enum class EMComponent { EX, EY, EZ, HX, HY, HZ };
 class EMF {
  public:
   EMF() = default;
+  ~EMF() = default;
+
+  const EFTA& getEx() const;
+  const EFTA& getEy() const;
+  const EFTA& getEz() const;
+  const EFTA& getHx() const;
+  const EFTA& getHy() const;
+  const EFTA& getHz() const;
+  const EFTA& getExPrev() const;
+  const EFTA& getEyPrev() const;
+  const EFTA& getEzPrev() const;
+
   inline EFTA& getEx() { return _ex; }
   inline EFTA& getEy() { return _ey; }
   inline EFTA& getEz() { return _ez; }
@@ -126,7 +138,13 @@ class EMF {
     return _jz_prev(i, j, k);
   }
 
+  const EFTA& getEMComponent(EMComponent c) const;
+
   EFTA& getEMComponent(EMComponent c);
+
+  double getEMComponent(EMComponent c, SpatialIndex i, SpatialIndex j,
+                        SpatialIndex k) const;
+
   double& getEMComponent(EMComponent c, SpatialIndex i, SpatialIndex j,
                          SpatialIndex k);
 

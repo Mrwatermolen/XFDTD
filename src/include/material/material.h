@@ -7,7 +7,6 @@
 #include <tuple>
 
 #include "electromagnetic_field/electromagnetic_field.h"
-#include "util/type_define.h"
 
 namespace xfdtd {
 class Material {
@@ -23,9 +22,18 @@ class Material {
   explicit operator std::string() const;
 
   virtual void init(double dt, double dl, const std::shared_ptr<EMF>& emf){};
+
   virtual void updateEx(int i, int j, int k){};
+
   virtual void updateEy(int i, int j, int k){};
+
   virtual void updateEz(int i, int j, int k){};
+
+  virtual void updateHx(size_t i, size_t j, size_t k){};
+
+  virtual void updateHy(size_t i, size_t j, size_t k){};
+
+  virtual void updateHz(size_t i, size_t j, size_t k){};
 
   inline double getPermittivityE() { return _eps; }
   inline double getPermeabilityM() { return _mu; }

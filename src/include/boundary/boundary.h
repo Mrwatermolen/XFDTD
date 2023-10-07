@@ -2,22 +2,21 @@
 #define _BOUNDARY_H_
 
 #include <memory>
-#include <utility>
 
 #include "electromagnetic_field/electromagnetic_field.h"
+#include "fdtd_basic_coff/fdtd_basic_coff.h"
+#include "grid/grid_space.h"
+#include "shape/shape.h"
 #include "util/type_define.h"
 
 namespace xfdtd {
-class Simulation;
 
-// remove it later
-enum class Orientation { XN, XP, YN, YP, ZN, ZP };
 class Boundary {
  public:
   Boundary() = default;
-  Boundary(const Boundary &) = default;
+  Boundary(const Boundary &) = delete;
   Boundary(Boundary &&) noexcept = default;
-  Boundary &operator=(const Boundary &) = default;
+  Boundary &operator=(const Boundary &) = delete;
   Boundary &operator=(Boundary &&) noexcept = default;
   virtual ~Boundary() = default;
 
@@ -35,7 +34,10 @@ class Boundary {
    */
   virtual Orientation getOrientation() const = 0;
 
-  virtual void init(Simulation *simulation) = 0;
+  virtual void init(std::shared_ptr<EMF> emf,
+                    std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+                    std::shared_ptr<GridSpace> grid_space,
+                    std::unique_ptr<Shape> shape) = 0;
 
   /**
    * @brief update the H field in the boundary
@@ -50,17 +52,24 @@ class Boundary {
   virtual void updateE() = 0;
 
  protected:
- /**
-  * @brief Initialize the boundary with the EMF instance.
-  * 
-  * @param emf
-  */
-  void defaultInit(std::shared_ptr<EMF> emf);
+  void defaultInit(std::shared_ptr<EMF> emf,
+                   std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+                   std::shared_ptr<GridSpace> _grid_space,
+                   std::unique_ptr<Shape> _shape);
 
-  inline std::shared_ptr<EMF> getEMFInstance() const { return _emf; }
+  EMF *getEMFInstance() const;
+
+  FDTDBasicCoff *getFDTDBasicCoff() const;
+
+  GridSpace *getGridSpace() const;
+
+  Shape *getShape() const;
 
  private:
   std::shared_ptr<EMF> _emf;
+  std::shared_ptr<FDTDBasicCoff> _fdtd_basic_coff;
+  std::shared_ptr<GridSpace> _grid_space;
+  std::unique_ptr<Shape> _shape;
 };
 }  // namespace xfdtd
 

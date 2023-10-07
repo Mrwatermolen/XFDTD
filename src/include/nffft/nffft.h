@@ -4,10 +4,9 @@
 #include <filesystem>
 #include <memory>
 #include <tuple>
-#include <utility>
 
 #include "electromagnetic_field/electromagnetic_field.h"
-#include "mesh/grid_box.h"
+#include "grid/grid_box.h"
 #include "util/constant.h"
 #include "util/type_define.h"
 
@@ -43,23 +42,29 @@ class NFFFT {
     return {_distance_x, _distance_y, _distance_z};
   }
 
-  inline SpatialIndex getStartIndexX() { return _output_box->getStartIndexX(); }
-  inline SpatialIndex getStartIndexY() { return _output_box->getStartIndexY(); }
-  inline SpatialIndex getStartIndexZ() { return _output_box->getStartIndexZ(); }
-  inline SpatialIndex getEndIndexX() { return _output_box->getEndIndexX(); }
-  inline SpatialIndex getEndIndexY() { return _output_box->getEndIndexY(); }
-  inline SpatialIndex getEndIndexZ() { return _output_box->getEndIndexZ(); }
-  inline SpatialIndex getNx() { return _output_box->getNx(); }
-  inline SpatialIndex getNy() { return _output_box->getNy(); }
-  inline SpatialIndex getNz() { return _output_box->getNz(); }
+  inline SpatialIndex getStartIndexX() {
+    return _output_box->getGridStartIndexX();
+  }
+  inline SpatialIndex getStartIndexY() {
+    return _output_box->getGridStartIndexY();
+  }
+  inline SpatialIndex getStartIndexZ() {
+    return _output_box->getGridStartIndexZ();
+  }
+  inline SpatialIndex getEndIndexX() { return _output_box->getGridEndIndexX(); }
+  inline SpatialIndex getEndIndexY() { return _output_box->getGridEndIndexY(); }
+  inline SpatialIndex getEndIndexZ() { return _output_box->getGridEndIndexZ(); }
+  inline SpatialIndex getNx() { return _output_box->getGridNumX(); }
+  inline SpatialIndex getNy() { return _output_box->getGridNumY(); }
+  inline SpatialIndex getNz() { return _output_box->getGridNumZ(); }
   inline SpatialIndex getCenterIndexX() {
-    return _output_box->getCenterIndexX();
+    return _output_box->getGridCenterIndexX();
   }
   inline SpatialIndex getCenterIndexY() {
-    return _output_box->getCenterIndexY();
+    return _output_box->getGridCenterIndexY();
   }
   inline SpatialIndex getCenterIndexZ() {
-    return _output_box->getCenterIndexZ();
+    return _output_box->getGridCenterIndexZ();
   }
   inline std::filesystem::path getOutputDirPath() { return _output_dir_path; }
 

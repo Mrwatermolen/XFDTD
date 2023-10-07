@@ -1,8 +1,6 @@
 #ifndef _TFSF_3D_H_
 #define _TFSF_3D_H_
 
-#include <vector>
-
 #include "tfsf/tfsf.h"
 #include "util/type_define.h"
 

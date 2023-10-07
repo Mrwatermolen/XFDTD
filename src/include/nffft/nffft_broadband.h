@@ -1,12 +1,8 @@
 #ifndef _NFFFT_BROADBAND_H_
 #define _NFFFT_BROADBAND_H_
 
-#include <complex>
-
 #include "nffft/nffft.h"
 #include "util/type_define.h"
-#include "xtensor-fftw/basic_double.hpp"
-#include "xtensor-fftw/helper.hpp"
 
 namespace xfdtd {
 class NffftBroadBand : public NFFFT {
@@ -25,9 +21,9 @@ class NffftBroadBand : public NFFFT {
 
  private:
   double _theta, _phi;
-  double _smaple_rate;
+  double _sample_rate;
   size_t _number_samples;
-  PointVector _farfield_vector;
+  PointVector _fairfield_vector;
 
   EFTA _jx_yn, _jx_yp, _jx_zn, _jx_zp;
   EFTA _jy_xn, _jy_xp, _jy_zn, _jy_zp;
@@ -36,7 +32,7 @@ class NffftBroadBand : public NFFFT {
   EFTA _my_xn, _my_xp, _my_zn, _my_zp;
   EFTA _mz_xn, _mz_xp, _mz_yn, _mz_yp;
 
-  // axuiliary function
+  // auxiliary function
   EFFA _n_x, _n_y, _n_z;
   EFFA _l_x, _l_y, _l_z;
 
@@ -53,7 +49,7 @@ class NffftBroadBand : public NFFFT {
   void updateZN(size_t current_time_step);
   void updateZP(size_t current_time_step);
 
-  void calculateFarfield();
+  void calculateFarField();
 
   void calculateLNXYZ();
   void calculateAuxiliary(EFFA &n_a, EFFA &n_b, EFFA &l_a, EFFA &l_b,
@@ -61,7 +57,7 @@ class NffftBroadBand : public NFFFT {
                           EFTA &m_b, int x, int y, int z,
                           const xt::xarray<double> &delay, double ds);
 
-  void outputFarFieldParamertes();
+  void outputFarFieldParameters();
 };
 
 }  // namespace xfdtd

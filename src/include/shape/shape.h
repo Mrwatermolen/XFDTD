@@ -10,6 +10,10 @@ namespace xfdtd {
 
 class Shape {
  public:
+  Shape() = default;
+  Shape(const Shape&) = default;
+  Shape(Shape&&) noexcept = default;
+  Shape& operator=(const Shape&) noexcept = default;
   virtual ~Shape() = default;
 
   virtual explicit operator std::string() const;

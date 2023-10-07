@@ -3,7 +3,6 @@
 #include <cmath>
 #include <memory>
 
-#include "util/constant.h"
 #include "util/type_define.h"
 
 namespace xfdtd {

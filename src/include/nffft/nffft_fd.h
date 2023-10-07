@@ -6,7 +6,6 @@
 #include <utility>
 
 #include "electromagnetic_field/electromagnetic_field.h"
-#include "mesh/grid_box.h"
 #include "nffft/nffft.h"
 #include "util/type_define.h"
 
@@ -45,7 +44,7 @@ class NffftFd : public NFFFT {
         _wave_number{2 * constant::PI * _frequencies / constant::C_0},
         _theta{std::move(theta)},
         _phi{std::move(phi)},
-        _number_frequecies{_frequencies.size()},
+        _number_frequencies{_frequencies.size()},
         _number_theta{_theta.size()},
         _number_phi{_phi.size()} {}
   NffftFd(const NffftFd &) = delete;
@@ -62,7 +61,7 @@ class NffftFd : public NFFFT {
 
  private:
   xt::xarray<double> _frequencies, _wave_number, _theta, _phi;
-  size_t _number_frequecies, _number_theta, _number_phi;
+  size_t _number_frequencies, _number_theta, _number_phi;
 
   EFFA _e_theta, _e_phi, _h_theta, _h_phi;
   EFFA _f_theta, _f_phi, _a_theta, _a_phi;
@@ -78,8 +77,8 @@ class NffftFd : public NFFFT {
   EFFA _my_xn, _my_xp, _my_zn, _my_zp;
   EFFA _mz_xn, _mz_xp, _mz_yn, _mz_yp;
 
-  EFFA _frequecy_transform_j;
-  EFFA _frequecy_transform_m;
+  EFFA _frequency_transform_j;
+  EFFA _frequency_transform_m;
 
   void initDFT();
 
@@ -103,7 +102,7 @@ class NffftFd : public NFFFT {
                           SpatialIndex range_b_end, SpatialIndex range_c_start,
                           SpatialIndex range_c_end, const PointVector &offset);
 
-  void outputFarFieldParamertes();
+  void outputFarFieldParameters();
 };
 }  // namespace xfdtd
 

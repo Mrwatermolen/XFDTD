@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "electromagnetic_field/electromagnetic_field.h"
-#include "mesh/grid_box.h"
+#include "grid/grid_box.h"
 #include "shape/cube.h"
 #include "util/type_define.h"
 #include "waveform/waveform.h"
@@ -54,26 +54,26 @@ class TFSF {
 
   inline PointVector getKVector() const { return _k; }
   inline SpatialIndex getStartIndexX() const {
-    return _tfsf_grid_box->getStartIndexX();
+    return _tfsf_grid_box->getGridStartIndexX();
   }
   inline SpatialIndex getEndIndexX() const {
     return getStartIndexX() + getNx();
   }
   inline SpatialIndex getStartIndexY() const {
-    return _tfsf_grid_box->getStartIndexY();
+    return _tfsf_grid_box->getGridStartIndexY();
   }
   inline SpatialIndex getEndIndexY() const {
     return getStartIndexY() + getNy();
   }
   inline SpatialIndex getStartIndexZ() const {
-    return _tfsf_grid_box->getStartIndexZ();
+    return _tfsf_grid_box->getGridStartIndexZ();
   }
   inline SpatialIndex getEndIndexZ() const {
     return getStartIndexZ() + getNz();
   }
-  inline SpatialIndex getNx() const { return _tfsf_grid_box->getNx(); }
-  inline SpatialIndex getNy() const { return _tfsf_grid_box->getNy(); }
-  inline SpatialIndex getNz() const { return _tfsf_grid_box->getNz(); }
+  inline SpatialIndex getNx() const { return _tfsf_grid_box->getGridNumX(); }
+  inline SpatialIndex getNy() const { return _tfsf_grid_box->getGridNumY(); }
+  inline SpatialIndex getNz() const { return _tfsf_grid_box->getGridNumZ(); }
 
   inline PointVector getKInc() const { return _k; }
 

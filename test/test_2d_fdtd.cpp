@@ -1,6 +1,6 @@
 #include <chrono>
 #include <cstddef>
-#include <fstream>
+#include <filesystem>
 #include <memory>
 #include <utility>
 #include <xtensor-fftw/basic_double.hpp>
@@ -18,6 +18,7 @@
 #include "simulation/simulation.h"
 #include "tfsf/tfsf_2d.h"
 #include "util/constant.h"
+#include "util/type_define.h"
 #include "waveform/cosine_modulated_gaussian_waveform.h"
 
 void testBasic2D() {
@@ -70,17 +71,16 @@ void testBasic2D() {
   boundaries.emplace_back(
       std::make_shared<xfdtd::PML>(xfdtd::Orientation::YP, pml_size));
 
-  //   auto monitor{xfdtd::TimeDomainFieldMonitor{
-  //       std::make_unique<xfdtd::Cube>(
-  //           xfdtd::PointVector{0, 0, 0},
-  //           xfdtd::PointVector{total_nx * dx, total_ny * dy, 0}),
-  //       xfdtd::PlaneType::XY, xfdtd::EMComponent::EZ,
-  //       std::filesystem::absolute("visualizing_data/2d_movie_output"), ""}};
-  //   auto movie_monitor{xfdtd::MovieMonitor{
-  //       std::make_unique<xfdtd::TimeDomainFieldMonitor>(std::move(monitor)),
-  //       total_time_steps, 10}};
-  //   monitors.emplace_back(
-  //       std::make_shared<xfdtd::MovieMonitor>(std::move(movie_monitor)));
+  auto monitor{xfdtd::TimeDomainFieldMonitor{
+      std::make_unique<xfdtd::Cube>(xfdtd::PointVector{0, 0, 0},
+                                    xfdtd::PointVector{nx * dx, ny * dy, 0}),
+      xfdtd::PlaneType::XY, xfdtd::EMComponent::EZ,
+      std::filesystem::path("./visualizing_data/data/2d_cylinder_scatter/ez"),
+      ""}};
+  auto movie_monitor{xfdtd::MovieMonitor{
+      std::make_unique<xfdtd::TimeDomainFieldMonitor>(std::move(monitor)),
+      total_time_steps, 100}};
+
   auto simulation{xfdtd::Simulation{
       dx, objects, boundaries,
       std::make_unique<xfdtd::TFSF2D>(
@@ -89,43 +89,20 @@ void testBasic2D() {
               std::move(cosine_modulated_gaussian_waveform))),
       std::make_unique<xfdtd::NffftBroadBand>(
           40, 40, 0, xfdtd::constant::PI / 2, xfdtd::constant::PI * 1.25,
-          "visualizing_data/"),
+          "visualizing_data/data/2d_cylinder_scatter/"),
       0.8}};
+  simulation.addMonitor(
+      std::make_unique<xfdtd::MovieMonitor>(std::move(movie_monitor)));
   auto t0{std::chrono::high_resolution_clock::now()};
   simulation.run(total_time_steps);
-  for (auto &&e : monitors) {
-    e->outputData();
-  }
-
-  // record incident wave fft
-
-  std::vector<double> times = [&]() {
-    std::vector<double> v;
-    v.resize(total_time_steps * 2 - 1);
-    for (int i = 0; i < v.size(); ++i) {
-      v[i] = i * simulation.getDt();
-    }
-    return v;
-  }();
-  std::fstream incident_wave_fft_file{"visualizing_data/incident_wave_fft.dat",
-                                      std::ios::out};
-  auto waveform{
-      xfdtd::CosineModulatedGaussianWaveform{1, tau, t_0, center_frequency}};
-  waveform.init(times);
-  xt::xarray<double> tem = xt::adapt(waveform.getAllValues(),
-                                     std::vector<std::size_t>{times.size()});
-  for (auto &&e : xt::abs(xt::fftw::fftshift(xt::fftw::fft(tem)))) {
-    incident_wave_fft_file << e << " ";
-  }
-  incident_wave_fft_file.close();
   auto t1{std::chrono::high_resolution_clock::now()};
   std::cout
       << "Simulation takes "
       << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
-      << " msec" << std::endl;
+      << " msec" << '\n';
   std::cout << "Simulation takes "
             << std::chrono::duration_cast<std::chrono::seconds>(t1 - t0).count()
-            << " s" << std::endl;
+            << " s" << '\n';
 }
 
 int main() {

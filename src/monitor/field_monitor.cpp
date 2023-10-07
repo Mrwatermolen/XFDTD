@@ -1,43 +1,55 @@
 #include "monitor/field_monitor.h"
 
-#include <cmath>
-#include <cstddef>
 #include <exception>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
-#include <stdexcept>
+#include <memory>
 #include <string>
 #include <utility>
+#include <xtensor/xnpy.hpp>
 
+#include "grid/grid_box.h"
 #include "util/type_define.h"
-#include "simulation/yee_cell.h"
+
 namespace xfdtd {
 TimeDomainFieldMonitor::TimeDomainFieldMonitor(
-    std::unique_ptr<Shape> shape, PlaneType plane_type, EMComponent component,
+    std::unique_ptr<Cube> shape, PlaneType plane_type, EMComponent component,
     std::filesystem::path output_dir_path, std::string _output_file_name)
     : Monitor{std::move(shape), std::move(output_dir_path),
               std::move(_output_file_name)},
       _plane_type{plane_type},
       _component{component} {}
 
-double& TimeDomainFieldMonitor::getEMComponent(SpatialIndex i, SpatialIndex j,
-                                               SpatialIndex k) {
-  if (getEMFInstance() == nullptr) {
-    throw std::runtime_error{"Error: EMF is not set."};
+std::unique_ptr<Monitor> TimeDomainFieldMonitor::clone() const {
+  return std::make_unique<TimeDomainFieldMonitor>(*this);
+}
+
+void TimeDomainFieldMonitor::init(
+    const std::shared_ptr<const FDTDBasicCoff> &fdtd_basic_coff,
+    const std::shared_ptr<const GridSpace> &grid_space,
+    const std::shared_ptr<const EMF> &emf) {
+  defaultInit(fdtd_basic_coff, grid_space, emf);
+  _grid_box = *getGridSpaceInstance()->getGridBox(getShape());
+  if (_plane_type == PlaneType::XY) {
+    if (1 < _grid_box.getGridNumZ()) {
+      throw std::runtime_error("Error: invalid grid box");
+    }
   }
-  return getEMFInstance()->getEMComponent(_component, i, j, k);
+
+  if (_plane_type == PlaneType::ZX) {
+    if (1 < _grid_box.getGridNumY()) {
+      throw std::runtime_error("Error: invalid grid box");
+    }
+  }
+
+  if (_plane_type == PlaneType::YZ) {
+    if (1 < _grid_box.getGridNumX()) {
+      throw std::runtime_error("Error: invalid grid box");
+    }
+  }
 }
 
-void TimeDomainFieldMonitor::setYeeCells(const YeeCellArray& yee_cells) {
-  _yee_cells = yee_cells;
-}
-
-void TimeDomainFieldMonitor::setYeeCells(YeeCellArray&& yee_cells) {
-  _yee_cells = std::move(yee_cells);
-}
-
-void TimeDomainFieldMonitor::update(size_t current_time_step) {}
+void TimeDomainFieldMonitor::update() {}
 
 void TimeDomainFieldMonitor::outputData() {
   if (!std::filesystem::exists(getOutputPath()) &&
@@ -45,50 +57,45 @@ void TimeDomainFieldMonitor::outputData() {
     try {
       std::filesystem::create_directory(getOutputPath());
     } catch (std::exception e) {
-      std::cerr << "Error: cannot create directory " << getOutputPath()
-                << std::endl;
+      std::cerr << "Error: cannot create directory " << getOutputPath() << '\n';
       return;
     }
   }
-  std::ofstream output_file{getOutputPath() / getOutputFileName()};
-  if (!output_file.is_open()) {
-    std::cerr << "Error: cannot open file " << getOutputFileName() << std::endl;
-    return;
-  }
-  output_file << "Field Type:" << &_component;
-
+  const auto emf{getEMFInstance()};
+  const auto &data{emf->getEMComponent(_component)};
+  auto x{_grid_box.getGridOriginIndexX()};
+  auto y{_grid_box.getGridOriginIndexY()};
+  auto z{_grid_box.getGridOriginIndexZ()};
+  auto nx{_grid_box.getGridNumX()};
+  auto ny{_grid_box.getGridNumY()};
+  auto nz{_grid_box.getGridNumZ()};
   if (_plane_type == PlaneType::XY) {
-    SpatialIndex counter{-1};
-    for (const auto& e : _yee_cells) {
-      auto [x, y, z] = e->getGridXYZIndex();
-      if (counter != x) {
-        output_file << std::endl;
-        counter = x;
+    xt::xarray<double> data_view{xt::zeros<double>({nx, ny})};
+    for (size_t i = x; i < nx; ++i) {
+      for (size_t j = y; j < ny; ++j) {
+        data_view(i, j) = data(i, j, z);
       }
-      output_file << getEMComponent(x, y, z) << " ";
     }
-  } else if (_plane_type == PlaneType::YZ) {
-    SpatialIndex counter{-1};
-    for (const auto& e : _yee_cells) {
-      auto [x, y, z] = e->getGridXYZIndex();
-      if (counter != y) {
-        output_file << std::endl;
-        counter = y;
-      }
-      output_file << getEMComponent(x, y, z) << " ";
-    }
-  } else if (_plane_type == PlaneType::ZX) {
-    SpatialIndex counter{-1};
-    for (const auto& e : _yee_cells) {
-      auto [x, y, z] = e->getGridXYZIndex();
-      if (counter != x) {
-        output_file << std::endl;
-        counter = x;
-      }
-      output_file << getEMComponent(x, y, z) << " ";
-    }
+    xt::dump_npy(getOutputPath() / getOutputFileName(), data_view);
   }
-  output_file.close();
+  if (_plane_type == PlaneType::ZX) {
+    xt::xarray<double> data_view{xt::zeros<double>({nx, nz})};
+    for (size_t k = z; k < nz; ++k) {
+      for (size_t i = x; i < nx; ++i) {
+        data_view(i, k) = data(i, y, k);
+      }
+    }
+    xt::dump_npy(getOutputPath() / getOutputFileName(), data_view);
+  }
+  if (_plane_type == PlaneType::YZ) {
+    xt::xarray<double> data_view{xt::zeros<double>({ny, nz})};
+    for (size_t j = y; j < ny; ++j) {
+      for (size_t k = z; k < nz; ++k) {
+        data_view(j, k) = data(x, j, k);
+      }
+    }
+    xt::dump_npy(getOutputPath() / getOutputFileName(), data_view);
+  }
 }
 
 }  // namespace xfdtd

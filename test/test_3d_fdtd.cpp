@@ -1,16 +1,11 @@
 #include <chrono>
-#include <cmath>
-#include <complex>
 #include <filesystem>
-#include <fstream>
 #include <memory>
 #include <utility>
 
 #include "boundary/perfect_match_layer.h"
 #include "material/dispersive_material.h"
 #include "material/material.h"
-#include "monitor/field_monitor.h"
-#include "monitor/movie_monitor.h"
 #include "nffft/nffft_broadband.h"
 #include "nffft/nffft_fd.h"
 #include "object/object.h"
@@ -18,11 +13,8 @@
 #include "shape/sphere.h"
 #include "simulation/simulation.h"
 #include "tfsf/tfsf_3d.h"
-#include "util/dft.h"
 #include "util/type_define.h"
-#include "waveform/cosine_modulated_gaussian_waveform.h"
 #include "waveform/gaussian_waveform.h"
-#include "waveform/sinusoidal_waveform.h"
 
 using xfdtd::Cube;
 using xfdtd::GaussianWaveform;
@@ -35,20 +27,19 @@ using xfdtd::PointVector;
 using xfdtd::Simulation;
 using xfdtd::Sphere;
 using xfdtd::TFSF3D;
-using xfdtd::TimeDomainFieldMonitor;
 
 void testPECSphereMonostaticRCS() {
   // Grid
   constexpr double dl = 2e-2;
 
   auto objects{xfdtd::ObjectArray{}};
-  auto domain_orign_point{-40 * dl};
+  auto domain_origin_point{-40 * dl};
   auto domain_size{80 * dl};
   objects.emplace_back(std::make_shared<Object>(
       "domain",
       std::make_unique<Cube>(
-          PointVector{domain_orign_point, domain_orign_point,
-                      domain_orign_point},
+          PointVector{domain_origin_point, domain_origin_point,
+                      domain_origin_point},
           PointVector{domain_size, domain_size, domain_size}),
       Material{"air", 1, 1, 0, 0}));
 
@@ -84,7 +75,7 @@ void testPECSphereMonostaticRCS() {
   auto mono_rcs{std::make_unique<NffftBroadBand>(
       output_boundary_index, output_boundary_index, output_boundary_index,
       incident_theta + M_PI, incident_phi + M_PI,
-      std::filesystem::path{"./visualizing_data/mie"})};
+      std::filesystem::path{"./visualizing_data/data/pec_sphere_mono_rcs"})};
 
   constexpr size_t total_time_steps{1200};
   Simulation simulation(dl, objects, boundaries, std::move(tfsf),
@@ -97,13 +88,13 @@ void testPECSphereBistaticRCS() {
   constexpr double dl = 7.5e-3;
 
   auto objects{xfdtd::ObjectArray{}};
-  auto domain_orign_point{-40 * dl};
+  auto domain_origin_point{-40 * dl};
   auto domain_size{80 * dl};
   objects.emplace_back(std::make_shared<Object>(
       "domain",
       std::make_unique<Cube>(
-          PointVector{domain_orign_point, domain_orign_point,
-                      domain_orign_point},
+          PointVector{domain_origin_point, domain_origin_point,
+                      domain_origin_point},
           PointVector{domain_size, domain_size, domain_size}),
       Material{"air", 1, 1, 0, 0}));
 
@@ -142,44 +133,27 @@ void testPECSphereBistaticRCS() {
   auto bistatic_rcs{std::make_unique<NffftFd>(
       output_boundary_index, output_boundary_index, output_boundary_index,
       frequencies, theta, phi,
-      std::filesystem::path{"./visualizing_data/bistatic_rcs"})};
+      std::filesystem::path{
+          "./visualizing_data/data/pec_sphere_bistatic_rcs"})};
 
   constexpr size_t total_time_steps{1000};
   Simulation simulation(dl, objects, boundaries, std::move(tfsf),
                         std::move(bistatic_rcs), 0.98);
   simulation.run(total_time_steps);
-  auto waveform{xfdtd::CosineModulatedGaussianWaveform{1, tau, t_0, 1e9}};
-  auto dt{simulation.getDt()};
-  xt::xarray<double> a;
-  a.resize({total_time_steps});
-  for (auto i{0}; i < total_time_steps; ++i) {
-    a(i) = waveform.getValueByTime((i + 0.5) * dt);
-  }
-  xt::xarray<double> values{xt::make_lambda_xfunction(
-      [&waveform](double t) { return waveform.getValueByTime(t); },
-      xt::linspace<double>(0.5 * dt, (total_time_steps - 0.5) * dt,
-                           total_time_steps))};
-  std::ofstream ofs{"./visualizing_data/bistatic_rcs/incident_power.dat"};
-  std::cout << simulation.getDt();
-  auto incident_wave_power{xfdtd::dft(values, dt, frequencies)};
-  for (auto i{0}; i < incident_wave_power.size(); ++i) {
-    ofs << std::norm(incident_wave_power(i)) << "\t";
-  }
-  ofs.close();
 }
 
-void testLorentzSphereMonostaticRCS() {
+void testLorentzSphereMonoStaticRCS() {
   constexpr double radius{15e-9};
   constexpr double dl{radius / 30};
   constexpr double domain_size{radius * 2.5};
-  constexpr double domain_orign_point{-domain_size / 2};
+  constexpr double domain_origin_point{-domain_size / 2};
   constexpr double domain_cell_x{domain_size / dl};
   auto objects{xfdtd::ObjectArray{}};
   objects.emplace_back(std::make_shared<Object>(
       "domain",
       std::make_unique<Cube>(
-          PointVector{domain_orign_point, domain_orign_point,
-                      domain_orign_point},
+          PointVector{domain_origin_point, domain_origin_point,
+                      domain_origin_point},
           PointVector{domain_size, domain_size, domain_size}),
       Material{"air", 1, 1, 0, 0}));
   objects.emplace_back(std::make_shared<Object>(
@@ -225,14 +199,14 @@ void testDrudeSphereMonostaticRCS() {
   constexpr double radius{3.75e-3};
   constexpr double dl{radius / 30};
   constexpr double domain_size{radius * 2.5};
-  constexpr double domain_orign_point{-domain_size / 2};
+  constexpr double domain_origin_point{-domain_size / 2};
   constexpr double domain_cell_x{domain_size / dl};
   auto objects{xfdtd::ObjectArray{}};
   objects.emplace_back(std::make_shared<Object>(
       "domain",
       std::make_unique<Cube>(
-          PointVector{domain_orign_point, domain_orign_point,
-                      domain_orign_point},
+          PointVector{domain_origin_point, domain_origin_point,
+                      domain_origin_point},
           PointVector{domain_size, domain_size, domain_size}),
       Material{"air", 1, 1, 0, 0}));
 
@@ -278,14 +252,14 @@ void testDebySphereMonostaticRCS() {
   constexpr double radius{0.25};
   constexpr double dl{radius / 30};
   constexpr double domain_size{radius * 2.5};
-  constexpr double domain_orign_point{-domain_size / 2};
+  constexpr double domain_origin_point{-domain_size / 2};
   constexpr double domain_cell_x{domain_size / dl};
   auto objects{xfdtd::ObjectArray{}};
   objects.emplace_back(std::make_shared<Object>(
       "domain",
       std::make_unique<Cube>(
-          PointVector{domain_orign_point, domain_orign_point,
-                      domain_orign_point},
+          PointVector{domain_origin_point, domain_origin_point,
+                      domain_origin_point},
           PointVector{domain_size, domain_size, domain_size}),
       Material{"air", 1, 1, 0, 0}));
 
@@ -331,12 +305,12 @@ void testDebySphereMonostaticRCS() {
 
 int main() {
   auto t0{std::chrono::high_resolution_clock::now()};
-  testPECSphereBistaticRCS();
+  testPECSphereMonostaticRCS();
   auto t1{std::chrono::high_resolution_clock::now()};
   std::cout
       << "Simulation takes "
       << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
       << " msec "
       << std::chrono::duration_cast<std::chrono::seconds>(t1 - t0).count()
-      << " s" << std::endl;
+      << " s" << '\n';
 }

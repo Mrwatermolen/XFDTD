@@ -1,5 +1,5 @@
-#ifndef _MOVIE_MONITOR_H_
-#define _MOVIE_MONITOR_H_
+#ifndef _XFDTD_MOVIE_MONITOR_H_
+#define _XFDTD_MOVIE_MONITOR_H_
 
 #include <cstddef>
 #include <filesystem>
@@ -11,29 +11,36 @@ class MovieMonitor : public Monitor {
  public:
   MovieMonitor(std::unique_ptr<Monitor> monitor, size_t total_time_steps,
                size_t plot_step = 30);
-  MovieMonitor(const MovieMonitor& other) = delete;
+
+  MovieMonitor(const MovieMonitor& other);
+
+  MovieMonitor& operator=(const MovieMonitor& other);
+
   MovieMonitor(MovieMonitor&& other) noexcept = default;
-  MovieMonitor& operator=(const MovieMonitor& other) = delete;
+
   MovieMonitor& operator=(MovieMonitor&& other) noexcept = default;
+
   ~MovieMonitor() override = default;
 
-  const std::unique_ptr<Shape>& getShape() const override;
+  std::unique_ptr<Monitor> clone() const override;
+
+  void init(const std::shared_ptr<const FDTDBasicCoff>& fdtd_basic_coff,
+            const std::shared_ptr<const GridSpace>& grid_space,
+            const std::shared_ptr<const EMF>& emf) override;
+
+  void update() override;
+
+  void outputData() override;
+
   const std::filesystem::path& getOutputPath() const override;
+
   const std::string& getOutputFileName() const override;
 
   void setOutputDirPath(const std::string& output_dir_path) override;
+
   void setOutputFileName(const std::string& output_file_name) override;
-  void setYeeCells(const YeeCellArray& yee_cells) override;
-  void setYeeCells(YeeCellArray&& yee_cells) override;
 
-  void update(size_t current_time_step) override;
-  void outputData() override;
-
-  inline void setPlotStep(size_t plot_step) { _plot_step = plot_step; }
-
-  void setEMFInstance(std::shared_ptr<EMF> emf) override {
-    _monitor->setEMFInstance(std::move(emf));
-  }
+  void setPlotStep(size_t plot_step);
 
  private:
   std::unique_ptr<Monitor> _monitor;
@@ -42,4 +49,4 @@ class MovieMonitor : public Monitor {
 };
 }  // namespace xfdtd
 
-#endif  // _MOVIE_MONITOR_H_
+#endif  // _XFDTD_MOVIE_MONITOR_H_
