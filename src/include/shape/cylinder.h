@@ -13,7 +13,7 @@ namespace xfdtd {
  */
 class Cylinder : public Shape {
  public:
-  Cylinder(PointVector center, double raduis, double height);
+  Cylinder(Axis axis, PointVector center, double radius, double height);
   ~Cylinder() override = default;
 
   std::unique_ptr<Shape> clone() const override;
@@ -22,9 +22,18 @@ class Cylinder : public Shape {
 
   std::unique_ptr<Shape> getWrappedBox() const override;
 
+  Axis getAxis() const;
+
+  double getRadius() const;
+
+  double getHeight() const;
+
+  PointVector getCenter() const;
+
  private:
+  Axis _axis;
   PointVector _center;
-  double _raduis;
+  double _radius;
   double _height;
 };
 }  // namespace xfdtd

@@ -24,4 +24,17 @@ Material::operator std::string() const {
          "sigma_m: " + std::to_string(_sigma_m) + "\n" +
          "is_dispersion: " + std::to_string(static_cast<int>(_is_dispersion));
 }
+
+std::unique_ptr<Material> Material::createAir(const std::string& name) {
+  return std::make_unique<Material>(name, 1, 1, 0, 0);
+}
+
+std::unique_ptr<Material> Material::createPEC() {
+  return std::make_unique<Material>("XFDTD_PEC", 1, 1, 1e10, 0);
+}
+
+std::unique_ptr<Material> Material::createPMC() {
+  return std::make_unique<Material>("XFDTD_PMC", 1, 1, 1e10, 0);
+}
+
 }  // namespace xfdtd

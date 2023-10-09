@@ -56,7 +56,8 @@ void testBasic2D() {
   objects.emplace_back(std::make_shared<xfdtd::Object>(
       "objectA",
       std::make_unique<xfdtd::Cylinder>(
-          xfdtd::PointVector{cylinder_x, cylinder_y, 0}, cylinder_radius, 0),
+          xfdtd::Axis::Z, xfdtd::PointVector{cylinder_x, cylinder_y, 0},
+          cylinder_radius, 0),
       std::make_unique<xfdtd::Material>(pec_material)));
 
   auto cosine_modulated_gaussian_waveform{

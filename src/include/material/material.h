@@ -53,6 +53,13 @@ class Material {
 
   inline bool isDispersion() { return _is_dispersion; }
 
+  static std::unique_ptr<Material> createAir(
+      const std::string& name = "XFDTD_AIR");
+
+  static std::unique_ptr<Material> createPEC();
+
+  static std::unique_ptr<Material> createPMC();
+
  private:
   std::string _name;
 
