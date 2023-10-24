@@ -247,7 +247,7 @@ double TFSF2D::getIncidentHx(int i, int j, int k) {
   // 0 0.5 0.5
   i = i - getStartIndexX();
   j = j - getStartIndexY() + 1;
-  auto projection{_projection_x_full(i) + _projection_y_half(j)};
+  auto projection{_projection_x_full(i) + _projection_y_half(j) - 0.5};
   auto index{static_cast<SpatialIndex>(projection)};
   auto weight{projection - index};
   return (1 - weight) * _hx_inc(index) + weight * _hx_inc(index + 1);
@@ -257,7 +257,7 @@ double TFSF2D::getIncidentHy(int i, int j, int k) {
   // 0.5 0 0.5
   i = i - getStartIndexX() + 1;
   j = j - getStartIndexY();
-  auto projection{_projection_x_half(i) + _projection_y_full(j)};
+  auto projection{_projection_x_half(i) + _projection_y_full(j) - 0.5};
   auto index{static_cast<SpatialIndex>(projection)};
   auto weight{projection - index};
   return (1 - weight) * _hy_inc(index) + weight * _hy_inc(index + 1);

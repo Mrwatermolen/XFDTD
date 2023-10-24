@@ -430,9 +430,6 @@ double TFSF3D::getIncidentEx(int i, int j, int k) {
                   _projection_z_full(k)};
   auto index{static_cast<SpatialIndex>(projection)};
   auto weight{projection - index};
-  auto e_1{getIncidentCosPsi() * getIncidentCosTheta() * getIncidentCosPhi()};
-  auto e_2{-getIncidentSinPsi() * getIncidentSinPhi()};
-  auto ex{1};
   return (1 - weight) * _ex_inc(index) + weight * _ex_inc(index + 1);
 }
 
@@ -466,7 +463,7 @@ double TFSF3D::getIncidentHx(int i, int j, int k) {
   j = j - getStartIndexY() + 1;
   k = k - getStartIndexZ() + 1;
   auto projection{_projection_x_full(i) + _projection_y_half(j) +
-                  _projection_z_half(k)};
+                  _projection_z_half(k) - 0.5};
   auto index{static_cast<SpatialIndex>(projection)};
   auto weight{projection - index};
   return (1 - weight) * _hx_inc(index) + weight * _hx_inc(index + 1);
@@ -478,7 +475,7 @@ double TFSF3D::getIncidentHy(int i, int j, int k) {
   j = j - getStartIndexY();
   k = k - getStartIndexZ() + 1;
   auto projection{_projection_x_half(i) + _projection_y_full(j) +
-                  _projection_z_half(k)};
+                  _projection_z_half(k) - 0.5};
   auto index{static_cast<SpatialIndex>(projection)};
   auto weight{projection - index};
   return (1 - weight) * _hy_inc(index) + weight * _hy_inc(index + 1);
@@ -490,7 +487,7 @@ double TFSF3D::getIncidentHz(int i, int j, int k) {
   j = j - getStartIndexY() + 1;
   k = k - getStartIndexZ();
   auto projection{_projection_x_half(i) + _projection_y_half(j) +
-                  _projection_z_full(k)};
+                  _projection_z_full(k) - 0.5};
   auto index{static_cast<SpatialIndex>(projection)};
   auto weight{projection - index};
   return (1 - weight) * _hz_inc(index) + weight * _hz_inc(index + 1);

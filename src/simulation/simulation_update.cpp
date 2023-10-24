@@ -6,7 +6,7 @@ void Simulation::run(size_t total_time_steps) {
   _total_time_steps = total_time_steps;
   init();
   std::cout << "Start running simulation..." << '\n';
-  for (size_t i{_current_time_step}; i < _total_time_steps; ++i) {
+  for (size_t i{_fdtd_basic_coff->getCurrentTimeStep()}; i < _total_time_steps; ++i) {
     std::cout << "\r"
               << "Progress: " << std::setw(4) << std::setfill('0') << i + 1
               << "/" << _total_time_steps << std::flush;
@@ -26,9 +26,9 @@ void Simulation::run(size_t total_time_steps) {
 
     // Time: (current_time_step + 0.5) * dt
     updateH();
+    updateTFSFIncidentField();
     correctH();
     updateBoundaryH();
-    updateTFSFIncidentField();
 
     // finish calculation. Record
     updateNFFFT();

@@ -97,8 +97,8 @@ void testPECSphereBistaticRCS() {
       "domain",
       std::make_unique<Cube>(
           PointVector{domain_origin_point, domain_origin_point,
-                      domain_origin_point - 6 * dl},
-          PointVector{domain_size, domain_size, domain_size + 12 * dl}),
+                      domain_origin_point},
+          PointVector{domain_size, domain_size, domain_size}),
       Material{"air", 1, 1, 0, 0}));
 
   constexpr double radius{0.1};
@@ -142,15 +142,15 @@ void testPECSphereBistaticRCS() {
   auto monitor{std::make_unique<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::TimeDomainFieldMonitor>(
           std::make_unique<Cube>(
-              PointVector{domain_origin_point, 0, domain_origin_point - 6 * dl},
-              PointVector{domain_size, 0, domain_size + 12 * dl}),
+              PointVector{domain_origin_point, 0, domain_origin_point},
+              PointVector{domain_size, 0, domain_size}),
           xfdtd::PlaneType::ZX, xfdtd::EMComponent::EZ,
           "./visualizing_data/data/pec_sphere_bistatic_rcs/movie", ""),
       500, 10)};
 
   constexpr size_t total_time_steps{500};
   Simulation simulation(dl, objects, boundaries, std::move(tfsf),
-                        std::move(bistatic_rcs), 0.98);
+                        std::move(bistatic_rcs), 1);
   simulation.addMonitor(std::move(monitor));
   simulation.run(total_time_steps);
 }
@@ -322,7 +322,7 @@ void testDebySphereMonostaticRCS() {
 
 int main() {
   auto t0{std::chrono::high_resolution_clock::now()};
-  testPECSphereMonostaticRCS();
+  testPECSphereBistaticRCS();
   auto t1{std::chrono::high_resolution_clock::now()};
   std::cout
       << "Simulation takes "
