@@ -1,5 +1,6 @@
 #include "lumped_element/voltage_source.h"
 
+#include <iostream>
 #include <memory>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xnpy.hpp>
@@ -62,11 +63,18 @@ void VoltageSource::init(std::shared_ptr<GridSpace> grid_space,
     if (_orientation == Orientation::XN) {
       _voltage_amplitude_factor *= -1;
     }
-    _da = {fdtd_basic_coff->getDy()};
-    _db = {fdtd_basic_coff->getDz()};
-    _alpha = _da * _db * _resistance_factor;
-    _beta = fdtd_basic_coff->getDt() * fdtd_basic_coff->getDx() /
-            (_resistance_factor * _da * _db);
+
+    _grid_size_a =
+        xt::view(grid_space->getGridSizeArrayHY(), xt::range(_js, _je));
+    _grid_size_b =
+        xt::view(grid_space->getGridSizeArrayHZ(), xt::range(_ks, _ke));
+    _grid_size_c =
+        xt::view(grid_space->getGridSizeArrayEX(), xt::range(_is, _ie));
+
+    auto [dx, dy, dz] = xt::meshgrid(_grid_size_c, _grid_size_a, _grid_size_b);
+    _da = dy;
+    _db = dz;
+    _dc = dx;
   }
 
   if (_orientation == Orientation::YN || _orientation == Orientation::YN) {
@@ -75,11 +83,18 @@ void VoltageSource::init(std::shared_ptr<GridSpace> grid_space,
     if (_orientation == Orientation::YN) {
       _voltage_amplitude_factor *= -1;
     }
-    _da = {fdtd_basic_coff->getDz()};
-    _db = {fdtd_basic_coff->getDx()};
-    _alpha = _da * _db * _resistance_factor;
-    _beta = fdtd_basic_coff->getDt() * fdtd_basic_coff->getDy() /
-            (_resistance_factor * _da * _db);
+
+    _grid_size_a =
+        xt::view(grid_space->getGridSizeArrayHZ(), xt::range(_ks, _ke));
+    _grid_size_b =
+        xt::view(grid_space->getGridSizeArrayHX(), xt::range(_is, _ie));
+    _grid_size_c =
+        xt::view(grid_space->getGridSizeArrayEY(), xt::range(_js, _je));
+
+    auto [dx, dy, dz] = xt::meshgrid(_grid_size_b, _grid_size_c, _grid_size_a);
+    _da = dz;
+    _db = dx;
+    _dc = dy;
   }
 
   if (_orientation == Orientation::ZN || _orientation == Orientation::ZP) {
@@ -88,12 +103,22 @@ void VoltageSource::init(std::shared_ptr<GridSpace> grid_space,
     if (_orientation == Orientation::ZN) {
       _voltage_amplitude_factor *= -1;
     }
-    _da = {fdtd_basic_coff->getDx()};
-    _db = {fdtd_basic_coff->getDy()};
-    _alpha = _da * _db * _resistance_factor;
-    _beta = fdtd_basic_coff->getDt() * fdtd_basic_coff->getDz() / (_alpha);
+
+    _grid_size_a =
+        xt::view(grid_space->getGridSizeArrayHX(), xt::range(_is, _ie));
+    _grid_size_b =
+        xt::view(grid_space->getGridSizeArrayHY(), xt::range(_js, _je));
+    _grid_size_c =
+        xt::view(grid_space->getGridSizeArrayEZ(), xt::range(_ks, _ke));
+
+    auto [dx, dy, dz] = xt::meshgrid(_grid_size_a, _grid_size_b, _grid_size_c);
+    _da = dx;
+    _db = dy;
+    _dc = dz;
   }
 
+  _alpha = _da * _db * _resistance_factor;
+  _beta = dt * _dc / _alpha;
   _waveform->setAmplitude(_voltage_amplitude_factor);
   _waveform->init(xt::linspace<double>(dt * 0.5, (total_time_step - 0.5) * dt,
                                        total_time_step));

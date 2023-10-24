@@ -35,6 +35,9 @@ class TimeDomainFieldMonitor : public Monitor {
   PlaneType _plane_type;
   EMComponent _component;
   GridBox _grid_box;
+
+  xt::xarray<double> _coord;
+  xt::xarray<double> _x, _y, _z;
 };
 
 }  // namespace xfdtd

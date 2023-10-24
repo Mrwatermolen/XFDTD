@@ -34,11 +34,36 @@ void TimeDomainFieldMonitor::init(
     if (1 < _grid_box.getGridNumZ()) {
       throw std::runtime_error("Error: invalid grid box");
     }
+    _z =
+        getGridSpaceInstance()->getGridCenterZ(_grid_box.getGridOriginIndexZ());
+    _x = xt::make_lambda_xfunction(
+        [&grid_space](const auto &e) { return grid_space->getGridCenterX(e); },
+        xt::arange<size_t>(_grid_box.getGridOriginIndexX(),
+                           _grid_box.getGridEndIndexX()));
+    _y = xt::make_lambda_xfunction(
+        [&grid_space](const auto &e) { return grid_space->getGridCenterY(e); },
+        xt::arange<size_t>(_grid_box.getGridOriginIndexY(),
+                           _grid_box.getGridEndIndexY()));
   }
 
   if (_plane_type == PlaneType::ZX) {
     if (1 < _grid_box.getGridNumY()) {
       throw std::runtime_error("Error: invalid grid box");
+
+      _y = getGridSpaceInstance()->getGridCenterY(
+          _grid_box.getGridOriginIndexY());
+      _z = xt::make_lambda_xfunction(
+          [&grid_space](const auto &e) {
+            return grid_space->getGridCenterZ(e);
+          },
+          xt::arange<size_t>(_grid_box.getGridOriginIndexZ(),
+                             _grid_box.getGridEndIndexZ()));
+      _x = xt::make_lambda_xfunction(
+          [&grid_space](const auto &e) {
+            return grid_space->getGridCenterX(e);
+          },
+          xt::arange<size_t>(_grid_box.getGridOriginIndexX(),
+                             _grid_box.getGridEndIndexX()));
     }
   }
 
@@ -46,6 +71,16 @@ void TimeDomainFieldMonitor::init(
     if (1 < _grid_box.getGridNumX()) {
       throw std::runtime_error("Error: invalid grid box");
     }
+    _x =
+        getGridSpaceInstance()->getGridCenterX(_grid_box.getGridOriginIndexX());
+    _y = xt::make_lambda_xfunction(
+        [&grid_space](const auto &e) { return grid_space->getGridCenterY(e); },
+        xt::arange<size_t>(_grid_box.getGridOriginIndexY(),
+                           _grid_box.getGridEndIndexY()));
+    _z = xt::make_lambda_xfunction(
+        [&grid_space](const auto &e) { return grid_space->getGridCenterZ(e); },
+        xt::arange<size_t>(_grid_box.getGridOriginIndexZ(),
+                           _grid_box.getGridEndIndexZ()));
   }
 }
 
@@ -55,7 +90,7 @@ void TimeDomainFieldMonitor::outputData() {
   if (!std::filesystem::exists(getOutputPath()) &&
       !std::filesystem::is_directory(getOutputPath())) {
     try {
-      std::filesystem::create_directory(getOutputPath());
+      std::filesystem::create_directories(getOutputPath());
     } catch (std::exception e) {
       std::cerr << "Error: cannot create directory " << getOutputPath() << '\n';
       return;
@@ -63,39 +98,20 @@ void TimeDomainFieldMonitor::outputData() {
   }
   const auto emf{getEMFInstance()};
   const auto &data{emf->getEMComponent(_component)};
-  auto x{_grid_box.getGridOriginIndexX()};
-  auto y{_grid_box.getGridOriginIndexY()};
-  auto z{_grid_box.getGridOriginIndexZ()};
+  auto is{_grid_box.getGridOriginIndexX()};
+  auto js{_grid_box.getGridOriginIndexY()};
+  auto ks{_grid_box.getGridOriginIndexZ()};
   auto nx{_grid_box.getGridNumX()};
   auto ny{_grid_box.getGridNumY()};
   auto nz{_grid_box.getGridNumZ()};
-  if (_plane_type == PlaneType::XY) {
-    xt::xarray<double> data_view{xt::zeros<double>({nx, ny})};
-    for (size_t i = x; i < nx; ++i) {
-      for (size_t j = y; j < ny; ++j) {
-        data_view(i, j) = data(i, j, z);
-      }
-    }
-    xt::dump_npy(getOutputPath() / getOutputFileName(), data_view);
-  }
-  if (_plane_type == PlaneType::ZX) {
-    xt::xarray<double> data_view{xt::zeros<double>({nx, nz})};
-    for (size_t k = z; k < nz; ++k) {
-      for (size_t i = x; i < nx; ++i) {
-        data_view(i, k) = data(i, y, k);
-      }
-    }
-    xt::dump_npy(getOutputPath() / getOutputFileName(), data_view);
-  }
-  if (_plane_type == PlaneType::YZ) {
-    xt::xarray<double> data_view{xt::zeros<double>({ny, nz})};
-    for (size_t j = y; j < ny; ++j) {
-      for (size_t k = z; k < nz; ++k) {
-        data_view(j, k) = data(x, j, k);
-      }
-    }
-    xt::dump_npy(getOutputPath() / getOutputFileName(), data_view);
-  }
+  nx = nx == 0 ? 1 : nx;
+  ny = ny == 0 ? 1 : ny;
+  nz = nz == 0 ? 1 : nz;
+  auto x_range{xt::range(is, is + nx)};
+  auto y_range{xt::range(js, js + ny)};
+  auto z_range{xt::range(ks, ks + nz)};
+  auto data_view{xt::view(data, x_range, y_range, z_range)};
+  xt::dump_npy(getOutputPath() / getOutputFileName(), data_view);
 }
 
 }  // namespace xfdtd

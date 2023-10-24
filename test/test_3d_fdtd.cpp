@@ -4,8 +4,11 @@
 #include <utility>
 
 #include "boundary/perfect_match_layer.h"
+#include "electromagnetic_field/electromagnetic_field.h"
 #include "material/dispersive_material.h"
 #include "material/material.h"
+#include "monitor/field_monitor.h"
+#include "monitor/movie_monitor.h"
 #include "nffft/nffft_broadband.h"
 #include "nffft/nffft_fd.h"
 #include "object/object.h"
@@ -94,8 +97,8 @@ void testPECSphereBistaticRCS() {
       "domain",
       std::make_unique<Cube>(
           PointVector{domain_origin_point, domain_origin_point,
-                      domain_origin_point},
-          PointVector{domain_size, domain_size, domain_size}),
+                      domain_origin_point - 6 * dl},
+          PointVector{domain_size, domain_size, domain_size + 12 * dl}),
       Material{"air", 1, 1, 0, 0}));
 
   constexpr double radius{0.1};
@@ -136,9 +139,19 @@ void testPECSphereBistaticRCS() {
       std::filesystem::path{
           "./visualizing_data/data/pec_sphere_bistatic_rcs"})};
 
-  constexpr size_t total_time_steps{1000};
+  auto monitor{std::make_unique<xfdtd::MovieMonitor>(
+      std::make_unique<xfdtd::TimeDomainFieldMonitor>(
+          std::make_unique<Cube>(
+              PointVector{domain_origin_point, 0, domain_origin_point - 6 * dl},
+              PointVector{domain_size, 0, domain_size + 12 * dl}),
+          xfdtd::PlaneType::ZX, xfdtd::EMComponent::EZ,
+          "./visualizing_data/data/pec_sphere_bistatic_rcs/movie", ""),
+      500, 10)};
+
+  constexpr size_t total_time_steps{500};
   Simulation simulation(dl, objects, boundaries, std::move(tfsf),
                         std::move(bistatic_rcs), 0.98);
+  simulation.addMonitor(std::move(monitor));
   simulation.run(total_time_steps);
 }
 
@@ -187,12 +200,14 @@ void testLorentzSphereMonoStaticRCS() {
   auto mono_rcs{std::make_unique<NffftBroadBand>(
       output_boundary_index, output_boundary_index, output_boundary_index,
       incident_theta + M_PI, incident_phi + M_PI,
-      std::filesystem::path{"./visualizing_data/mono_rcs"})};
+      std::filesystem::path{"./visualizing_data/data/lorentz_sphere"})};
 
   Simulation simulation(dl, objects, boundaries, std::move(tfsf),
                         std::move(mono_rcs));
   constexpr size_t total_time_steps{1000};
   simulation.run(total_time_steps);
+  simulation.outputTFSFIncidentWaveFastFourierTransform(
+      "./visualizing_data/lorentz_sphere/data/incident_wave_fft");
 }
 
 void testDrudeSphereMonostaticRCS() {
@@ -240,12 +255,14 @@ void testDrudeSphereMonostaticRCS() {
   auto mono_rcs{std::make_unique<NffftBroadBand>(
       output_boundary_index, output_boundary_index, output_boundary_index,
       incident_theta + M_PI, incident_phi + M_PI,
-      std::filesystem::path{"./visualizing_data/mono_rcs"})};
+      std::filesystem::path{"./visualizing_data/data/drude_sphere"})};
 
   Simulation simulation(dl, objects, boundaries, std::move(tfsf),
                         std::move(mono_rcs));
   constexpr size_t total_time_steps{1000};
   simulation.run(total_time_steps);
+  simulation.outputTFSFIncidentWaveFastFourierTransform(
+      "./visualizing_data/data/drude_sphere/incident_wave_fft");
 }
 
 void testDebySphereMonostaticRCS() {

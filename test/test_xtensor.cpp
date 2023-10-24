@@ -1,3 +1,10 @@
+/**
+ * @file test_xtensor.cpp
+ * @brief this file is used to practice xtensor
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -23,7 +30,7 @@ void exampleForMeshgrid();
 void exampleForFind();
 void exampleForIndex();
 
-int main() { exampleForIndex(); }
+int main() {}
 
 void exampleForDotProduct() {
   std::cout << "Xtensor: dot product for two vectors" << std::endl;

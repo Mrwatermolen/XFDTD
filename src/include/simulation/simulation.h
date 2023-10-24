@@ -2,6 +2,7 @@
 #define _SIMULATION_H_
 
 #include <cstddef>
+#include <filesystem>
 #include <memory>
 #include <vector>
 
@@ -58,9 +59,9 @@ class Simulation {
   void checkRun(size_t total_time_steps);
   void run(size_t total_time_steps);
 
-  inline double getDx() const { return _fdtd_basic_coff->getDx(); }
-  inline double getDy() const { return _fdtd_basic_coff->getDy(); }
-  inline double getDz() const { return _fdtd_basic_coff->getDz(); }
+  // inline double getDx() const { return _grid_space->getDx(); }
+  // inline double getDy() const { return _grid_space->getDy(); }
+  // inline double getDz() const { return _grid_space->getDz(); }
   inline double getDt() const { return _fdtd_basic_coff->getDt(); }
   inline SpatialIndex getNx() const { return _grid_space->getGridNumX(); }
   inline SpatialIndex getNy() const { return _grid_space->getGridNumY(); }
@@ -110,6 +111,8 @@ class Simulation {
     return _emf->getHz(i, j, k);
   }
 
+  void outputTFSFIncidentWaveFastFourierTransform(const std::filesystem::path &path);
+
  private:
   ObjectArray _objects;
   BoundaryArray _boundaries;
@@ -130,17 +133,16 @@ class Simulation {
   xt::xarray<bool> _is_exist_dispersive_material_array;
 
   void init();
-  void initMaterialGrid();
+  // void initMaterialGrid();
+  void initGridSpace();
   void initFDTDBasicCoff();
   void initEMInstance();
+  void initObject();
   void initTFSF();
   void initNFFFT();
   void initUpdateCoefficient();
   void initBoundaryCondition();
-  // TODO(franzero): fix it
   void initMonitor();
-  void initObject();
-  void initGridSpace();
   void initLumpedElement();
   void initNetwork();
 

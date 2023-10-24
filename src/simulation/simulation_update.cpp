@@ -1,7 +1,6 @@
 #include <xtensor/xnpy.hpp>
 
 #include "simulation/simulation.h"
-
 namespace xfdtd {
 void Simulation::run(size_t total_time_steps) {
   _total_time_steps = total_time_steps;
@@ -64,7 +63,24 @@ void Simulation::updateH() {
   const auto& chzh{getChzh()};
   const auto& chzex{getChzex()};
   const auto& chzey{getChzey()};
-
+  // for (SpatialIndex i{0}; i < _nx; ++i) {
+  //   for (SpatialIndex j{0}; j < _ny; ++j) {
+  //     for (SpatialIndex k{0}; k < _nz; ++k) {
+  //       hx.at(i, j, k) =
+  //           chxh.at(i, j, k) * hx.at(i, j, k) +
+  //           chxey.at(i, j, k) * (ey.at(i, j, k + 1) - ey.at(i, j, k)) +
+  //           chxez.at(i, j, k) * (ez.at(i, j + 1, k) - ez.at(i, j, k));
+  //       hy.at(i, j, k) =
+  //           chyh.at(i, j, k) * hy.at(i, j, k) +
+  //           chyez.at(i, j, k) * (ez.at(i + 1, j, k) - ez.at(i, j, k)) +
+  //           chyex.at(i, j, k) * (ex.at(i, j, k + 1) - ex.at(i, j, k));
+  //       hz.at(i, j, k) =
+  //           chzh.at(i, j, k) * hz.at(i, j, k) +
+  //           chzex.at(i, j, k) * (ex.at(i, j + 1, k) - ex.at(i, j, k)) +
+  //           chzey.at(i, j, k) * (ey.at(i + 1, j, k) - ey.at(i, j, k));
+  //     }
+  //   }
+  // }
   for (SpatialIndex i{0}; i < _nx; ++i) {
     for (SpatialIndex j{0}; j < _ny; ++j) {
       for (SpatialIndex k{0}; k < _nz; ++k) {

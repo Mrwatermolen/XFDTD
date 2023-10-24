@@ -22,23 +22,25 @@
 #include "waveform/cosine_modulated_gaussian_waveform.h"
 
 void testBasic2D() {
-  xfdtd::SpatialIndex nx{350};
-  xfdtd::SpatialIndex ny{350};
-  xfdtd::SpatialIndex pml_size{10};
-  xfdtd::SpatialIndex total_nx{nx + pml_size * 2};
-  xfdtd::SpatialIndex total_ny{ny + pml_size * 2};
-  double center_frequency{12e9};
-  double max_frequency{20e9};
-  double min_lambda{xfdtd::constant::C_0 / max_frequency};
-  double bandwidth{2 * center_frequency};
-  double dx{min_lambda / 20};
-  double dy{dx};
-  double tau{1.7 / (max_frequency - center_frequency)};
-  double t_0{0.8 * tau};
-  size_t total_time_steps{1400};
-  double cylinder_x{nx * 0.5 * dx};
-  double cylinder_y{ny * 0.5 * dx};
-  double cylinder_radius{0.03};
+  constexpr xfdtd::SpatialIndex nx{350};
+  constexpr xfdtd::SpatialIndex ny{300};
+  constexpr xfdtd::SpatialIndex pml_size{10};
+  constexpr xfdtd::SpatialIndex total_nx{nx + pml_size * 2};
+  constexpr xfdtd::SpatialIndex total_ny{ny + pml_size * 2};
+  constexpr double center_frequency{12e9};
+  constexpr double max_frequency{20e9};
+  constexpr double min_lambda{3e8 / max_frequency};
+  constexpr double bandwidth{2 * center_frequency};
+  constexpr double dx{min_lambda / 20};
+  constexpr double dy{dx};
+  constexpr double tau{1.7 / (max_frequency - center_frequency)};
+  constexpr double t_0{0.8 * tau};
+  constexpr size_t total_time_steps{1400};
+  constexpr double cylinder_x{nx * 0.5 * dx};
+  constexpr double cylinder_y{ny * 0.5 * dx};
+  constexpr double cylinder_radius{0.03};
+  const std::filesystem::path output_dir{
+      "./visualizing_data/data/2d_cylinder_scatter/"};
 
   auto objects{xfdtd::ObjectArray{}};
   auto boundaries{xfdtd::BoundaryArray{}};
@@ -72,12 +74,11 @@ void testBasic2D() {
   boundaries.emplace_back(
       std::make_shared<xfdtd::PML>(xfdtd::Orientation::YP, pml_size));
 
+  const std::filesystem::path movie_dir{output_dir / "movie_ez"};
   auto monitor{xfdtd::TimeDomainFieldMonitor{
       std::make_unique<xfdtd::Cube>(xfdtd::PointVector{0, 0, 0},
                                     xfdtd::PointVector{nx * dx, ny * dy, 0}),
-      xfdtd::PlaneType::XY, xfdtd::EMComponent::EZ,
-      std::filesystem::path("./visualizing_data/data/2d_cylinder_scatter/ez"),
-      ""}};
+      xfdtd::PlaneType::XY, xfdtd::EMComponent::EZ, movie_dir, ""}};
   auto movie_monitor{xfdtd::MovieMonitor{
       std::make_unique<xfdtd::TimeDomainFieldMonitor>(std::move(monitor)),
       total_time_steps, 100}};
@@ -90,12 +91,15 @@ void testBasic2D() {
               std::move(cosine_modulated_gaussian_waveform))),
       std::make_unique<xfdtd::NffftBroadBand>(
           40, 40, 0, xfdtd::constant::PI / 2, xfdtd::constant::PI * 1.25,
-          "visualizing_data/data/2d_cylinder_scatter/"),
+          output_dir / "nffft"),
       0.8}};
   simulation.addMonitor(
       std::make_unique<xfdtd::MovieMonitor>(std::move(movie_monitor)));
+
   auto t0{std::chrono::high_resolution_clock::now()};
   simulation.run(total_time_steps);
+  simulation.outputTFSFIncidentWaveFastFourierTransform(
+      output_dir / "tfsf_incident_wave_fft");
   auto t1{std::chrono::high_resolution_clock::now()};
   std::cout
       << "Simulation takes "

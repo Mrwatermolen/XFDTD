@@ -1,6 +1,7 @@
 #include "simulation/simulation.h"
 
 #include <cstddef>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -8,8 +9,8 @@
 #include <utility>
 #include <vector>
 #include <xtensor/xadapt.hpp>
-#include <xtensor/xview.hpp>
 #include <xtensor/xnpy.hpp>
+#include <xtensor/xview.hpp>
 
 #include "electromagnetic_field/electromagnetic_field.h"
 #include "fdtd_basic_coff/fdtd_basic_coff.h"
@@ -19,8 +20,7 @@ namespace xfdtd {
 Simulation::Simulation(double cell_size, float cfl)
     : _emf{std::make_shared<EMF>()},
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
-      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cell_size, cell_size,
-                                                       cell_size, cfl)} {};
+      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
 Simulation::Simulation(double cell_size, ObjectArray objects,
                        BoundaryArray boundaries, std::unique_ptr<TFSF> tfsf,
@@ -30,8 +30,7 @@ Simulation::Simulation(double cell_size, ObjectArray objects,
       _tfsf{std::move(tfsf)},
       _emf{std::make_shared<EMF>()},
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
-      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cell_size, cell_size,
-                                                       cell_size, cfl)} {};
+      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
 Simulation::Simulation(double cell_size, ObjectArray objects,
                        BoundaryArray boundaries, std::unique_ptr<TFSF> tfsf,
@@ -42,8 +41,7 @@ Simulation::Simulation(double cell_size, ObjectArray objects,
       _nffft{std::move(nffft)},
       _emf{std::make_shared<EMF>()},
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
-      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cell_size, cell_size,
-                                                       cell_size, cfl)} {};
+      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
 Simulation::Simulation(
     double cell_size, ObjectArray objects,
@@ -55,8 +53,7 @@ Simulation::Simulation(
       _monitors{std::move(monitors)},
       _emf{std::make_shared<EMF>()},
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
-      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cell_size, cell_size,
-                                                       cell_size, cfl)} {};
+      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
 Simulation::Simulation(double cell_size, ObjectArray objects,
                        MonitorArray monitors, float cfl)
@@ -64,8 +61,7 @@ Simulation::Simulation(double cell_size, ObjectArray objects,
       _monitors{std::move(monitors)},
       _emf{std::make_shared<EMF>()},
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
-      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cell_size, cell_size,
-                                                       cell_size, cfl)} {};
+      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
 Simulation::Simulation(
     double cell_size, ObjectArray objects,
@@ -76,8 +72,7 @@ Simulation::Simulation(
       _monitors{std::move(monitors)},
       _emf{std::make_shared<EMF>()},
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
-      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cell_size, cell_size,
-                                                       cell_size, cfl)} {}
+      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {}
 
 Simulation::Simulation(
     double cell_size, ObjectArray objects,
@@ -91,8 +86,7 @@ Simulation::Simulation(
       _network{std::move(network)},
       _emf{std::make_shared<EMF>()},
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
-      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cell_size, cell_size,
-                                                       cell_size, cfl)} {}
+      _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {}
 
 void Simulation::checkRun(size_t total_time_steps) {
   std::cout << "Simulation Check:" << '\n';
@@ -139,14 +133,38 @@ void Simulation::outputData() {
     _network->outputData();
   }
   // xt::dump_npy("./visualizing_data/data/cexe", _fdtd_basic_coff->getCexe());
-  // xt::dump_npy("./visualizing_data/data/cexhy", _fdtd_basic_coff->getCexhy());
-  // xt::dump_npy("./visualizing_data/data/cexhz", _fdtd_basic_coff->getCexhz());
-  // xt::dump_npy("./visualizing_data/data/ceye", _fdtd_basic_coff->getCeye());
-  // xt::dump_npy("./visualizing_data/data/ceyhz", _fdtd_basic_coff->getCeyhz());
-  // xt::dump_npy("./visualizing_data/data/ceyhx", _fdtd_basic_coff->getCeyhx());
-  // xt::dump_npy("./visualizing_data/data/ceze", _fdtd_basic_coff->getCeze());
-  // xt::dump_npy("./visualizing_data/data/cezhx", _fdtd_basic_coff->getCezhx());
-  // xt::dump_npy("./visualizing_data/data/cezhy", _fdtd_basic_coff->getCezhy());
+  // xt::dump_npy("./visualizing_data/data/cexhy",
+  // _fdtd_basic_coff->getCexhy());
+  // xt::dump_npy("./visualizing_data/data/cexhz",
+  // _fdtd_basic_coff->getCexhz()); xt::dump_npy("./visualizing_data/data/ceye",
+  // _fdtd_basic_coff->getCeye()); xt::dump_npy("./visualizing_data/data/ceyhz",
+  // _fdtd_basic_coff->getCeyhz());
+  // xt::dump_npy("./visualizing_data/data/ceyhx",
+  // _fdtd_basic_coff->getCeyhx()); xt::dump_npy("./visualizing_data/data/ceze",
+  // _fdtd_basic_coff->getCeze()); xt::dump_npy("./visualizing_data/data/cezhx",
+  // _fdtd_basic_coff->getCezhx());
+  // xt::dump_npy("./visualizing_data/data/cezhy",
+  // _fdtd_basic_coff->getCezhy());
+}
+
+void Simulation::outputTFSFIncidentWaveFastFourierTransform(
+    const std::filesystem::path &path) {
+  if (_tfsf == nullptr) {
+    return;
+  }
+  if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path)) {
+    try {
+      std::filesystem::create_directories(path);
+    } catch (std::filesystem::filesystem_error& e) {
+      std::cerr << "Error: " << e.what() << '\n';
+      return;
+    }
+  }
+  auto f_file{(path / "frequencies.npy").string()};
+  auto v_file{(path / "value.npy").string()};
+  auto [frequencies, v] = _tfsf->getIncidentWaveFastFourierTransform();
+  xt::dump_npy(f_file, frequencies);
+  xt::dump_npy(v_file, v);
 }
 
 }  // namespace xfdtd

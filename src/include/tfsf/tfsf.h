@@ -1,11 +1,13 @@
 #ifndef _TFSF_H_
 #define _TFSF_H_
 
+#include <complex>
 #include <memory>
 
 #include "electromagnetic_field/electromagnetic_field.h"
+#include "fdtd_basic_coff/fdtd_basic_coff.h"
 #include "grid/grid_box.h"
-#include "shape/cube.h"
+#include "grid/grid_space.h"
 #include "util/type_define.h"
 #include "waveform/waveform.h"
 namespace xfdtd {
@@ -36,7 +38,7 @@ class TFSF {
   TFSF(SpatialIndex distance_x, SpatialIndex distance_y,
        SpatialIndex distance_z, double e_0, double theta_inc, double phi_inc,
        double psi, std::unique_ptr<Waveform> waveform);
-  TFSF(TFSF&& ohter) = default;
+  TFSF(TFSF&&) noexcept = default;
   virtual ~TFSF() = default;
 
   inline std::tuple<SpatialIndex, SpatialIndex, SpatialIndex> getDistance()
@@ -47,10 +49,6 @@ class TFSF {
   inline double getIncidentTheta() const { return _theta_inc; }
   inline double getIncidentPhi() const { return _phi_inc; }
   inline double getIncidentPsi() const { return _psi; }
-
-  inline double getIncidentFieldWaveformValueByTime(double time) {
-    return _e_0 * _waveform->getValueByTime(time);
-  }
 
   inline PointVector getKVector() const { return _k; }
   inline SpatialIndex getStartIndexX() const {
@@ -79,8 +77,10 @@ class TFSF {
 
   void setEMFInstance(std::shared_ptr<EMF> emf) { _emf = std::move(emf); };
 
-  virtual void init(double dx, double dy, double dz, double dt,
-                    std::unique_ptr<GridBox> tfsf_grid_box) = 0;
+  virtual void init(const GridSpace* grid_space,
+                    const FDTDBasicCoff* fdtd_basic_coff,
+                    std::shared_ptr<EMF> emf) = 0;
+
   virtual void updateIncidentField(size_t current_time_step) = 0;
   virtual void updateH() = 0;
   /**
@@ -89,8 +89,18 @@ class TFSF {
    */
   virtual void updateE() = 0;
 
+  xt::xarray<double> getIncidentWaveValue() const;
+
+  xt::xarray<std::complex<double>> getIncidentWaveFourierTransform(
+      const xt::xarray<double>& frequencies) const;
+
+  std::tuple<xt::xarray<double>, xt::xarray<std::complex<double>>>
+  getIncidentWaveFastFourierTransform() const;
+
  protected:
-  void defaultInitTFSF(double dx, double dy, double dz, double dt,
+  void defaultInitTFSF(const GridSpace* grid_space,
+                       const FDTDBasicCoff* fdtd_basic_coff,
+                       std::shared_ptr<EMF> emf,
                        std::unique_ptr<GridBox> tfsf_grid_box);
 
   inline double getIncidentSinTheta() const { return _sin_theta_inc; }
@@ -123,6 +133,14 @@ class TFSF {
     return _emf->getHz(i, j, k);
   }
 
+  void initIncidentWaveForm(xt::xarray<double> time);
+
+  double getIncidentFieldWaveformValueByTime(double time) const {
+    return _e_0 * _waveform->getValueByTime(time);
+  }
+
+  double getIncidentWaveValueByTimeStep(size_t t) const;
+
  private:
   SpatialIndex _distance_x;
   SpatialIndex _distance_y;
@@ -144,6 +162,7 @@ class TFSF {
   double _dx;
   double _dy;
   double _dz;
+  size_t _total_time_steps;
   std::unique_ptr<GridBox> _tfsf_grid_box;
   std::shared_ptr<EMF> _emf;
 };

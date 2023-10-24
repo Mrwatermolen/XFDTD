@@ -6,53 +6,124 @@
 
 namespace xfdtd {
 
-FDTDBasicCoff::FDTDBasicCoff(double dx, double dy, double dz, double cfl)
-    : _dx{dx}, _dy{dy}, _dz{dz}, _cfl{cfl} {
-  _dt = _cfl /
-        (constant::C_0 *
-         std::sqrt(1.0 / (_dx * _dx) + 1.0 / (_dy * _dy) + 1.0 / (_dz * _dz)));
+FDTDBasicCoff::FDTDBasicCoff(double cfl) : _cfl{cfl} {}
+
+void FDTDBasicCoff::init(const GridSpace* grid_space, size_t total_time_step,
+                         size_t current_time_step) {
+  if (grid_space == nullptr) {
+    throw std::runtime_error("Grid space is not initialized.");
+  }
+
+  setTotalTimeStep(total_time_step);
+  setCurrentTimeStep(current_time_step);
+  if (grid_space->getGridNumZ() <= 1) {
+    setDt(calculateDeltaT(_cfl, grid_space->getGridSizeMinX(),
+                          grid_space->getGridSizeMinY()));
+  } else {
+    setDt(calculateDeltaT(_cfl, grid_space->getGridSizeMinX(),
+                          grid_space->getGridSizeMinY(),
+                          grid_space->getGridSizeMinZ()));
+  }
+  allocateArray(grid_space->getGridNumX(), grid_space->getGridNumY(),
+                grid_space->getGridNumZ());
 }
 
-void FDTDBasicCoff::init(size_t nx, size_t ny, size_t nz,
-                         size_t total_time_step) {
-  _total_time_step = total_time_step;
-  _current_time_step = 0;
-  allocateArray(nx, ny, nz);
+void FDTDBasicCoff::initCoff(const GridSpace* grid_space) {
+  if (grid_space == nullptr) {
+    throw std::runtime_error("Grid space is not initialized.");
+  }
+  // auto dx{grid_space->getGridBaseSizeX()};
+  // auto dy{grid_space->getGridBaseSizeY()};
+  // auto dz{grid_space->getGridBaseSizeZ()};
+  // _dx = dx;
+  // _dy = dy;
+  // _dz = dz;
+  // _cexe = (2 * _eps_x - _dt * _sigma_x) / (2 * _eps_x + _dt * _sigma_x);
+  // _cexhy = -(2 * _dt / _dz) / (2 * _eps_x + _sigma_x * _dt);
+  // _cexhz = (2 * _dt / _dy) / (2 * _eps_x + _sigma_x * _dt);
+
+  // _ceye = (2 * _eps_y - _dt * _sigma_y) / (2 * _eps_y + _dt * _sigma_y);
+  // _ceyhz = -(2 * _dt / _dx) / (2 * _eps_y + _sigma_y * _dt);
+  // _ceyhx = (2 * _dt / _dz) / (2 * _eps_y + _sigma_y * _dt);
+
+  // _ceze = (2 * _eps_z - _dt * _sigma_z) / (2 * _eps_z + _dt * _sigma_z);
+  // _cezhx = -(2 * _dt / _dy) / (2 * _eps_z + _sigma_z * _dt);
+  // _cezhy = (2 * _dt / _dx) / (2 * _eps_z + _sigma_z * _dt);
+
+  // _chxh = (2 * _mu_x - _dt * _sigma_m_x) / (2 * _mu_x + _dt * _sigma_m_x);
+  // _chxey = (2 * _dt / _dy) / (2 * _mu_x + _sigma_m_x * _dt);
+  // _chxez = -(2 * _dt / _dz) / (2 * _mu_x + _sigma_m_x * _dt);
+
+  // _chyh = (2 * _mu_y - _dt * _sigma_m_y) / (2 * _mu_y + _dt * _sigma_m_y);
+  // _chyez = (2 * _dt / _dz) / (2 * _mu_y + _sigma_m_y * _dt);
+  // _chyex = -(2 * _dt / _dx) / (2 * _mu_y + _sigma_m_y * _dt);
+
+  // _chzh = (2 * _mu_z - _dt * _sigma_m_z) / (2 * _mu_z + _dt * _sigma_m_z);
+  // _chzex = (2 * _dt / _dx) / (2 * _mu_z + _sigma_m_z * _dt);
+  // _chzey = -(2 * _dt / _dy) / (2 * _mu_z + _sigma_m_z * _dt);
+  // return;
+
+  const auto& e_node_size_x{grid_space->getGridSizeArrayEX()};
+  const auto& e_node_size_y{grid_space->getGridSizeArrayEY()};
+  const auto& e_node_size_z{grid_space->getGridSizeArrayEZ()};
+  const auto& h_node_size_x{grid_space->getGridSizeArrayHX()};
+  const auto& h_node_size_y{grid_space->getGridSizeArrayHY()};
+  const auto& h_node_size_z{grid_space->getGridSizeArrayHZ()};
+
+  auto get_xyz{[](const auto& size_x, const auto& size_y, const auto& size_z) {
+    return xt::meshgrid(size_x, size_y, size_z);
+  }};
+
+  auto calculate_coff_e{[](const auto& da, const auto& db, const auto& dc,
+                           const auto& dt, const auto& eps, const auto& sigma,
+                           auto&& cece, auto&& cecha, auto&& cechb) {
+    cece = (2 * eps - dt * sigma) / (2 * eps + dt * sigma);
+    cecha = -(2 * dt / db) / (2 * eps + sigma * dt);
+    cechb = (2 * dt / da) / (2 * eps + sigma * dt);
+  }};
+
+  auto calculate_coff_h{[](const auto& da, const auto& db, const auto& dc,
+                           const auto& dt, const auto& mu, const auto& sigma_m,
+                           auto&& chch, auto&& chcea, auto&& chceb) {
+    chch = (2 * mu - dt * sigma_m) / (2 * mu + dt * sigma_m);
+    chcea = (2 * dt / db) / (2 * mu + sigma_m * dt);
+    chceb = -(2 * dt / da) / (2 * mu + sigma_m * dt);
+  }};
+
+  auto e_x_size{get_xyz(e_node_size_x, h_node_size_y, h_node_size_z)};
+  calculate_coff_e(std::get<1>(e_x_size), std::get<2>(e_x_size),
+                   std::get<0>(e_x_size), _dt, _eps_x, _sigma_x, _cexe, _cexhy,
+                   _cexhz);
+
+  auto e_y_size{get_xyz(h_node_size_x, e_node_size_y, h_node_size_z)};
+  calculate_coff_e(std::get<2>(e_y_size), std::get<0>(e_y_size),
+                   std::get<1>(e_y_size), _dt, _eps_y, _sigma_y, _ceye, _ceyhz,
+                   _ceyhx);
+
+  auto e_z_size{get_xyz(h_node_size_x, h_node_size_y, e_node_size_z)};
+  calculate_coff_e(std::get<0>(e_z_size), std::get<1>(e_z_size),
+                   std::get<2>(e_z_size), _dt, _eps_z, _sigma_z, _ceze, _cezhx,
+                   _cezhy);
+
+  auto h_x_size{get_xyz(h_node_size_x, e_node_size_y, e_node_size_z)};
+  calculate_coff_h(std::get<1>(h_x_size), std::get<2>(h_x_size),
+                   std::get<0>(h_x_size), _dt, _mu_x, _sigma_m_x, _chxh, _chxey,
+                   _chxez);
+
+  auto h_y_size{get_xyz(e_node_size_x, h_node_size_y, e_node_size_z)};
+  calculate_coff_h(std::get<2>(h_y_size), std::get<0>(h_y_size),
+                   std::get<1>(h_y_size), _dt, _mu_y, _sigma_m_y, _chyh, _chyez,
+                   _chyex);
+
+  auto h_z_size{get_xyz(e_node_size_x, e_node_size_y, h_node_size_z)};
+  calculate_coff_h(std::get<0>(h_z_size), std::get<1>(h_z_size),
+                   std::get<2>(h_z_size), _dt, _mu_z, _sigma_m_z, _chzh, _chzex,
+                   _chzey);
 }
 
-void FDTDBasicCoff::initCoff() {
-  _cexe = (2 * _eps_x - _dt * _sigma_x) / (2 * _eps_x + _dt * _sigma_x);
-  _cexhy = -(2 * _dt / _dz) / (2 * _eps_x + _sigma_x * _dt);
-  _cexhz = (2 * _dt / _dy) / (2 * _eps_x + _sigma_x * _dt);
-
-  _ceye = (2 * _eps_y - _dt * _sigma_y) / (2 * _eps_y + _dt * _sigma_y);
-  _ceyhz = -(2 * _dt / _dx) / (2 * _eps_y + _sigma_y * _dt);
-  _ceyhx = (2 * _dt / _dz) / (2 * _eps_y + _sigma_y * _dt);
-
-  _ceze = (2 * _eps_z - _dt * _sigma_z) / (2 * _eps_z + _dt * _sigma_z);
-  _cezhx = -(2 * _dt / _dy) / (2 * _eps_z + _sigma_z * _dt);
-  _cezhy = (2 * _dt / _dx) / (2 * _eps_z + _sigma_z * _dt);
-
-  _chxh = (2 * _mu_x - _dt * _sigma_m_x) / (2 * _mu_x + _dt * _sigma_m_x);
-  _chxey = (2 * _dt / _dy) / (2 * _mu_x + _sigma_m_x * _dt);
-  _chxez = -(2 * _dt / _dz) / (2 * _mu_x + _sigma_m_x * _dt);
-
-  _chyh = (2 * _mu_y - _dt * _sigma_m_y) / (2 * _mu_y + _dt * _sigma_m_y);
-  _chyez = (2 * _dt / _dz) / (2 * _mu_y + _sigma_m_y * _dt);
-  _chyex = -(2 * _dt / _dx) / (2 * _mu_y + _sigma_m_y * _dt);
-
-  _chzh = (2 * _mu_z - _dt * _sigma_m_z) / (2 * _mu_z + _dt * _sigma_m_z);
-  _chzex = (2 * _dt / _dx) / (2 * _mu_z + _sigma_m_z * _dt);
-  _chzey = -(2 * _dt / _dy) / (2 * _mu_z + _sigma_m_z * _dt);
-}
+double FDTDBasicCoff::getCFL() const { return _cfl; }
 
 double FDTDBasicCoff::getDt() const { return _dt; }
-
-double FDTDBasicCoff::getDx() const { return _dx; }
-
-double FDTDBasicCoff::getDy() const { return _dy; }
-
-double FDTDBasicCoff::getDz() const { return _dz; }
 
 size_t FDTDBasicCoff::getTotalTimeStep() const { return _total_time_step; }
 
@@ -184,6 +255,14 @@ xt::xarray<double>& FDTDBasicCoff::getChzex() { return _chzex; }
 
 xt::xarray<double>& FDTDBasicCoff::getChzey() { return _chzey; }
 
+void FDTDBasicCoff::setCFL(double cfl) { _cfl = cfl; }
+
+void FDTDBasicCoff::setDt(double dt) { _dt = dt; }
+
+void FDTDBasicCoff::setTotalTimeStep(size_t total_time_step) {
+  _total_time_step = total_time_step;
+}
+
 void FDTDBasicCoff::setCurrentTimeStep(size_t current_time_step) {
   _current_time_step = current_time_step;
 }
@@ -260,4 +339,17 @@ void FDTDBasicCoff::allocateArray(size_t nx, size_t ny, size_t nz) {
   _sigma_m_z.fill(0);
 }
 
+double FDTDBasicCoff::calculateDeltaT(double cfl, double dx, double dy,
+                                      double dz) {
+  return cfl / (constant::C_0 *
+                std::sqrt(1.0 / (dx * dx) + 1.0 / (dy * dy) + 1.0 / (dz * dz)));
+}
+
+double FDTDBasicCoff::calculateDeltaT(double cfl, double dx, double dy) {
+  return cfl / (constant::C_0 * std::sqrt(1.0 / (dx * dx) + 1.0 / (dy * dy)));
+}
+
+double FDTDBasicCoff::calculateDeltaT(double cfl, double dx) {
+  return cfl / (constant::C_0 * std::sqrt(1.0 / (dx * dx)));
+}
 }  // namespace xfdtd

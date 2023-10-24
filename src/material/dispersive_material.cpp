@@ -1,6 +1,5 @@
 #include "material/dispersive_material.h"
 
-#include "material/material.h"
 #include "util/constant.h"
 
 namespace xfdtd {
@@ -15,11 +14,14 @@ LorentzMedium::LorentzMedium(std::string_view name, double eps_s,
       _omega_p{omega_p},
       _nv{nv} {}
 
-void LorentzMedium::init(double dt, double dl,
-                         const std::shared_ptr<EMF> &emf) {
-  LinearDispersiveMaterial::init(dt, dl, emf);
+void LorentzMedium::init(std::shared_ptr<GridSpace> grid_space,
+                         std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+                         std::shared_ptr<EMF> emf) {
+  LinearDispersiveMaterial::init(grid_space, fdtd_basic_coff, emf);
   auto eps_0{constant::EPSILON_0};
   auto sigma_e{getElectricalConductivity()};
+  auto dt{getDt()};
+  auto dl{getDl()};
   auto temp_coff_0{_nv * dt + 1};
 
   _coff_alpha = (2 - _omega_p * _omega_p * dt * dt) / temp_coff_0;
@@ -121,16 +123,19 @@ DrudeMedium::DrudeMedium(std::string_view name, double eps_inf,
       _omega_p{pole_omega},
       _nv{nv} {}
 
-void DrudeMedium::init(double dt, double dl, const std::shared_ptr<EMF> &emf) {
-  LinearDispersiveMaterial::init(dt, dl, emf);
+void DrudeMedium::init(std::shared_ptr<GridSpace> grid_space,
+                       std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+                       std::shared_ptr<EMF> emf) {
+  LinearDispersiveMaterial::init(grid_space, fdtd_basic_coff, emf);
   auto eps_0{constant::EPSILON_0};
   auto sigma_e{getElectricalConductivity()};
+  auto dt{getDt()};
+  auto dl{getDl()};
 
   _coff_k = (2 - _nv * dt) / (2 + _nv * dt);
   _coff_beta = (_omega_p * _omega_p * eps_0 * dt) / (2 + _nv * dt);
 
   auto temp_coff_1{2 * eps_0 * _eps_inf + _coff_beta * dt + sigma_e * dt};
-  // TODO(franzero): check this
   _coff_ca =
       (2 * eps_0 * _eps_inf - _coff_beta * dt - sigma_e * dt) / (temp_coff_1);
   _coff_cb = 2 * dt / (temp_coff_1 * dl);
@@ -195,10 +200,14 @@ DebyMedium::DebyMedium(std::string_view name, double eps_s, double eps_inf,
       _delta_eps{eps_s - eps_inf},
       _tau{tau} {}
 
-void DebyMedium::init(double dt, double dl, const std::shared_ptr<EMF> &emf) {
-  LinearDispersiveMaterial::init(dt, dl, emf);
+void DebyMedium::init(std::shared_ptr<GridSpace> grid_space,
+                      std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+                      std::shared_ptr<EMF> emf) {
+  LinearDispersiveMaterial::init(grid_space, fdtd_basic_coff, emf);
   auto eps_0{constant::EPSILON_0};
   auto sigma_e{getElectricalConductivity()};
+  auto dt{getDt()};
+  auto dl{getDl()};
 
   _coff_k = (2 * _tau - dt) / (2 * _tau + dt);
   _coff_beta = (2 * _delta_eps * eps_0 * dt) / (2 * _tau + dt);

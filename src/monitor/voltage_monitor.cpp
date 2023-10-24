@@ -20,9 +20,10 @@ std::unique_ptr<Monitor> VoltageMonitor::clone() const {
   return std::make_unique<VoltageMonitor>(*this);
 }
 
-void VoltageMonitor::init(const std::shared_ptr<const FDTDBasicCoff> &fdtd_basic_coff,
-                const std::shared_ptr<const GridSpace> &grid_space,
-                const std::shared_ptr<const EMF> &emf) {
+void VoltageMonitor::init(
+    const std::shared_ptr<const FDTDBasicCoff> &fdtd_basic_coff,
+    const std::shared_ptr<const GridSpace> &grid_space,
+    const std::shared_ptr<const EMF> &emf) {
   defaultInit(fdtd_basic_coff, grid_space, emf);
 
   auto grid_box{grid_space->getGridBox(getShape())};
@@ -34,15 +35,21 @@ void VoltageMonitor::init(const std::shared_ptr<const FDTDBasicCoff> &fdtd_basic
   _ke = grid_box->getGridEndIndexZ();
 
   if (_orientation == Orientation::XN || _orientation == Orientation::XP) {
-    _dc = fdtd_basic_coff->getDx();
+    _dc = xt::view(grid_space->getGridSizeArrayHX(), xt::range(_is, _ie));
     _coff = -_dc / ((_je - _js) * (_ke - _ks));
+    if (_orientation == Orientation::XN) {
+      _coff *= -1;
+    }
   }
   if (_orientation == Orientation::YN || _orientation == Orientation::YP) {
-    _dc = fdtd_basic_coff->getDy();
+    _dc = xt::view(grid_space->getGridSizeArrayHY(), xt::range(_js, _je));
     _coff = -_dc / ((_ie - _is) * (_ke - _ks));
+    if (_orientation == Orientation::YN) {
+      _coff *= -1;
+    }
   }
   if (_orientation == Orientation::ZN || _orientation == Orientation::ZP) {
-    _dc = fdtd_basic_coff->getDz();
+    _dc = xt::view(grid_space->getGridSizeArrayHZ(), xt::range(_ks, _ke));
     _coff = -_dc / ((_ie - _is) * (_je - _js));
     if (_orientation == Orientation::ZN) {
       _coff *= -1;
@@ -60,7 +67,7 @@ void VoltageMonitor::update() {
     for (size_t i{_is}; i < _ie; ++i) {
       for (size_t j{_js}; j < _je; ++j) {
         for (size_t k{_ks}; k < _ke; ++k) {
-          _value(current_time_step) += _coff * (emf->getEx(i, j, k));
+          _value(current_time_step) += _coff(i - _is) * (emf->getEx(i, j, k));
         }
       }
     }
@@ -70,7 +77,7 @@ void VoltageMonitor::update() {
     for (size_t i{_is}; i < _ie; ++i) {
       for (size_t j{_js}; j < _je; ++j) {
         for (size_t k{_ks}; k < _ke; ++k) {
-          _value(current_time_step) += _coff * (emf->getEy(i, j, k));
+          _value(current_time_step) += _coff(j - _js) * (emf->getEy(i, j, k));
         }
       }
     }
@@ -80,7 +87,7 @@ void VoltageMonitor::update() {
     for (size_t i{_is}; i < _ie; ++i) {
       for (size_t j{_js}; j < _je; ++j) {
         for (size_t k{_ks}; k < _ke; ++k) {
-          _value(current_time_step) += _coff * (emf->getEz(i, j, k));
+          _value(current_time_step) += _coff(k - _ks) * (emf->getEz(i, j, k));
         }
       }
     }

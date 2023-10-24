@@ -29,7 +29,8 @@ class CurrentMonitor : public Monitor {
  private:
   Orientation _orientation;
   size_t _is, _ie, _js, _je, _ks, _ke;
-  double _da, _db;
+  // double _da, _db;
+  xt::xarray<double> _da, _db, _dc;
   double _positive;
 
   xt::xarray<double> _value;

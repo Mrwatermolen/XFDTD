@@ -1,6 +1,5 @@
 #include "object/thin_wire.h"
 
-#include <cmath>
 #include <memory>
 #include <xtensor/xview.hpp>
 
@@ -20,8 +19,10 @@ void ThinWire::init(int index, std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
                     std::shared_ptr<GridSpace> grid_space,
                     const std::shared_ptr<EMF>& emf) {
   defaultInit(index, fdtd_basic_coff, grid_space, emf);
+  if (!grid_space->isUniformGridSpace()) {
+    throw std::runtime_error("ThinWire only support uniform grid space");
+  }
   auto shape{getShape()};
-  auto grid_box{grid_space->getGridBox(shape.get())};
   auto cylinder{dynamic_cast<Cylinder*>(shape.get())};
   if (cylinder == nullptr) {
     throw std::runtime_error("ThinWire only support Cylinder shape");
@@ -50,9 +51,9 @@ void ThinWire::correctFDTDCoff() {
   auto x_range{xt::range(is, ie)};
   auto y_range{xt::range(js, je)};
   auto z_range{xt::range(ks, ke)};
-  auto dx{fdtd_basic_coff->getDx()};
-  auto dy{fdtd_basic_coff->getDy()};
-  auto dz{fdtd_basic_coff->getDz()};
+  auto dx{grid_space->getGridBaseSizeX()};
+  auto dy{grid_space->getGridBaseSizeY()};
+  auto dz{grid_space->getGridBaseSizeZ()};
   auto dt = fdtd_basic_coff->getDt();
 
   if (_axis == Axis::X) {
@@ -128,9 +129,9 @@ void ThinWire::correctFDTDCoff() {
 }
 
 bool ThinWire::isEnoughThin() const {
-  auto dx{getFDTDBasicCoff()->getDx()};
-  auto dy{getFDTDBasicCoff()->getDy()};
-  auto dz{getFDTDBasicCoff()->getDz()};
+  auto dx{getGridSpace()->getGridBaseSizeX()};
+  auto dy{getGridSpace()->getGridBaseSizeY()};
+  auto dz{getGridSpace()->getGridBaseSizeZ()};
   if (_axis == Axis::X) {
     return _radius < dy / 2 && _radius < dz / 2;
   }

@@ -25,22 +25,49 @@ void Capacitor::init(std::shared_ptr<GridSpace> grid_space,
   if (_axis == Axis::X) {
     _capacitance_factor =
         _capacitance * (_ie - _is) / ((_je - _js) * (_ke - _ks));
-    ;
-    _da = {fdtd_basic_coff->getDy()};
-    _db = {fdtd_basic_coff->getDz()};
-    _dc = {fdtd_basic_coff->getDx()};
-  } else if (_axis == Axis::Y) {
+    _grid_size_a =
+        xt::view(grid_space->getGridSizeArrayHY(), xt::range(_js, _je));
+    _grid_size_b =
+        xt::view(grid_space->getGridSizeArrayHZ(), xt::range(_ks, _ke));
+    _grid_size_c =
+        xt::view(grid_space->getGridSizeArrayEX(), xt::range(_is, _ie));
+
+    auto [dx, dy, dz] = xt::meshgrid(_grid_size_c, _grid_size_a, _grid_size_b);
+    _da = dy;
+    _db = dz;
+    _dc = dx;
+  }
+
+  if (_axis == Axis::Y) {
     _capacitance_factor =
         _capacitance * (_je - _js) / ((_ie - _is) * (_ke - _ks));
-    _da = {fdtd_basic_coff->getDz()};
-    _db = {fdtd_basic_coff->getDx()};
-    _dc = {fdtd_basic_coff->getDy()};
-  } else if (_axis == Axis::Z) {
+    _grid_size_a =
+        xt::view(grid_space->getGridSizeArrayHZ(), xt::range(_ks, _ke));
+    _grid_size_b =
+        xt::view(grid_space->getGridSizeArrayHX(), xt::range(_is, _ie));
+    _grid_size_c =
+        xt::view(grid_space->getGridSizeArrayEY(), xt::range(_js, _je));
+
+    auto [dx, dy, dz] = xt::meshgrid(_grid_size_b, _grid_size_c, _grid_size_a);
+    _da = dz;
+    _da = dx;
+    _dc = dy;
+  }
+
+  if (_axis == Axis::Z) {
     _capacitance_factor =
         _capacitance * (_ke - _ks) / ((_ie - _is) * (_je - _js));
-    _da = {fdtd_basic_coff->getDx()};
-    _db = {fdtd_basic_coff->getDy()};
-    _dc = {fdtd_basic_coff->getDz()};
+    _grid_size_a =
+        xt::view(grid_space->getGridSizeArrayHX(), xt::range(_is, _ie));
+    _grid_size_b =
+        xt::view(grid_space->getGridSizeArrayHY(), xt::range(_js, _je));
+    _grid_size_c =
+        xt::view(grid_space->getGridSizeArrayEZ(), xt::range(_ks, _ke));
+
+    auto [dx, dy, dz] = xt::meshgrid(_grid_size_a, _grid_size_b, _grid_size_c);
+    _da = dx;
+    _db = dy;
+    _dc = dz;
   }
   _beta = 2 * _capacitance_factor * _dc / (_da * _db);
 }

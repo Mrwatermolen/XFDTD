@@ -84,7 +84,6 @@ class Object {
   std::shared_ptr<FDTDBasicCoff> _fdtd_basic_coff;
   std::shared_ptr<GridSpace> _grid_space;
   double _dt;
-  double _dl;
 };
 
 }  // namespace xfdtd

@@ -7,14 +7,15 @@ class TFSF2D : public TFSF {
  public:
   TFSF2D(SpatialIndex distance_x, SpatialIndex distance_y, double phi_inc,
          double ez_i0, std::unique_ptr<Waveform> waveform);
-  TFSF2D(const TFSF2D &) = delete;
-  TFSF2D &operator=(const TFSF2D &) = delete;
-  TFSF2D(TFSF2D &&) = default;
-  TFSF2D &operator=(TFSF2D &&) = delete;
+  //   TFSF2D(const TFSF2D &) = delete;
+  //   TFSF2D &operator=(const TFSF2D &) = delete;
+  //   TFSF2D(TFSF2D &&) noexcept = default;
+  //   TFSF2D &operator=(TFSF2D &&) = delete;
   ~TFSF2D() override = default;
 
-  void init(double dx, double dy, double dz, double dt,
-            std::unique_ptr<GridBox> tfsf_grid_box) override;
+  void init(const GridSpace* grid_space, const FDTDBasicCoff* fdtd_basic_coff,
+            std::shared_ptr<EMF> emf) override;
+
   void updateIncidentField(size_t current_time_step) override;
   void updateH() override;
   void updateE() override;

@@ -40,11 +40,13 @@ class VoltageSource : public LumpedElement {
   Orientation _orientation;
   double _resistance;
   std::unique_ptr<Waveform> _waveform;
-  double _da, _db;  // grid length in a, b direction
   size_t _is, _ie, _js, _je, _ks, _ke;
   double _resistance_factor;
   double _voltage_amplitude_factor;
-  double _alpha, _beta;
+  xt::xarray<double> _grid_size_a, _grid_size_b, _grid_size_c;
+  xt::xarray<double> _da, _db, _dc;
+  xt::xarray<double> _alpha;
+  xt::xarray<double> _beta;
   xt::xarray<double> _coff_v;
 
   void correctFDTDCoff(xt::xarray<double>& cece, xt::xarray<double>& cecha,

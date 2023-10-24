@@ -31,7 +31,11 @@ bool Sphere::isPointInside(const PointVector &point) const {
 
 std::unique_ptr<Shape> Sphere::getWrappedBox() const {
   return std::make_unique<Cube>(
-      (_center - PointVector{_radius / 2, _radius / 2, _radius / 2}),
-      PointVector{_radius, _radius, _radius});
+      (_center - PointVector{_radius, _radius, _radius}),
+      PointVector{2 * _radius, 2 * _radius, 2 * _radius});
 }
+
+double Sphere::getRadius() const { return _radius; }
+
+PointVector Sphere::getCenter() const { return _center; }
 }  // namespace xfdtd

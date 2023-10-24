@@ -34,8 +34,9 @@ class VoltageMonitor : public Monitor {
  private:
   Orientation _orientation;
   size_t _is, _ie, _js, _je, _ks, _ke;
-  double _dc;
-  double _coff;
+  // double _dc;
+  xt::xarray<double> _dc;
+  xt::xarray<double> _coff;
 
   xt::xarray<double> _value;
 };

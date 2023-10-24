@@ -1,5 +1,6 @@
 #include "waveform/waveform.h"
 
+#include <complex>
 #include <filesystem>
 #include <fstream>
 #include <utility>
@@ -7,11 +8,26 @@
 #include <xtensor/xnpy.hpp>
 #include <xtensor/xview.hpp>
 
+#include "util/dft.h"
+
 namespace xfdtd {
 
 Waveform::Waveform(double amplitude) : _amplitude(amplitude) {}
 
 double Waveform::getAmplitude() const { return _amplitude; }
+
+xt::xarray<double> Waveform::getValue() const { return _value; }
+
+xt::xarray<std::complex<double>> Waveform::getFourierTransform(
+    const xt::xarray<double> &time, const xt::xarray<double> &frequencies,
+    double dt) const {
+  return dft(_value, dt, frequencies);
+}
+
+xt::xarray<std::complex<double>> Waveform::getFourierTransform(
+    const xt::xarray<double> &frequencies, double dt) const {
+  return dft(_value, dt, frequencies);
+}
 
 void Waveform::setAmplitude(double amplitude) { _amplitude = amplitude; }
 

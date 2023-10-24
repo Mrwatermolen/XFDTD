@@ -23,11 +23,14 @@ class Inductor : public LumpedElement {
 
  private:
   Axis _axis;
-  double _da, _db, _dc;
+  // double _da, _db, _dc;
   size_t _is, _ie, _js, _je, _ks, _ke;
   double _inductance;
   double _inductance_factor;
-  double _cjcec;
+  // double _cjcec;
+  xt::xarray<double> _grid_size_a, _grid_size_b, _grid_size_c;
+  xt::xarray<double> _da,_db,_dc;
+  xt::xarray<double> _cjcec;
   xt::xarray<double> _cecjc;
 };
 

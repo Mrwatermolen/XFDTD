@@ -8,7 +8,6 @@
 namespace xfdtd {
 
 void Simulation::init() {
-  _current_time_step = 0;
   initGridSpace();
   initFDTDBasicCoff();
   initEMInstance();
@@ -22,20 +21,8 @@ void Simulation::init() {
   initNetwork();
 }
 
-void Simulation::initMaterialGrid() {
-  initGridSpace();
-  _fdtd_basic_coff->init(_nx, _ny, _nz, _total_time_steps);
-  allocateEx(_nx, _ny + 1, _nz + 1);
-  allocateEy(_nx + 1, _ny, _nz + 1);
-  allocateEz(_nx + 1, _ny + 1, _nz);
-  allocateHx(_nx + 1, _ny, _nz);
-  allocateHy(_nx, _ny + 1, _nz);
-  allocateHz(_nx, _ny, _nz + 1);
-  initObject();
-}
-
 void Simulation::initFDTDBasicCoff() {
-  _fdtd_basic_coff->init(_nx, _ny, _nz, _total_time_steps);
+  _fdtd_basic_coff->init(_grid_space.get(), _total_time_steps);
 }
 
 void Simulation::initEMInstance() {
@@ -76,12 +63,7 @@ void Simulation::initTFSF() {
   if (_tfsf == nullptr) {
     return;
   }
-  auto [x, y, z]{_tfsf->getDistance()};
-  _tfsf->setEMFInstance(getEMFInstance());
-  _tfsf->init(getDx(), _fdtd_basic_coff->getDy(), _fdtd_basic_coff->getDz(),
-              _fdtd_basic_coff->getDt(),
-              std::make_unique<GridBox>(x, y, z, _nx - 2 * x, _ny - 2 * y,
-                                        _nz - 2 * z));
+  _tfsf->init(_grid_space.get(), _fdtd_basic_coff.get(), _emf);
 }
 
 void Simulation::initNFFFT() {
@@ -92,14 +74,15 @@ void Simulation::initNFFFT() {
   if (_nz == 1) {
     _nffft->init(
         std::make_unique<GridBox>(x, y, 0, _nx - 2 * x, _ny - 2 * y, 1),
-        getEMFInstance(), _total_time_steps, _fdtd_basic_coff->getDt(), getDx(),
-        _fdtd_basic_coff->getDy(), 1);
+        getEMFInstance(), _total_time_steps, _fdtd_basic_coff->getDt(),
+        _grid_space->getGridBaseSizeX(), _grid_space->getGridBaseSizeY(), 1);
     return;
   }
   _nffft->init(
       std::make_unique<GridBox>(x, y, z, _nx - 2 * x, _ny - 2 * y, _nz - 2 * z),
-      getEMFInstance(), _total_time_steps, _fdtd_basic_coff->getDt(), getDx(),
-      _fdtd_basic_coff->getDy(), _fdtd_basic_coff->getDz());
+      getEMFInstance(), _total_time_steps, _fdtd_basic_coff->getDt(),
+      _grid_space->getGridBaseSizeX(), _grid_space->getGridBaseSizeY(),
+      _grid_space->getGridBaseSizeZ());
 }
 
 void Simulation::initLumpedElement() {
@@ -109,7 +92,7 @@ void Simulation::initLumpedElement() {
 }
 
 void Simulation::initUpdateCoefficient() {
-  _fdtd_basic_coff->initCoff();
+  _fdtd_basic_coff->initCoff(_grid_space.get());
   for (auto&& e : _objects) {
     e->correctFDTDCoff();
   }
@@ -137,38 +120,38 @@ void Simulation::initGridSpace() {
     shapes.emplace_back(object->getWrappedBox());
   }
   _grid_space->calculateSpaceSize(shapes);
+
+  auto base_dx{_grid_space->getGridBaseSizeX()};
+  auto base_dy{_grid_space->getGridBaseSizeY()};
+  auto base_dz{_grid_space->getGridBaseSizeZ()};
   for (const auto& boundary : _boundaries) {
     auto ori{boundary->getOrientation()};
     if (ori == Orientation::XN) {
-      _grid_space->extendBoundaryXN(boundary->getSize() * getDx());
+      _grid_space->extendBoundaryXN(boundary->getSize() * base_dx);
       continue;
     }
     if (ori == Orientation::XP) {
-      _grid_space->extendBoundaryXP(boundary->getSize() * getDx());
+      _grid_space->extendBoundaryXP(boundary->getSize() * base_dx);
       continue;
     }
     if (ori == Orientation::YN) {
-      _grid_space->extendBoundaryYN(boundary->getSize() *
-                                    _fdtd_basic_coff->getDy());
+      _grid_space->extendBoundaryYN(boundary->getSize() * base_dy);
       continue;
     }
     if (ori == Orientation::YP) {
-      _grid_space->extendBoundaryYP(boundary->getSize() *
-                                    _fdtd_basic_coff->getDy());
+      _grid_space->extendBoundaryYP(boundary->getSize() * base_dy);
       continue;
     }
     if (ori == Orientation::ZN) {
-      _grid_space->extendBoundaryZN(boundary->getSize() *
-                                    _fdtd_basic_coff->getDz());
+      _grid_space->extendBoundaryZN(boundary->getSize() * base_dz);
       continue;
     }
     if (ori == Orientation::ZP) {
-      _grid_space->extendBoundaryZP(boundary->getSize() *
-                                    _fdtd_basic_coff->getDz());
+      _grid_space->extendBoundaryZP(boundary->getSize() * base_dz);
       continue;
     }
   }
-  _grid_space->generateGridSpace();
+  _grid_space->generateUniformGridSpace();
   _nx = _grid_space->getGridNumX();
   _ny = _grid_space->getGridNumY();
   _nz = _grid_space->getGridNumZ();

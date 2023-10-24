@@ -7,6 +7,8 @@
 #include <tuple>
 
 #include "electromagnetic_field/electromagnetic_field.h"
+#include "fdtd_basic_coff/fdtd_basic_coff.h"
+#include "grid/grid_space.h"
 
 namespace xfdtd {
 class Material {
@@ -21,7 +23,9 @@ class Material {
 
   explicit operator std::string() const;
 
-  virtual void init(double dt, double dl, const std::shared_ptr<EMF>& emf){};
+  virtual void init(std::shared_ptr<GridSpace> grid_space,
+                    std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+                    std::shared_ptr<EMF> emf){};
 
   virtual void updateEx(int i, int j, int k){};
 

@@ -103,7 +103,7 @@ void NffftBroadBand::outputData() {
   if (!std::filesystem::exists(output_dir_path) ||
       !std::filesystem::is_directory(output_dir_path)) {
     try {
-      std::filesystem::create_directory(output_dir_path);
+      std::filesystem::create_directories(output_dir_path);
     } catch (std::exception e) {
       std::cerr << "Error: cannot create directory " << output_dir_path
                 << "\t Error:" << e.what() << '\n';

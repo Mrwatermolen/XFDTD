@@ -1,6 +1,7 @@
 #ifndef _XFDTD_WAVEFORM_H_
 #define _XFDTD_WAVEFORM_H_
 
+#include <complex>
 #include <filesystem>
 #include <memory>
 #include <utility>
@@ -25,7 +26,16 @@ class Waveform {
 
   virtual double getValueByTime(double time) const = 0;
 
+  xt::xarray<double> getValue() const;
+
   double getAmplitude() const;
+
+  xt::xarray<std::complex<double>> getFourierTransform(
+      const xt::xarray<double>& time, const xt::xarray<double>& frequencies,
+      double dt) const;
+
+  xt::xarray<std::complex<double>> getFourierTransform(
+      const xt::xarray<double>& frequencies, double dt) const;
 
   void setAmplitude(double amplitude);
 

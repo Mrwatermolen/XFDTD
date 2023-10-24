@@ -22,10 +22,11 @@ class Capacitor : public LumpedElement {
  private:
   Axis _axis;
   double _capacitance;
-  double _da, _db, _dc;
   size_t _is, _ie, _js, _je, _ks, _ke;
   double _capacitance_factor;
-  double _beta;
+  xt::xarray<double> _grid_size_a, _grid_size_b, _grid_size_c;
+  xt::xarray<double> _da, _db, _dc;
+  xt::xarray<double> _beta;
 
   void correctFDTDCoff(xt::xarray<double>& cece, xt::xarray<double>& cecha,
                        xt::xarray<double>& cechb, const xt::xarray<double>& eps,

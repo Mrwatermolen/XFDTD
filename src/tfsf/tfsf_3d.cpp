@@ -1,9 +1,10 @@
 #include "tfsf/tfsf_3d.h"
 
 #include <cmath>
+#include <memory>
 #include <utility>
-#include <xtensor/xfixed.hpp>
 
+#include "grid/grid_box.h"
 #include "tfsf/tfsf.h"
 #include "util/constant.h"
 #include "xtensor-blas/xlinalg.hpp"
@@ -30,9 +31,19 @@ TFSF3D::TFSF3D(SpatialIndex distance_x, SpatialIndex distance_y,
   _transform_h = xt::linalg::cross(getKVector(), _transform_e);
 };
 
-void TFSF3D::init(double dx, double dy, double dz, double dt,
-                  std::unique_ptr<GridBox> tfsf_grid_box) {
-  defaultInitTFSF(dx, dy, dz, dt, std::move(tfsf_grid_box));
+void TFSF3D::init(const GridSpace* grid_space,
+                  const FDTDBasicCoff* fdtd_basic_coff,
+                  std::shared_ptr<EMF> emf) {
+  // grid_space is uniform grid space
+  auto [x, y, z]{getDistance()};
+  auto t_nx{grid_space->getGridNumX()};
+  auto t_ny{grid_space->getGridNumY()};
+  auto t_nz{grid_space->getGridNumZ()};
+  defaultInitTFSF(grid_space, fdtd_basic_coff, std::move(emf),
+                  std::make_unique<GridBox>(x, y, z, t_nx - 2 * x, t_ny - 2 * y,
+                                            t_nz - 2 * z));
+
+  const auto dt{fdtd_basic_coff->getDt()};
   const auto nx{getNx()};
   const auto ny{getNy()};
   const auto nz{getNz()};
@@ -47,13 +58,8 @@ void TFSF3D::init(double dx, double dy, double dz, double dt,
   const auto k_inc{getKInc()};
 
   const auto diagonal_length{
-      sqrt(pow(getNx(), 2) + pow(getNy(), 2) + sqrt(pow(getNz(), 2))) *
-      ratio_delta};
+      sqrt(pow(getNx(), 2) + pow(getNy(), 2) + pow(getNz(), 2)) * ratio_delta};
 
-  // TODO(franzero): The additional 6-fold increase in diagonal length is due to
-  // the poor absorption performance of the currently used absorption boundary,
-  // using a compromise method that does not allow wave propagation to the
-  // boundary until the end of the calculation
   _auxiliary_array_size =
       static_cast<size_t>(std::ceil(diagonal_length)) + 4 + 1;
   _e_inc.resize({_auxiliary_array_size});
@@ -149,13 +155,15 @@ void TFSF3D::init(double dx, double dy, double dz, double dt,
   _scaled_dl = getDx() / ratio_delta;
   _ceihi = -(dt / (constant::EPSILON_0 * _scaled_dl));
   _chiei = -(dt / (constant::MU_0 * _scaled_dl));
+
+  auto time_arr{xt::arange<double>(0, fdtd_basic_coff->getTotalTimeStep()) *
+                dt};
+  initIncidentWaveForm(time_arr);
 }
 
 void TFSF3D::updateIncidentField(size_t current_time_step) {
   auto dt{getDt()};
-  _e_inc[0] = getIncidentFieldWaveformValueByTime(current_time_step * getDt());
-  // 1D Mur Absorbing Boundary Condition. TODO(franzero): poor performance
-  // Fix it
+  _e_inc[0] = getIncidentWaveValueByTimeStep(current_time_step);
   auto x{_e_inc[_e_inc.size() - 2]};
   auto y{_e_inc[_e_inc.size() - 1]};
   for (auto i{1}; i < _e_inc.size() - 1; ++i) {

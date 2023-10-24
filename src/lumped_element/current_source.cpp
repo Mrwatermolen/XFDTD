@@ -51,34 +51,62 @@ void CurrentSource::init(std::shared_ptr<GridSpace> grid_space,
     _resistance_factor = _resistance * (_ke - _ks) * (_je - _js) / (_ie - _is);
     _current_amplitude_factor =
         _waveform->getAmplitude() / ((_ke - _ks) * (_je - _js));
-    _da = {fdtd_basic_coff->getDy()};
-    _db = {fdtd_basic_coff->getDz()};
-    _dc = {fdtd_basic_coff->getDx()};
     if (_orientation == Orientation::XN) {
       _current_amplitude_factor *= -1;
     }
-  } else if (_orientation == Orientation::YN ||
-             _orientation == Orientation::YP) {
+
+    _grid_size_a =
+        xt::view(grid_space->getGridSizeArrayHY(), xt::range(_js, _je));
+    _grid_size_b =
+        xt::view(grid_space->getGridSizeArrayHZ(), xt::range(_ks, _ke));
+    _grid_size_c =
+        xt::view(grid_space->getGridSizeArrayEX(), xt::range(_is, _ie));
+
+    auto [dx, dy, dz] = xt::meshgrid(_grid_size_c, _grid_size_a, _grid_size_b);
+    _da = dy;
+    _db = dz;
+    _dc = dx;
+  }
+
+  if (_orientation == Orientation::YN || _orientation == Orientation::YP) {
     _resistance_factor = _resistance * (_ke - _ks) * (_ie - _is) / (_je - _js);
     _current_amplitude_factor =
         _waveform->getAmplitude() / ((_ke - _ks) * (_ie - _is));
-    _da = {fdtd_basic_coff->getDz()};
-    _db = {fdtd_basic_coff->getDx()};
-    _dc = {fdtd_basic_coff->getDy()};
     if (_orientation == Orientation::YN) {
       _current_amplitude_factor *= -1;
     }
-  } else if (_orientation == Orientation::ZN ||
-             _orientation == Orientation::ZP) {
+    _grid_size_a =
+        xt::view(grid_space->getGridSizeArrayHZ(), xt::range(_ks, _ke));
+    _grid_size_b =
+        xt::view(grid_space->getGridSizeArrayHX(), xt::range(_is, _ie));
+    _grid_size_c =
+        xt::view(grid_space->getGridSizeArrayEY(), xt::range(_js, _je));
+
+    auto [dx, dy, dz] = xt::meshgrid(_grid_size_b, _grid_size_c, _grid_size_a);
+    _da = dz;
+    _da = dx;
+    _dc = dy;
+  }
+
+  if (_orientation == Orientation::ZN || _orientation == Orientation::ZP) {
     _resistance_factor = _resistance * (_ie - _is) * (_je - _js) / (_ke - _ks);
     _current_amplitude_factor =
         _waveform->getAmplitude() / ((_ie - _is) * (_je - _js));
-    _da = {fdtd_basic_coff->getDx()};
-    _db = {fdtd_basic_coff->getDy()};
-    _dc = {fdtd_basic_coff->getDz()};
     if (_orientation == Orientation::ZN) {
       _current_amplitude_factor *= -1;
     }
+
+    _grid_size_a =
+        xt::view(grid_space->getGridSizeArrayHX(), xt::range(_is, _ie));
+    _grid_size_b =
+        xt::view(grid_space->getGridSizeArrayHY(), xt::range(_js, _je));
+    _grid_size_c =
+        xt::view(grid_space->getGridSizeArrayEZ(), xt::range(_ks, _ke));
+
+    auto [dx, dy, dz] = xt::meshgrid(_grid_size_a, _grid_size_b, _grid_size_c);
+    _da = dx;
+    _db = dy;
+    _dc = dz;
   }
 
   _beta = (dt * _dc) / (_resistance_factor * _da * _db);

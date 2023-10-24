@@ -53,9 +53,9 @@ void PML::init(std::shared_ptr<EMF> emf,
   defaultInit(emf, fdtd_basic_coff, grid_space, std::move(shape));
   auto ori{getOrientation()};
   auto dt{fdtd_basic_coff->getDt()};
-  auto dx{fdtd_basic_coff->getDx()};
-  auto dy{fdtd_basic_coff->getDy()};
-  auto dz{fdtd_basic_coff->getDz()};
+  auto dx{grid_space->getGridBaseSizeX()};
+  auto dy{grid_space->getGridBaseSizeY()};
+  auto dz{grid_space->getGridBaseSizeZ()};
   auto nx{grid_space->getGridNumX()};
   auto ny{grid_space->getGridNumY()};
   auto nz{grid_space->getGridNumZ()};

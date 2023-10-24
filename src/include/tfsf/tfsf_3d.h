@@ -16,8 +16,9 @@ class TFSF3D : public TFSF {
   TFSF3D &operator=(TFSF3D &&) = delete;
   ~TFSF3D() override = default;
 
-  void init(double dx, double dy, double dz, double dt,
-            std::unique_ptr<GridBox> tfsf_grid_box) override;
+  void init(const GridSpace *grid_space, const FDTDBasicCoff *fdtd_basic_coff,
+            std::shared_ptr<EMF> emf) override;
+
   void updateIncidentField(size_t current_time_step) override;
   void updateH() override;
   void updateE() override;

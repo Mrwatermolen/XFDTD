@@ -104,11 +104,10 @@ void Object::defaultInit(int index,
   _fdtd_basic_coff = std::move(fdtd_basic_coff);
   _grid_space = std::move(grid_space);
   _dt = _fdtd_basic_coff->getDt();
-  _dl = _grid_space->getGridSizeX();
 
   if (isDispersion()) {
     auto m{_material.get()};
-    m->init(_dt, _dl, emf);
+    m->init(_grid_space, _fdtd_basic_coff, emf);
     auto grid{_grid_space->getGridView(_shape.get())};
     std::for_each(grid.begin(), grid.end(),
                   [index](auto&& e) { e->setMaterialIndex(index); });

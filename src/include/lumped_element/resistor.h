@@ -26,7 +26,9 @@ class Resistor : public LumpedElement {
 
  private:
   Axis _axis;
-  double _resistance, _resistance_factor, _da, _db, _beta;
+  double _resistance, _resistance_factor;
+  xt::xarray<double> _grid_size_a, _grid_size_b, _grid_size_c;
+  xt::xarray<double> _da, _db, _dc, _beta;
   size_t _is, _ie, _js, _je, _ks, _ke;
 
   void correctFDTDCoff(xt::xarray<double> &cece, xt::xarray<double> &cecha,

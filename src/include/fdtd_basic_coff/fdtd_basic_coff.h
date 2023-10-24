@@ -4,25 +4,22 @@
 #include <cstddef>
 #include <xtensor/xarray.hpp>
 
+#include "grid/grid_space.h"
+
 namespace xfdtd {
 
 class FDTDBasicCoff {
  public:
-  FDTDBasicCoff(double dx, double dy, double dz, double cfl);
-  FDTDBasicCoff(double dx, double dy, double dz, double cfl,
-                size_t total_time_step);
+  explicit FDTDBasicCoff(double cfl);
 
-  void init(size_t nx, size_t ny, size_t nz, size_t total_time_step);
+  void init(const GridSpace* grid_space, size_t total_time_step,
+            size_t current_time_step = 0);
 
-  void initCoff();
+  void initCoff(const GridSpace* grid_space);
+
+  double getCFL() const;
 
   double getDt() const;
-
-  double getDx() const;
-
-  double getDy() const;
-
-  double getDz() const;
 
   size_t getTotalTimeStep() const;
 
@@ -148,11 +145,23 @@ class FDTDBasicCoff {
 
   xt::xarray<double>& getChzey();
 
+  void setCFL(double cfl);
+
+  void setDt(double dt);
+
   void setCurrentTimeStep(size_t current_time_step);
+
+  void setTotalTimeStep(size_t total_time_step);
+
+  static double calculateDeltaT(double cfl, double dx, double dy, double dz);
+
+  static double calculateDeltaT(double cfl, double dx, double dy);
+
+  static double calculateDeltaT(double cfl, double dx);
 
  private:
   double _cfl;
-  double _dx, _dy, _dz;
+  // double _dx, _dy, _dz;
   double _dt;
   size_t _total_time_step, _current_time_step;
 

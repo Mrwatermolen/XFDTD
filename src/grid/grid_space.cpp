@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <exception>
 #include <memory>
 #include <stdexcept>
 
@@ -14,7 +13,12 @@
 namespace xfdtd {
 
 GridSpace::GridSpace(double dx, double dy, double dz)
-    : _dx{dx}, _dy{dy}, _dz{dz} {
+    : _base_grid_size_x{dx},
+      _base_grid_size_y{dy},
+      _base_grid_size_z{dz},
+      _min_grid_size_x{dx},
+      _min_grid_size_y{dy},
+      _min_grid_size_z{dz} {
   _min_x = std::numeric_limits<double>::max();
   _min_y = std::numeric_limits<double>::max();
   _min_z = std::numeric_limits<double>::max();
@@ -29,31 +33,104 @@ size_t GridSpace::getGridNumY() const { return _ny; };
 
 size_t GridSpace::getGridNumZ() const { return _nz; };
 
-double GridSpace::getGridSizeX() const { return _dx; };
+double GridSpace::getGridSizeMinX() const { return _min_grid_size_x; }
 
-double GridSpace::getGridSizeY() const { return _dy; };
+double GridSpace::getGridSizeMinY() const { return _min_grid_size_y; }
 
-double GridSpace::getGridSizeZ() const { return _dz; };
+double GridSpace::getGridSizeMinZ() const { return _min_grid_size_z; }
 
-double GridSpace::getGridOriginX(size_t i) const { return _min_x + (i * _dx); };
+double GridSpace::getGridBaseSizeX() const { return _base_grid_size_x; }
 
-double GridSpace::getGridOriginY(size_t j) const { return _min_y + (j * _dy); };
+double GridSpace::getGridBaseSizeY() const { return _base_grid_size_y; }
 
-double GridSpace::getGridOriginZ(size_t k) const { return _min_z + (k * _dz); };
+double GridSpace::getGridBaseSizeZ() const { return _base_grid_size_z; }
 
-double GridSpace::getGridCenterX(size_t i) const {
-  return _min_x + ((i + 0.5) * _dx);
+const xt::xarray<double>& GridSpace::getGridSizeArrayX() const {
+  return _e_node_size_x;
+}
+
+const xt::xarray<double>& GridSpace::getGridSizeArrayY() const {
+  return _e_node_size_y;
+}
+
+const xt::xarray<double>& GridSpace::getGridSizeArrayZ() const {
+  return _e_node_size_z;
+}
+
+const xt::xarray<double>& GridSpace::getGridSizeArrayEX() const {
+  return _e_node_size_x;
+}
+
+const xt::xarray<double>& GridSpace::getGridSizeArrayEY() const {
+  return _e_node_size_y;
+}
+
+const xt::xarray<double>& GridSpace::getGridSizeArrayEZ() const {
+  return _e_node_size_z;
+}
+
+const xt::xarray<double>& GridSpace::getGridSizeArrayHX() const {
+  return _h_node_size_x;
+}
+
+const xt::xarray<double>& GridSpace::getGridSizeArrayHY() const {
+  return _h_node_size_y;
+}
+
+const xt::xarray<double>& GridSpace::getGridSizeArrayHZ() const {
+  return _h_node_size_z;
+}
+
+double GridSpace::getGridSizeX(size_t i) const {
+  // return _e_node_coord_x(i + 1) - _e_node_coord_x(i);
+  return _e_node_size_x(i);
 };
 
-double GridSpace::getGridCenterY(size_t j) const {
-  return _min_y + ((j + 0.5) * _dy);
+double GridSpace::getGridSizeY(size_t j) const {
+  // return _e_node_coord_y(j + 1) - _e_node_coord_y(j);
+  return _e_node_size_y(j);
 };
+
+double GridSpace::getGridSizeZ(size_t k) const {
+  if (_2d_space) {
+    return 0;
+  }
+  // return _e_node_coord_z(k + 1) - _e_node_coord_z(k);
+  return _e_node_size_z(k);
+};
+
+double GridSpace::getGridSizeHX(size_t i) const { return _h_node_size_x(i); }
+
+double GridSpace::getGridSizeHY(size_t j) const { return _h_node_size_y(j); }
+
+double GridSpace::getGridSizeHZ(size_t k) const {
+  if (_2d_space) {
+    return 0;
+  }
+  return _h_node_size_z(k);
+}
+
+double GridSpace::getGridSizeEX(size_t i) const { return getGridSizeX(i); };
+
+double GridSpace::getGridSizeEY(size_t j) const { return getGridSizeY(j); };
+
+double GridSpace::getGridSizeEZ(size_t k) const { return getGridSizeZ(k); };
+
+double GridSpace::getGridOriginX(size_t i) const { return _e_node_coord_x(i); };
+
+double GridSpace::getGridOriginY(size_t j) const { return _e_node_coord_y(j); };
+
+double GridSpace::getGridOriginZ(size_t k) const { return _e_node_coord_z(k); };
+
+double GridSpace::getGridCenterX(size_t i) const { return _h_node_coord_x(i); };
+
+double GridSpace::getGridCenterY(size_t j) const { return _h_node_coord_y(j); };
 
 double GridSpace::getGridCenterZ(size_t k) const {
   if (_2d_space) {
     return 0;
   }
-  return _min_z + ((k + 0.5) * _dz);
+  return _h_node_coord_z(k);
 };
 
 size_t GridSpace::getGridIndexI(double x) const { return handleTransformX(x); };
@@ -78,7 +155,7 @@ std::unique_ptr<Cube> GridSpace::getGridCube(size_t i, size_t j,
                                              size_t k) const {
   return std::make_unique<Cube>(
       PointVector{getGridOriginX(i), getGridOriginY(j), getGridOriginZ(k)},
-      PointVector{getGridSizeX(), getGridSizeY(), getGridSizeZ()});
+      PointVector{getGridSizeX(i), getGridSizeY(j), getGridSizeZ(k)});
 };
 
 xt::xarray<bool> GridSpace::getShapeMask(const Shape* shape) const {
@@ -100,7 +177,7 @@ xt::xarray<bool> GridSpace::getShapeMask(const Shape* shape) const {
         _grids);
     return mask;
   }
-  throw std::exception();
+  throw std::runtime_error("GridSpace only support 2D, 3D");
 }
 
 std::unique_ptr<GridBox> GridSpace::getGridBox(const Shape* shape) const {
@@ -146,7 +223,7 @@ double GridSpace::getGridSpaceSizeY() const { return _size_y; };
 
 double GridSpace::getGridSpaceSizeZ() const { return _size_z; };
 
-double GridSpace::getGridVolume() const { return _dx * _dy * _dz; };
+bool GridSpace::isUniformGridSpace() const { return _is_uniform_grid_space; }
 
 void GridSpace::calculateSpaceSize(
     const std::vector<std::unique_ptr<Shape>>& shapes) {
@@ -202,7 +279,38 @@ void GridSpace::extendBoundaryZP(double size) {
   resizeSpaceSize(_min_x, _min_y, _min_z, _max_x, _max_y, _max_z + size);
 }
 
-void GridSpace::generateGridSpace() {
+void GridSpace::insertSubRegion(const Subregion* subregion) {
+  if (subregion == nullptr) {
+    return;
+  }
+  _is_uniform_grid_space = false;
+
+  if (subregion->getAxis() == Axis::X) {
+    _min_grid_size_x = std::min(_min_grid_size_x, subregion->getDl());
+    correctGridSpaceWithSubRegion(subregion, _base_grid_size_x, _e_node_coord_x,
+                                  _h_node_coord_x, _e_node_size_x,
+                                  _h_node_size_x, _nx);
+    return;
+  }
+
+  if (subregion->getAxis() == Axis::Y) {
+    _min_grid_size_y = std::min(_min_grid_size_y, subregion->getDl());
+    correctGridSpaceWithSubRegion(subregion, _base_grid_size_y, _e_node_coord_y,
+                                  _h_node_coord_y, _e_node_size_y,
+                                  _h_node_size_y, _ny);
+    return;
+  }
+
+  if (subregion->getAxis() == Axis::Z) {
+    _min_grid_size_z = std::min(_min_grid_size_z, subregion->getDl());
+    correctGridSpaceWithSubRegion(subregion, _base_grid_size_z, _e_node_coord_z,
+                                  _h_node_coord_z, _e_node_size_z,
+                                  _h_node_size_z, _nz);
+    return;
+  }
+}
+
+void GridSpace::generateUniformGridSpace() {
   _nx = std::max(_nx, 1UL);
   _ny = std::max(_ny, 1UL);
   _nz = std::max(_nz, 1UL);
@@ -225,32 +333,32 @@ void GridSpace::generateGridSpace() {
   } else {
     throw std::runtime_error("GridSpace is not extended");
   }
-  if (_3d_space) {
-    generateGridSpace3D();
-  } else if (_2d_space) {
-    generateGridSpace2D();
-  } else if (_1d_space) {
-    generateGridSpace1D();
-  }
+  generateGridSpace3D();
 }
 
 size_t GridSpace::handleTransformX(double x) const {
   if (x < _min_x) {
     throw std::out_of_range("x is out of range");
   }
-  return static_cast<size_t>(std::round<size_t>((x - _min_x) / _dx));
+  auto index{xt::argmin(xt::abs(_e_node_coord_x - x)).front()};
+  return index;
+  // return static_cast<size_t>(std::round<size_t>((x - _min_x) / _dx));
 }
+
 size_t GridSpace::handleTransformY(double y) const {
   if (y < _min_y) {
     throw std::out_of_range("y is out of range");
   }
-  return static_cast<size_t>(std::round<size_t>((y - _min_y) / _dy));
+  return xt::argmin(xt::abs(_e_node_coord_y - y)).front();
+  // return static_cast<size_t>(std::round<size_t>((y - _min_y) / _dy));
 }
+
 size_t GridSpace::handleTransformZ(double z) const {
   if (z < _min_z) {
     throw std::out_of_range("z is out of range");
   }
-  return static_cast<size_t>(std::round<size_t>((z - _min_z) / _dz));
+  return xt::argmin(xt::abs(_e_node_coord_z - z)).front();
+  // return static_cast<size_t>(std::round<size_t>((z - _min_z) / _dz));
 }
 
 void GridSpace::resizeSpaceSize(double new_min_x, double new_min_y,
@@ -274,9 +382,12 @@ void GridSpace::resizeSpaceSize(double new_min_x, double new_min_y,
   if (isLessOrEqual(_max_z, new_max_z)) {
     _max_z = new_max_z;
   }
-  size_t new_nx{static_cast<size_t>(std::round((_max_x - _min_x) / _dx))};
-  size_t new_ny{static_cast<size_t>(std::round((_max_y - _min_y) / _dy))};
-  size_t new_nz{static_cast<size_t>(std::round((_max_z - _min_z) / _dz))};
+  size_t new_nx{
+      static_cast<size_t>(std::round((_max_x - _min_x) / _base_grid_size_x))};
+  size_t new_ny{
+      static_cast<size_t>(std::round((_max_y - _min_y) / _base_grid_size_y))};
+  size_t new_nz{
+      static_cast<size_t>(std::round((_max_z - _min_z) / _base_grid_size_z))};
   _nx = std::max(_nx, new_nx);
   _ny = std::max(_ny, new_ny);
   _nz = std::max(_nz, new_nz);
@@ -296,22 +407,143 @@ void GridSpace::generateGridSpace3D() {
       }
     }
   }
+  _e_node_coord_x = _min_x + xt::arange<double>(0, _nx + 1) * _base_grid_size_x;
+  _e_node_coord_y = _min_y + xt::arange<double>(0, _ny + 1) * _base_grid_size_y;
+  _e_node_coord_z = _min_z + xt::arange<double>(0, _nz + 1) * _base_grid_size_z;
+  correctGridSpaceCoordinate(_e_node_coord_x, _h_node_coord_x,
+                             _base_grid_size_x, _e_node_size_x, _h_node_size_x,
+                             _nx);
+  correctGridSpaceCoordinate(_e_node_coord_y, _h_node_coord_y,
+                             _base_grid_size_y, _e_node_size_y, _h_node_size_y,
+                             _ny);
+  correctGridSpaceCoordinate(_e_node_coord_z, _h_node_coord_z,
+                             _base_grid_size_z, _e_node_size_z, _h_node_size_z,
+                             _nz);
 }
 
 void GridSpace::generateGridSpace2D() {
-  _grids.resize({_nx, _ny, _nz});
-  for (size_t i = 0; i < _nx; ++i) {
-    for (size_t j = 0; j < _ny; ++j) {
-      _grids(i, j, 0) = std::make_shared<Grid>(i, j, 0);
-    }
-  }
 }
 
 void GridSpace::generateGridSpace1D() {
-  _grids.resize({_nx});
-  for (size_t k = 0; k < _nx; ++k) {
-    _grids(0, 0, k) = std::make_shared<Grid>(0, 0, 1);
-  }
 }
+
+void GridSpace::correctGridSpaceWithSubRegion(const Subregion* subregion,
+                                              double base_dl,
+                                              xt::xarray<double>& e_node_coord,
+                                              xt::xarray<double>& h_node_coord,
+                                              xt::xarray<double>& e_node_size,
+                                              xt::xarray<double>& h_node_size,
+                                              size_t& n) {
+  auto sub_start{subregion->getStartPosition()};
+  auto sub_end{subregion->getEndPosition()};
+  auto sub_length{subregion->getRegionLength()};
+  auto sub_transition_length{subregion->getTransitionLength()};
+  auto sub_dl{subregion->getDl()};
+
+  auto [l_tr_s_node, l_tr_s, l_tr_length, l_tr_size_arr] =
+      calculateTransitionRegion(sub_start - sub_transition_length, sub_start,
+                                base_dl, sub_dl, e_node_coord);
+  l_tr_size_arr = xt::flip(l_tr_size_arr);
+
+  auto [r_tr_s_node, r_tr_s, r_tr_length, r_tr_size_arr] =
+      calculateTransitionRegion(sub_end + sub_transition_length, sub_end,
+                                base_dl, sub_dl, e_node_coord);
+
+  auto sub_size_arr{xt::ones<double>({sub_length / sub_dl}) * sub_dl};
+  xt::xarray<double> subregion_size_arr{
+      xt::concatenate(xt::xtuple(l_tr_size_arr, sub_size_arr, r_tr_size_arr))};
+
+  // correct the grid coordinate
+  insertSubRegionCoord(e_node_coord, l_tr_s_node, r_tr_s_node,
+                       subregion_size_arr);
+
+  correctGridSpaceCoordinate(e_node_coord, h_node_coord, base_dl, e_node_size,
+                             h_node_size, n);
+  // std::cout << "e_node_coord: " << e_node_coord << "\n";
+  // std::cout << "h_node_coord: " << h_node_coord << "\n";
+  // std::cout << "e_node_size: " << e_node_size << "\n";
+  // std::cout << "h_node_size: " << h_node_size << "\n";
+  // std::cout << "n: " << n << "\n";
+}
+
+void GridSpace::correctGridSpaceCoordinate(
+    const xt::xarray<double>& e_node_coord, xt::xarray<double>& h_node_coord,
+    double base_dl, xt::xarray<double>& e_node_size,
+    xt::xarray<double>& h_node_size, size_t& n) {
+  h_node_coord = calculateHNodeCoord(e_node_coord);
+  h_node_size = calculateGridSizeHArray(h_node_coord, base_dl);
+
+  e_node_size = calculateGridSizeEArray(e_node_coord);
+
+  n = h_node_coord.size();
+}
+
+auto GridSpace::calculateTransitionRegion(double transition_start_position,
+                                          double subgrid_edge_position,
+                                          double base_dl, double subgrid_dl,
+                                          const xt::xarray<double>& node_coord)
+    -> std::tuple<size_t, double, double, xt::xarray<double>> {
+  // get closest node index
+  auto closest_node_index{
+      xt::argmin(xt::abs(node_coord - transition_start_position))};
+  auto closest_node_position{node_coord[closest_node_index]};
+
+  // calculate transition length
+  auto transition_length{(subgrid_edge_position > closest_node_position)
+                             ? (subgrid_edge_position - closest_node_position)
+                             : (closest_node_position - subgrid_edge_position)};
+  auto r{(transition_length + base_dl) / (transition_length + subgrid_dl)};
+  auto n_transition{static_cast<size_t>(
+      std::floor(std::log10(base_dl / subgrid_dl) / std::log10(r)) -
+      1)};  // number of transition grids
+
+  // calculate every grid size in transition region
+  xt::xarray<double> transition_size_arr{
+      subgrid_dl *
+      xt::pow(r, xt::arange<double>(1, n_transition + 1))};  // can't use auto
+  transition_size_arr =
+      transition_size_arr * transition_length / xt::sum(transition_size_arr);
+
+  return {closest_node_index[0], transition_start_position, transition_length,
+          transition_size_arr};
+}
+
+void GridSpace::insertSubRegionCoord(
+    xt::xarray<double>& node_coord, size_t start_node, size_t end_node,
+    const xt::xarray<double>& insert_node_size_arr) {
+  auto node_p{node_coord[start_node]};
+  auto insert_node_position_arr{xt::make_lambda_xfunction(
+      [&node_p](const auto& size) {
+        node_p += size;
+        return node_p;
+      },
+      insert_node_size_arr)};
+  node_coord = xt::concatenate(
+      xt::xtuple(xt::view(node_coord, xt::range(0, start_node + 1)),
+                 insert_node_position_arr,
+                 xt::view(node_coord, xt::range(end_node + 1, _))));
+}
+
+xt::xarray<double> GridSpace::calculateHNodeCoord(
+    const xt::xarray<double>& e_node_coord) {
+  return (xt::view(e_node_coord, xt::range(_, -1)) +
+          xt::view(e_node_coord, xt::range(1, _))) /
+         2;
+}
+
+xt::xarray<double> GridSpace::calculateGridSizeEArray(
+    const xt::xarray<double>& e_node_coord) const {
+  return (xt::view(e_node_coord, xt::range(1, _)) -
+          xt::view(e_node_coord, xt::range(_, -1)));
+}
+
+xt::xarray<double> GridSpace::calculateGridSizeHArray(
+    const xt::xarray<double>& h_node_coord, double base_dl) const {
+  xt::xarray<double> virtual_h_node{xt::concatenate(xt::xtuple(
+      xt::xarray<double>{h_node_coord.front() - base_dl}, h_node_coord,
+      xt::xarray<double>{h_node_coord.back() + base_dl}))};
+  return (xt::view(virtual_h_node, xt::range(1, _)) -
+          xt::view(virtual_h_node, xt::range(_, -1)));
+};
 
 }  // namespace xfdtd

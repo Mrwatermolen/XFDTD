@@ -1,8 +1,6 @@
 #include "tfsf/tfsf_2d.h"
 
-#include <fstream>
-#include <iostream>
-#include <istream>
+#include <utility>
 
 #include "util/constant.h"
 namespace xfdtd {
@@ -25,9 +23,15 @@ TFSF2D::TFSF2D(SpatialIndex distance_x, SpatialIndex distance_y, double phi_inc,
   _transform_h = xt::linalg::cross(getKVector(), _transform_e);
 }
 
-void TFSF2D::init(double dx, double dy, double dz, double dt,
-                  std::unique_ptr<GridBox> tfsf_grid_box) {
-  defaultInitTFSF(dx, dy, dz, dt, std::move(tfsf_grid_box));
+void TFSF2D::init(const GridSpace* grid_space,
+                  const FDTDBasicCoff* fdtd_basic_coff,
+                  std::shared_ptr<EMF> emf) {
+  auto [x, y, z]{getDistance()};
+  auto t_nx{grid_space->getGridNumX()};
+  auto t_ny{grid_space->getGridNumY()};
+  defaultInitTFSF(
+      grid_space, fdtd_basic_coff, std::move(emf),
+      std::make_unique<GridBox>(x, y, 0, t_nx - 2 * x, t_ny - 2 * y, 0));
   const auto nx{getNx()};
   const auto ny{getNy()};
 
@@ -110,14 +114,18 @@ void TFSF2D::init(double dx, double dy, double dz, double dt,
     getIncidentHy(getStartIndexX() - 1, i, 0);
   }
 
+  auto dt{getDt()};
   _scaled_dl = getDx() / ratio_delta;
   _ceihi = -(dt / (constant::EPSILON_0 * _scaled_dl));
   _chiei = -(dt / (constant::MU_0 * _scaled_dl));
+  auto time_arr{xt::arange<double>(0, fdtd_basic_coff->getTotalTimeStep()) *
+                dt};
+  initIncidentWaveForm(time_arr);
 }
 
 void TFSF2D::updateIncidentField(size_t current_time_step) {
   auto dt{getDt()};
-  _e_inc[0] = getIncidentFieldWaveformValueByTime(current_time_step * getDt());
+  _e_inc[0] = getIncidentWaveValueByTimeStep(current_time_step);
   // 2D Mur Absorbing Boundary Condition
   auto x{_e_inc[_e_inc.size() - 2]};
   auto y{_e_inc[_e_inc.size() - 1]};

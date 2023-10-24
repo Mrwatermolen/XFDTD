@@ -12,6 +12,8 @@ namespace xfdtd {
 /**
  * @brief A material's permittivity and/or permeability varies with frequency at
  * low intensities of the wave's E and H.
+ * IMPORTANCE: Currently only uniform grid space is supported, and the condition
+ * (dx == dy == dz) is required.
  *
  */
 class LinearDispersiveMaterial : public Material {
@@ -28,13 +30,27 @@ class LinearDispersiveMaterial : public Material {
   double getDl() { return _dl; }
   double getDt() { return _dt; }
 
-  void init(double dt, double dl, const std::shared_ptr<EMF>& emf) override {
-    _emf = emf;
-    _dl = dl;
-    _dt = dt;
+  void init(std::shared_ptr<GridSpace> grid_space,
+            std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+            std::shared_ptr<EMF> emf) override {
+    if (!grid_space->isUniformGridSpace()) {
+      throw std::runtime_error(
+          "Currently only uniform grid space is supported");
+    }
+    if (grid_space->getGridBaseSizeX() != grid_space->getGridBaseSizeY() ||
+        grid_space->getGridBaseSizeY() != grid_space->getGridBaseSizeZ()) {
+      throw std::runtime_error("The condition (dx == dy == dz) is required");
+    }
+    _grid_space = std::move(grid_space);
+    _fdtd_basic_coff = std::move(fdtd_basic_coff);
+    _emf = std::move(emf);
+    _dt = _fdtd_basic_coff->getDt();
+    _dl = _grid_space->getGridBaseSizeX();
   };
 
  private:
+  std::shared_ptr<GridSpace> _grid_space;
+  std::shared_ptr<FDTDBasicCoff> _fdtd_basic_coff;
   std::shared_ptr<EMF> _emf;
   double _dl;
   double _dt;
@@ -46,7 +62,7 @@ class LorentzMedium : public LinearDispersiveMaterial {
    * @brief Construct a new Lorentz Medium object
    *
    * @param name the name of the material
-   * @param eps_s the static or zero-frequncy relative permittivity
+   * @param eps_s the static or zero-frequency relative permittivity
    * @param eps_inf the relative permittivity at infinite frequency
    * @param omega_p the frequency of the pole pair
    * @param nv the pole relaxation time
@@ -59,7 +75,9 @@ class LorentzMedium : public LinearDispersiveMaterial {
 
   ~LorentzMedium() = default;
 
-  void init(double dt, double dl, const std::shared_ptr<EMF>& emf) override;
+  void init(std::shared_ptr<GridSpace> grid_space,
+            std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+            std::shared_ptr<EMF> emf) override;
 
   void updateEx(int i, int j, int k) override;
   void updateEy(int i, int j, int k) override;
@@ -96,7 +114,9 @@ class DrudeMedium : public LinearDispersiveMaterial {
 
   ~DrudeMedium() = default;
 
-  void init(double dt, double dl, const std::shared_ptr<EMF>& emf) override;
+  void init(std::shared_ptr<GridSpace> grid_space,
+            std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+            std::shared_ptr<EMF> emf) override;
 
   void updateEx(int i, int j, int k) override;
   void updateEy(int i, int j, int k) override;
@@ -121,7 +141,9 @@ class DebyMedium : public LinearDispersiveMaterial {
 
   ~DebyMedium() = default;
 
-  void init(double dt, double dl, const std::shared_ptr<EMF>& emf) override;
+  void init(std::shared_ptr<GridSpace> grid_space,
+            std::shared_ptr<FDTDBasicCoff> fdtd_basic_coff,
+            std::shared_ptr<EMF> emf) override;
 
   void updateEx(int i, int j, int k) override;
   void updateEy(int i, int j, int k) override;

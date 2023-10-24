@@ -25,6 +25,10 @@ class Sphere : public Shape {
 
   std::unique_ptr<Shape> getWrappedBox() const override;
 
+  double getRadius() const;
+
+  PointVector getCenter() const;
+
  private:
   PointVector _center;
   double _radius;
