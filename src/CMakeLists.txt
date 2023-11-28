@@ -28,7 +28,7 @@ set(XFDTD_LIBS
     xfdtd_grid
     xfdtd_fdtd_basic_coff)
 
-target_link_libraries(xfdtd ${XFDTD_LIBS} xtensor ${FFTW_LIBRARIES})
+target_link_libraries(xfdtd ${XFDTD_LIBS} xtensor ${FFTW_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 
 target_include_directories(
   xfdtd PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

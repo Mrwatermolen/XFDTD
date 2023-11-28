@@ -26,7 +26,7 @@ set(XFDTD_XTENSOR_LIB_INCLUDE_DIR ${xtensor_INCLUDE_DIRS})
 
 include_directories(
   src/include ${FFTW_INCLUDE_DIR} ${XFDTD_XTENSOR_LIB_INCLUDE_DIR}
-  ${xtensor-fftw_INCLUDE_DIRS} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+  ${xtensor-fftw_INCLUDE_DIRS})
 
 add_subdirectory(src)
 add_subdirectory(test)

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <xtensor/xindex_view.hpp>
@@ -106,11 +107,12 @@ void Object::defaultInit(int index,
   _dt = _fdtd_basic_coff->getDt();
 
   if (isDispersion()) {
-    auto m{_material.get()};
-    m->init(_grid_space, _fdtd_basic_coff, emf);
-    auto grid{_grid_space->getGridView(_shape.get())};
-    std::for_each(grid.begin(), grid.end(),
-                  [index](auto&& e) { e->setMaterialIndex(index); });
+    throw std::runtime_error("Dispersion is not supported yet.");
+    // auto m{_material.get()};
+    // m->init(_grid_space, _fdtd_basic_coff, emf);
+    // auto grid{_grid_space->getGridView(_shape.get())};
+    // std::for_each(grid.begin(), grid.end(),
+    //               [index](auto&& e) { e->setMaterialIndex(index); });
   }
 }
 
