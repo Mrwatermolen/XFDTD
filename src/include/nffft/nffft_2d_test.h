@@ -2,6 +2,7 @@
 #define _NFFFT_2D_TEST_H_
 
 #include "nffft/nffft.h"
+#include "util/constant.h"
 #include "util/type_define.h"
 namespace xfdtd {
 class NFFFT2DTEST : public NFFFT {
@@ -11,12 +12,12 @@ class NFFFT2DTEST : public NFFFT {
               std::filesystem::path output_dir_path);
   ~NFFFT2DTEST() override = default;
 
-  void update(size_t current_time_step) override;
+  void update() override;
   void outputData() override;
 
-  void init(std::unique_ptr<GridBox> output_box, std::shared_ptr<EMF> emf,
-            size_t total_time_steps, double dt, double dx, double dy,
-            double dz) override;
+  void init(std::shared_ptr<const GridSpace> grid_space,
+            std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
+            std::shared_ptr<const EMF> emf) override;
 
  private:
   EFTA _jx_yn, _jx_yp, _jx_zn, _jx_zp;

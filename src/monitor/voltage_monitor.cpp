@@ -1,5 +1,6 @@
 #include "monitor/voltage_monitor.h"
 
+#include <filesystem>
 #include <utility>
 #include <xtensor/xindex_view.hpp>
 #include <xtensor/xnpy.hpp>
@@ -98,7 +99,7 @@ void VoltageMonitor::outputData() {
   if (!std::filesystem::exists(getOutputPath()) &&
       !std::filesystem::is_directory(getOutputPath())) {
     try {
-      std::filesystem::create_directory(getOutputPath());
+      std::filesystem::create_directories(getOutputPath());
     } catch (std::exception e) {
       std::cerr << "Error: cannot create directory " << getOutputPath() << '\n';
       return;

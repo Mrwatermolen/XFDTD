@@ -5,7 +5,7 @@
 #include "util/constant.h"
 namespace xfdtd {
 TFSF2D::TFSF2D(SpatialIndex distance_x, SpatialIndex distance_y, double phi_inc,
-               double ez_i0, std::unique_ptr<Waveform> waveform)
+               double ez_i0, std::shared_ptr<Waveform> waveform)
     : TFSF(distance_x, distance_y, 0, ez_i0, constant::PI / 2, phi_inc, 0,
            std::move(waveform)) {
   auto sin_phi{getIncidentSinPhi()};
@@ -23,15 +23,12 @@ TFSF2D::TFSF2D(SpatialIndex distance_x, SpatialIndex distance_y, double phi_inc,
   _transform_h = xt::linalg::cross(getKVector(), _transform_e);
 }
 
-void TFSF2D::init(const GridSpace* grid_space,
-                  const FDTDBasicCoff* fdtd_basic_coff,
+void TFSF2D::init(std::shared_ptr<const GridSpace> grid_space,
+                  std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
                   std::shared_ptr<EMF> emf) {
-  auto [x, y, z]{getDistance()};
-  auto t_nx{grid_space->getGridNumX()};
-  auto t_ny{grid_space->getGridNumY()};
-  defaultInitTFSF(
-      grid_space, fdtd_basic_coff, std::move(emf),
-      std::make_unique<GridBox>(x, y, 0, t_nx - 2 * x, t_ny - 2 * y, 0));
+  defaultInitTFSF(std::move(grid_space), std::move(fdtd_basic_coff),
+                  std::move(emf));
+
   const auto nx{getNx()};
   const auto ny{getNy()};
 
@@ -118,9 +115,6 @@ void TFSF2D::init(const GridSpace* grid_space,
   _scaled_dl = getDx() / ratio_delta;
   _ceihi = -(dt / (constant::EPSILON_0 * _scaled_dl));
   _chiei = -(dt / (constant::MU_0 * _scaled_dl));
-  auto time_arr{xt::arange<double>(0, fdtd_basic_coff->getTotalTimeStep()) *
-                dt};
-  initIncidentWaveForm(time_arr);
 }
 
 void TFSF2D::updateIncidentField(size_t current_time_step) {

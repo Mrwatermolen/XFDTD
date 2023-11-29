@@ -4,7 +4,6 @@
 #include <memory>
 #include <utility>
 
-#include "grid/grid_box.h"
 #include "tfsf/tfsf.h"
 #include "util/constant.h"
 #include "xtensor-blas/xlinalg.hpp"
@@ -13,7 +12,7 @@ namespace xfdtd {
 
 TFSF3D::TFSF3D(SpatialIndex distance_x, SpatialIndex distance_y,
                SpatialIndex distance_z, double e_0, double theta_inc,
-               double phi_inc, double psi, std::unique_ptr<Waveform> waveform)
+               double phi_inc, double psi, std::shared_ptr<Waveform> waveform)
     : TFSF(distance_x, distance_y, distance_z, e_0, theta_inc, phi_inc, psi,
            std::move(waveform)) {
   auto sin_phi{getIncidentSinPhi()};
@@ -31,19 +30,13 @@ TFSF3D::TFSF3D(SpatialIndex distance_x, SpatialIndex distance_y,
   _transform_h = xt::linalg::cross(getKVector(), _transform_e);
 };
 
-void TFSF3D::init(const GridSpace* grid_space,
-                  const FDTDBasicCoff* fdtd_basic_coff,
+void TFSF3D::init(std::shared_ptr<const GridSpace> grid_space,
+                  std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
                   std::shared_ptr<EMF> emf) {
-  // grid_space is uniform grid space
-  auto [x, y, z]{getDistance()};
-  auto t_nx{grid_space->getGridNumX()};
-  auto t_ny{grid_space->getGridNumY()};
-  auto t_nz{grid_space->getGridNumZ()};
-  defaultInitTFSF(grid_space, fdtd_basic_coff, std::move(emf),
-                  std::make_unique<GridBox>(x, y, z, t_nx - 2 * x, t_ny - 2 * y,
-                                            t_nz - 2 * z));
+  defaultInitTFSF(std::move(grid_space), std::move(fdtd_basic_coff),
+                  std::move(emf));
 
-  const auto dt{fdtd_basic_coff->getDt()};
+  const auto dt{getDt()};
   const auto nx{getNx()};
   const auto ny{getNy()};
   const auto nz{getNz()};
@@ -155,10 +148,6 @@ void TFSF3D::init(const GridSpace* grid_space,
   _scaled_dl = getDx() / ratio_delta;
   _ceihi = -(dt / (constant::EPSILON_0 * _scaled_dl));
   _chiei = -(dt / (constant::MU_0 * _scaled_dl));
-
-  auto time_arr{xt::arange<double>(0, fdtd_basic_coff->getTotalTimeStep()) *
-                dt};
-  initIncidentWaveForm(time_arr);
 }
 
 void TFSF3D::updateIncidentField(size_t current_time_step) {

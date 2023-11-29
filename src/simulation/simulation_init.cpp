@@ -26,12 +26,12 @@ void Simulation::initFDTDBasicCoff() {
 }
 
 void Simulation::initEMInstance() {
-  allocateEx(_nx, _ny + 1, _nz + 1);
-  allocateEy(_nx + 1, _ny, _nz + 1);
-  allocateEz(_nx + 1, _ny + 1, _nz);
-  allocateHx(_nx + 1, _ny, _nz);
-  allocateHy(_nx, _ny + 1, _nz);
-  allocateHz(_nx, _ny, _nz + 1);
+  _emf->allocateEx(_nx, _ny + 1, _nz + 1);
+  _emf->allocateEy(_nx + 1, _ny, _nz + 1);
+  _emf->allocateEz(_nx + 1, _ny + 1, _nz);
+  _emf->allocateHx(_nx + 1, _ny, _nz);
+  _emf->allocateHy(_nx, _ny + 1, _nz);
+  _emf->allocateHz(_nx, _ny, _nz + 1);
 }
 
 void Simulation::initObject() {
@@ -63,26 +63,14 @@ void Simulation::initTFSF() {
   if (_tfsf == nullptr) {
     return;
   }
-  _tfsf->init(_grid_space.get(), _fdtd_basic_coff.get(), _emf);
+  _tfsf->init(_grid_space, _fdtd_basic_coff, _emf);
 }
 
 void Simulation::initNFFFT() {
   if (_nffft == nullptr) {
     return;
   }
-  auto [x, y, z]{_nffft->getDistance()};
-  if (_nz == 1) {
-    _nffft->init(
-        std::make_unique<GridBox>(x, y, 0, _nx - 2 * x, _ny - 2 * y, 1),
-        getEMFInstance(), _total_time_steps, _fdtd_basic_coff->getDt(),
-        _grid_space->getGridBaseSizeX(), _grid_space->getGridBaseSizeY(), 1);
-    return;
-  }
-  _nffft->init(
-      std::make_unique<GridBox>(x, y, z, _nx - 2 * x, _ny - 2 * y, _nz - 2 * z),
-      getEMFInstance(), _total_time_steps, _fdtd_basic_coff->getDt(),
-      _grid_space->getGridBaseSizeX(), _grid_space->getGridBaseSizeY(),
-      _grid_space->getGridBaseSizeZ());
+  _nffft->init(_grid_space, _fdtd_basic_coff, _emf);
 }
 
 void Simulation::initLumpedElement() {
@@ -117,9 +105,8 @@ void Simulation::initMonitor() {
 void Simulation::initGridSpace() {
   std::vector<std::unique_ptr<Shape>> shapes;
   for (const auto& object : _objects) {
-    shapes.emplace_back(object->getWrappedBox());
+    _grid_space->calculateSpaceSize(object->getWrappedBox().get());
   }
-  _grid_space->calculateSpaceSize(shapes);
 
   auto base_dx{_grid_space->getGridBaseSizeX()};
   auto base_dy{_grid_space->getGridBaseSizeY()};
@@ -155,6 +142,7 @@ void Simulation::initGridSpace() {
   _nx = _grid_space->getGridNumX();
   _ny = _grid_space->getGridNumY();
   _nz = _grid_space->getGridNumZ();
+  _grid_space->tellMeOk();
 }
 
 void Simulation::initNetwork() {

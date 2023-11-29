@@ -1,5 +1,6 @@
 #include "monitor/current_monitor.h"
 
+#include <filesystem>
 #include <xtensor/xnpy.hpp>
 
 #include "util/type_define.h"
@@ -114,7 +115,7 @@ void CurrentMonitor::outputData() {
   if (!std::filesystem::exists(getOutputPath()) &&
       !std::filesystem::is_directory(getOutputPath())) {
     try {
-      std::filesystem::create_directory(getOutputPath());
+      std::filesystem::create_directories(getOutputPath());
     } catch (std::exception e) {
       std::cerr << "Error: cannot create directory " << getOutputPath() << '\n';
       return;

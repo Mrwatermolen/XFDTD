@@ -11,11 +11,11 @@ class NffftBroadBand : public NFFFT {
                  SpatialIndex distance_z, double theta, double phi,
                  std::filesystem::path output_dir_path);
 
-  void init(std::unique_ptr<GridBox> output_box, std::shared_ptr<EMF> emf,
-            size_t total_time_steps, double dt, double dx, double dy,
-            double dz) override;
+  void init(std::shared_ptr<const GridSpace> grid_space,
+            std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
+            std::shared_ptr<const EMF> emf) override;
 
-  void update(size_t current_time_step) override;
+  void update() override;
 
   void outputData() override;
 

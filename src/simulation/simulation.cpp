@@ -22,8 +22,8 @@ Simulation::Simulation(double cell_size, float cfl)
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
       _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
-Simulation::Simulation(double cell_size, ObjectArray objects,
-                       BoundaryArray boundaries, std::unique_ptr<TFSF> tfsf,
+Simulation::Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
+                       std::vector<std::shared_ptr<Boundary>> boundaries, std::unique_ptr<TFSF> tfsf,
                        float cfl)
     : _objects{std::move(objects)},
       _boundaries{std::move(boundaries)},
@@ -32,8 +32,8 @@ Simulation::Simulation(double cell_size, ObjectArray objects,
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
       _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
-Simulation::Simulation(double cell_size, ObjectArray objects,
-                       BoundaryArray boundaries, std::unique_ptr<TFSF> tfsf,
+Simulation::Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
+                       std::vector<std::shared_ptr<Boundary>> boundaries, std::unique_ptr<TFSF> tfsf,
                        std::unique_ptr<NFFFT> nffft, float cfl)
     : _objects{std::move(objects)},
       _boundaries{std::move(boundaries)},
@@ -44,9 +44,9 @@ Simulation::Simulation(double cell_size, ObjectArray objects,
       _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
 Simulation::Simulation(
-    double cell_size, ObjectArray objects,
+    double cell_size, std::vector<std::shared_ptr<Object>> objects,
     std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
-    BoundaryArray boundaries, MonitorArray monitors, float cfl)
+    std::vector<std::shared_ptr<Boundary>> boundaries, std::vector<std::shared_ptr<Monitor>> monitors, float cfl)
     : _objects{std::move(objects)},
       _lumped_elements{std::move(lumped_elements)},
       _boundaries{std::move(boundaries)},
@@ -55,8 +55,8 @@ Simulation::Simulation(
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
       _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
-Simulation::Simulation(double cell_size, ObjectArray objects,
-                       MonitorArray monitors, float cfl)
+Simulation::Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
+                       std::vector<std::shared_ptr<Monitor>> monitors, float cfl)
     : _objects{std::move(objects)},
       _monitors{std::move(monitors)},
       _emf{std::make_shared<EMF>()},
@@ -64,9 +64,9 @@ Simulation::Simulation(double cell_size, ObjectArray objects,
       _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
 Simulation::Simulation(
-    double cell_size, ObjectArray objects,
+    double cell_size, std::vector<std::shared_ptr<Object>> objects,
     std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
-    MonitorArray monitors, float cfl)
+    std::vector<std::shared_ptr<Monitor>> monitors, float cfl)
     : _objects{std::move(objects)},
       _lumped_elements{std::move(lumped_elements)},
       _monitors{std::move(monitors)},
@@ -75,9 +75,9 @@ Simulation::Simulation(
       _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {}
 
 Simulation::Simulation(
-    double cell_size, ObjectArray objects,
+    double cell_size, std::vector<std::shared_ptr<Object>> objects,
     std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
-    BoundaryArray boundaries, MonitorArray monitors,
+    std::vector<std::shared_ptr<Boundary>> boundaries, std::vector<std::shared_ptr<Monitor>> monitors,
     std::unique_ptr<Network> network, float cfl)
     : _objects{std::move(objects)},
       _lumped_elements{std::move(lumped_elements)},
@@ -105,19 +105,19 @@ void Simulation::checkRun(size_t total_time_steps) {
   object_ofs.close();
 }
 
-void Simulation::addObject(std::unique_ptr<Object> object) {
+void Simulation::addObject(std::shared_ptr<Object> object) {
   _objects.push_back(std::move(object));
 }
 
-void Simulation::addTFSFSource(std::unique_ptr<TFSF> tfsf) {
+void Simulation::addTFSFSource(std::shared_ptr<TFSF> tfsf) {
   _tfsf = std::move(tfsf);
 }
 
-void Simulation::addNFFFT(std::unique_ptr<NFFFT> nffft) {
+void Simulation::addNFFFT(std::shared_ptr<NFFFT> nffft) {
   _nffft = std::move(nffft);
 }
 
-void Simulation::addMonitor(std::unique_ptr<Monitor> monitor) {
+void Simulation::addMonitor(std::shared_ptr<Monitor> monitor) {
   _monitors.push_back(std::move(monitor));
 }
 
@@ -148,7 +148,7 @@ void Simulation::outputData() {
 }
 
 void Simulation::outputTFSFIncidentWaveFastFourierTransform(
-    const std::filesystem::path &path) {
+    const std::filesystem::path& path) {
   if (_tfsf == nullptr) {
     return;
   }

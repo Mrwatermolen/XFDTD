@@ -35,7 +35,7 @@ void testPECSphereMonostaticRCS() {
   // Grid
   constexpr double dl = 2e-2;
 
-  auto objects{xfdtd::ObjectArray{}};
+  auto objects{std::vector<std::shared_ptr<Object>>{}};
   auto domain_origin_point{-40 * dl};
   auto domain_size{80 * dl};
   objects.emplace_back(std::make_shared<Object>(
@@ -51,7 +51,7 @@ void testPECSphereMonostaticRCS() {
       "scatter", std::make_unique<Sphere>(PointVector{0, 0, 0}, radius),
       Material{"pec", 1, 1, 1e10, 0}));
 
-  auto boundaries{xfdtd::BoundaryArray{}};
+  auto boundaries{std::vector<std::shared_ptr<xfdtd::Boundary>>{}};
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::XN, 8));
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::XP, 8));
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::YN, 8));
@@ -90,7 +90,7 @@ void testPECSphereBistaticRCS() {
   // Grid
   constexpr double dl = 7.5e-3;
 
-  auto objects{xfdtd::ObjectArray{}};
+  auto objects{std::vector<std::shared_ptr<Object>>{}};
   auto domain_origin_point{-40 * dl};
   auto domain_size{80 * dl};
   objects.emplace_back(std::make_shared<Object>(
@@ -106,7 +106,7 @@ void testPECSphereBistaticRCS() {
       "scatter", std::make_unique<Sphere>(PointVector{0, 0, 0}, radius),
       Material{"pec", 1, 1, 1e10, 0}));
 
-  auto boundaries{xfdtd::BoundaryArray{}};
+  auto boundaries{std::vector<std::shared_ptr<xfdtd::Boundary>>{}};
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::XN, 12));
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::XP, 12));
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::YN, 12));
@@ -161,7 +161,7 @@ void testLorentzSphereMonoStaticRCS() {
   constexpr double domain_size{radius * 2.5};
   constexpr double domain_origin_point{-domain_size / 2};
   constexpr double domain_cell_x{domain_size / dl};
-  auto objects{xfdtd::ObjectArray{}};
+  auto objects{std::vector<std::shared_ptr<Object>>{}};
   objects.emplace_back(std::make_shared<Object>(
       "domain",
       std::make_unique<Cube>(
@@ -173,7 +173,7 @@ void testLorentzSphereMonoStaticRCS() {
       "scatter", std::make_unique<Sphere>(PointVector{0, 0, 0}, radius),
       std::make_unique<xfdtd::LorentzMedium>("random", 2.25, 1, 4e16,
                                              0.28e16)));
-  auto boundaries{xfdtd::BoundaryArray{}};
+  auto boundaries{std::vector<std::shared_ptr<xfdtd::Boundary>>{}};
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::XN, 12));
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::XP, 12));
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::YN, 12));
@@ -216,7 +216,7 @@ void testDrudeSphereMonostaticRCS() {
   constexpr double domain_size{radius * 2.5};
   constexpr double domain_origin_point{-domain_size / 2};
   constexpr double domain_cell_x{domain_size / dl};
-  auto objects{xfdtd::ObjectArray{}};
+  auto objects{std::vector<std::shared_ptr<Object>>{}};
   objects.emplace_back(std::make_shared<Object>(
       "domain",
       std::make_unique<Cube>(
@@ -228,7 +228,7 @@ void testDrudeSphereMonostaticRCS() {
   objects.emplace_back(std::make_shared<Object>(
       "scatter", std::make_unique<Sphere>(PointVector{0, 0, 0}, radius),
       std::make_unique<xfdtd::DrudeMedium>("random", 1, 1.8e11, 2e10)));
-  auto boundaries{xfdtd::BoundaryArray{}};
+  auto boundaries{std::vector<std::shared_ptr<xfdtd::Boundary>>{}};
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::XN, 12));
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::XP, 12));
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::YN, 12));
@@ -271,7 +271,7 @@ void testDebySphereMonostaticRCS() {
   constexpr double domain_size{radius * 2.5};
   constexpr double domain_origin_point{-domain_size / 2};
   constexpr double domain_cell_x{domain_size / dl};
-  auto objects{xfdtd::ObjectArray{}};
+  auto objects{std::vector<std::shared_ptr<Object>>{}};
   objects.emplace_back(std::make_shared<Object>(
       "domain",
       std::make_unique<Cube>(
@@ -285,7 +285,7 @@ void testDebySphereMonostaticRCS() {
       std::make_unique<xfdtd::DebyMedium>("random", 1.16, 1.01, 6.497e-10,
                                           2.95e-4)));
 
-  auto boundaries{xfdtd::BoundaryArray{}};
+  auto boundaries{std::vector<std::shared_ptr<xfdtd::Boundary>>{}};
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::XN, 12));
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::XP, 12));
   boundaries.emplace_back(std::make_shared<PML>(xfdtd::Orientation::YN, 12));

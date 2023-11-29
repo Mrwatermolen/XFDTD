@@ -186,6 +186,118 @@ class EMF {
   void allocateJzPrev(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz,
                       double default_value = 0.0);
 
+  double getEMComponentAxisCenter(EMComponent c, Axis axis, SpatialIndex i,
+                                  SpatialIndex j, SpatialIndex k) const;
+
+  double getEMComponentFaceCenter(EMComponent c, Orientation orientation,
+                                  SpatialIndex i, SpatialIndex j,
+                                  SpatialIndex k) const;
+
+  double getEMComponentGridCenter(EMComponent c, SpatialIndex i, SpatialIndex j,
+                                  SpatialIndex k) const;
+
+  double getExAxisXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEyAxisXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEzAxisXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  /**
+   * @brief Be discouraged to use it
+   */
+  double getHxAxisXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHyAxisXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHzAxisXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getExAxisYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEyAxisYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEzAxisYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHxAxisYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  /**
+   * @brief Be discouraged to use it
+   */
+  double getHyAxisYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHzAxisYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getExAxisZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEyAxisZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEzAxisZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHxAxisZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHyAxisZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  /**
+   * @brief Be discouraged to use it
+   */
+  double getHzAxisZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  /**
+   * @brief Be discouraged to use it
+   */
+  double getExFaceXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEyFaceXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEzFaceXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHxFaceXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHyFaceXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHzFaceXCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getExFaceYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  /**
+   * @brief Be discouraged to use it
+   */
+  double getEyFaceYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEzFaceYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHxFaceYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHyFaceYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHzFaceYCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getExFaceZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEyFaceZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  /**
+   * @brief Be discouraged to use it
+   */
+  double getEzFaceZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHxFaceZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHyFaceZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHzFaceZCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getExGridCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEyGridCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getEzGridCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHxGridCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHyGridCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
+  double getHzGridCenter(SpatialIndex i, SpatialIndex j, SpatialIndex k) const;
+
  private:
   EFTA _ex;
   EFTA _ey;

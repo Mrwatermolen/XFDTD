@@ -6,8 +6,9 @@
 #include <tuple>
 
 #include "electromagnetic_field/electromagnetic_field.h"
+#include "fdtd_basic_coff/fdtd_basic_coff.h"
 #include "grid/grid_box.h"
-#include "util/constant.h"
+#include "grid/grid_space.h"
 #include "util/type_define.h"
 
 namespace xfdtd {
@@ -68,22 +69,26 @@ class NFFFT {
   }
   inline std::filesystem::path getOutputDirPath() { return _output_dir_path; }
 
-  virtual void update(size_t current_time_step) = 0;
+  virtual void update() = 0;
   virtual void outputData() = 0;
-  virtual void init(std::unique_ptr<GridBox> output_box,
-                    std::shared_ptr<EMF> emf, size_t total_time_steps,
-                    double dt, double dx, double dy, double dz) = 0;
+  virtual void init(std::shared_ptr<const GridSpace> grid_space,
+                    std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
+                    std::shared_ptr<const EMF> emf) = 0;
 
  protected:
-  void defaultInit(std::unique_ptr<GridBox> output_box,
-                   std::shared_ptr<EMF> emf, size_t total_time_steps, double dt,
-                   double dx, double dy, double dz);
+  void defaultInit(std::shared_ptr<const GridSpace> grid_space,
+                   std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
+                   std::shared_ptr<const EMF> emf);
 
-  inline size_t getTotalTimeSteps() { return _total_time_steps; }
-  inline double getDt() const { return _dt; }
-  inline double getDx() const { return _dx; }
-  inline double getDy() const { return _dy; }
-  inline double getDz() const { return _dz; }
+  inline size_t getTotalTimeSteps() {
+    return _fdtd_basic_coff->getTotalTimeStep();
+  }
+  size_t getCurrentTimeStep() { return _fdtd_basic_coff->getCurrentTimeStep(); }
+  inline double getDt() const { return _fdtd_basic_coff->getDt(); }
+  inline double getDx() const { return _grid_space->getGridBaseSizeX(); }
+  inline double getDy() const { return _grid_space->getGridBaseSizeY(); }
+  inline double getDz() const { return _grid_space->getGridBaseSizeZ(); }
+
   double getEx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
     return _emf->getEx(i, j, k);
   }
@@ -103,17 +108,23 @@ class NFFFT {
     return _emf->getHz(i, j, k);
   }
 
+ protected:
+  const GridSpace *getGridSpace() const { return _grid_space.get(); }
+
+  const FDTDBasicCoff *getFDTDBasicCoff() const {
+    return _fdtd_basic_coff.get();
+  }
+
+  const EMF *getEMFInstance() const { return _emf.get(); }
+
  private:
   SpatialIndex _distance_x, _distance_y, _distance_z;
   std::filesystem::path _output_dir_path;
 
-  std::unique_ptr<GridBox> _output_box;
+  std::shared_ptr<const GridSpace> _grid_space;
+  std::shared_ptr<const FDTDBasicCoff> _fdtd_basic_coff;
   std::shared_ptr<const EMF> _emf;
-  size_t _total_time_steps;
-  double _dt;
-  double _dx;
-  double _dy;
-  double _dz;
+  std::unique_ptr<GridBox> _output_box;
 };
 }  // namespace xfdtd
 

@@ -9,7 +9,68 @@ GridBox::GridBox(size_t origin_i, size_t origin_j, size_t origin_k, size_t nx,
       _origin_k{origin_k},
       _nx{nx},
       _ny{ny},
-      _nz{nz} {}
+      _nz{nz} {
+  if (nz > 1 && ny > 1 && nx > 1) {
+    _dimension = Type::CUBE;
+    return;
+  }
+
+  if (nz > 1 && ny > 1 && nx == 1) {
+    _dimension = Type::FACE;
+    return;
+  }
+
+  if (nz > 1 && ny == 1 && nx > 1) {
+    _dimension = Type::FACE;
+    return;
+  }
+
+  if (nz == 1 && ny > 1 && nx > 1) {
+    _dimension = Type::FACE;
+    return;
+  }
+
+  if (nz > 1 && ny == 1 && nx == 1) {
+    _dimension = Type::LINE;
+    return;
+  }
+
+  if (nz == 1 && ny > 1 && nx == 1) {
+    _dimension = Type::LINE;
+    return;
+  }
+
+  if (nz == 1 && ny == 1 && nx > 1) {
+    _dimension = Type::LINE;
+    return;
+  }
+
+  if (nz == 1 && ny == 1 && nx == 1) {
+    _dimension = Type::POINT;
+    return;
+  }
+
+  _dimension = Type::UNDEFINED_TYPE;
+}
+
+std::string GridBox::toString(Type dimension) {
+  switch (dimension) {
+    case Type::UNDEFINED_TYPE:
+      return "Undefined Type";
+    case Type::POINT:
+      return "Point";
+    case Type::LINE:
+      return "Line";
+    case Type::FACE:
+      return "Face";
+    case Type::CUBE:
+      return "Cube";
+    default:
+      return "Error";
+  }
+}
+
+GridBox::Type GridBox::getType() const { return _dimension; }
 
 size_t GridBox::getGridNumX() const { return _nx; }
 

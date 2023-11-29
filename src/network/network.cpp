@@ -27,7 +27,7 @@ void Network::outputData() {
   if (!std::filesystem::exists(_output_path) &&
       !std::filesystem::is_directory(_output_path)) {
     try {
-      std::filesystem::create_directory(_output_path);
+      std::filesystem::create_directories(_output_path);
     } catch (std::exception e) {
       std::cerr << "Error: cannot create directory " << _output_path << '\n';
       return;

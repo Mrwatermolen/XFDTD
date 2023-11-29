@@ -1,25 +1,29 @@
+#include <boundary/perfect_match_layer.h>
+#include <material/material.h>
+#include <monitor/field_monitor.h>
+#include <monitor/movie_monitor.h>
+#include <nffft/nffft_broadband.h>
+#include <object/object.h>
+#include <shape/cylinder.h>
+#include <simulation/simulation.h>
+#include <tfsf/tfsf_2d.h>
+#include <util/constant.h>
+#include <util/type_define.h>
+#include <waveform/cosine_modulated_gaussian_waveform.h>
+
 #include <chrono>
-#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <utility>
 #include <xtensor-fftw/basic_double.hpp>
 #include <xtensor-fftw/helper.hpp>
 #include <xtensor/xadapt.hpp>
-#include <xtensor/xmanipulation.hpp>
 
-#include "boundary/perfect_match_layer.h"
-#include "material/material.h"
-#include "monitor/field_monitor.h"
-#include "monitor/movie_monitor.h"
-#include "nffft/nffft_broadband.h"
-#include "object/object.h"
-#include "shape/cylinder.h"
-#include "simulation/simulation.h"
-#include "tfsf/tfsf_2d.h"
-#include "util/constant.h"
-#include "util/type_define.h"
-#include "waveform/cosine_modulated_gaussian_waveform.h"
+#include "helper.h"
+
+using xfdtd::Boundary;
+using xfdtd::Monitor;
+using xfdtd::Object;
 
 void testBasic2D() {
   constexpr xfdtd::SpatialIndex nx{350};
@@ -42,9 +46,9 @@ void testBasic2D() {
   const std::filesystem::path output_dir{
       "./visualizing_data/data/2d_cylinder_scatter/"};
 
-  auto objects{std::vector<std::shared_ptr<xfdtd::Object>>{}};
-  auto boundaries{std::vector<std::shared_ptr<xfdtd::Boundary>>{}};
-  auto monitors{std::vector<std::shared_ptr<xfdtd::Monitor>>{}};
+  auto objects{std::vector<std::shared_ptr<Object>>{}};
+  auto boundaries{std::vector<std::shared_ptr<Boundary>>{}};
+  auto monitors{std::vector<std::shared_ptr<Monitor>>{}};
 
   auto air_material{xfdtd::Material{"air", 1, 1, 0, 0, false}};
   auto pec_material{xfdtd::Material{"pec", 1, 1, 1e24, 0, false}};
@@ -96,21 +100,20 @@ void testBasic2D() {
   simulation.addMonitor(
       std::make_unique<xfdtd::MovieMonitor>(std::move(movie_monitor)));
 
-  auto t0{std::chrono::high_resolution_clock::now()};
   simulation.run(total_time_steps);
   simulation.outputTFSFIncidentWaveFastFourierTransform(
       output_dir / "tfsf_incident_wave_fft");
-  auto t1{std::chrono::high_resolution_clock::now()};
-  std::cout
-      << "Simulation takes "
-      << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
-      << " msec" << '\n';
-  std::cout << "Simulation takes "
-            << std::chrono::duration_cast<std::chrono::seconds>(t1 - t0).count()
-            << " s" << '\n';
 }
 
 int main() {
-  testBasic2D();
+  auto duration{xfdtd_example::timeSomething(testBasic2D)};
+  auto duration_in_seconds{
+      std::chrono::duration_cast<std::chrono::seconds>(duration)};
+  auto duration_in_milliseconds{
+      std::chrono::duration_cast<std::chrono::milliseconds>(duration)};
+  std::cout << "It costs " << duration_in_seconds.count() << " seconds or "
+            << duration_in_milliseconds.count()
+            << " milliseconds to run the 2D Cylinder Scatter."
+            << "\n";
   return 0;
 }

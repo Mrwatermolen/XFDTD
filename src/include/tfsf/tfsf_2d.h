@@ -6,18 +6,21 @@ namespace xfdtd {
 class TFSF2D : public TFSF {
  public:
   TFSF2D(SpatialIndex distance_x, SpatialIndex distance_y, double phi_inc,
-         double ez_i0, std::unique_ptr<Waveform> waveform);
+         double ez_i0, std::shared_ptr<Waveform> waveform);
   //   TFSF2D(const TFSF2D &) = delete;
   //   TFSF2D &operator=(const TFSF2D &) = delete;
   //   TFSF2D(TFSF2D &&) noexcept = default;
   //   TFSF2D &operator=(TFSF2D &&) = delete;
   ~TFSF2D() override = default;
 
-  void init(const GridSpace* grid_space, const FDTDBasicCoff* fdtd_basic_coff,
+  void init(std::shared_ptr<const GridSpace> grid_space,
+            std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
             std::shared_ptr<EMF> emf) override;
 
   void updateIncidentField(size_t current_time_step) override;
+
   void updateH() override;
+
   void updateE() override;
 
  private:

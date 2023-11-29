@@ -13,6 +13,12 @@ using PointVector = xt::xtensor_fixed<double, xt::xshape<3>>;
 enum class Orientation { XN, XP, YN, YP, ZN, ZP };
 enum class Axis { X, Y, Z };
 
+class SizeInf {
+ public:
+  SizeInf() = default;
+  ~SizeInf() = default;
+};
+
 using ElectromagneticFieldTimeDomainArray = xt::xarray<double>;
 using ElectromagneticFieldFrequencyDomainArray =
     xt::xarray<std::complex<double>>;

@@ -81,7 +81,7 @@ void testInvertedFAntenna() {
   auto cube_5_shape{Cube{cube_5_origin_point, cube_5_size}};
   auto cube_5_object{ObjectPlane{"cube_5", std::make_unique<Cube>(cube_5_shape),
                                  std::make_unique<Material>(pec)}};
-  ObjectArray objects;
+  std::vector<std::shared_ptr<Object>>objects;
   objects.emplace_back(std::make_unique<Object>(domain_object));
   objects.emplace_back(std::make_unique<Object>(substrate_object));
   objects.emplace_back(std::make_unique<ObjectPlane>(cube_0_object));
@@ -117,7 +117,7 @@ void testInvertedFAntenna() {
                              PointVector{1 * cell_size, 1 * cell_size, 2.4e-3}),
       Orientation::XP, "./visualizing_data/data/inverted_f_antenna", "c1.npy")};
 
-  MonitorArray monitors;
+  std::vector<std::shared_ptr<Monitor>> monitors;
   monitors.emplace_back(v1);
   monitors.emplace_back(c1);
 
@@ -130,7 +130,7 @@ void testInvertedFAntenna() {
                                 "./visualizing_data/data/inverted_f_antenna")};
 
   // boundary
-  BoundaryArray boundaries;
+  std::vector<std::shared_ptr<Boundary>> boundaries;
   boundaries.emplace_back(std::make_shared<PML>(Orientation::XN, 8));
   boundaries.emplace_back(std::make_shared<PML>(Orientation::XP, 8));
   boundaries.emplace_back(std::make_shared<PML>(Orientation::YN, 8));

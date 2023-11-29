@@ -209,7 +209,7 @@ void Simulation::updateNFFFT() {
     return;
   }
 
-  _nffft->update(_current_time_step);
+  _nffft->update();
 }
 
 void Simulation::updateMonitor() {

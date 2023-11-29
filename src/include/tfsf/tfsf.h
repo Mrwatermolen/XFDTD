@@ -37,7 +37,7 @@ class TFSF {
    */
   TFSF(SpatialIndex distance_x, SpatialIndex distance_y,
        SpatialIndex distance_z, double e_0, double theta_inc, double phi_inc,
-       double psi, std::unique_ptr<Waveform> waveform);
+       double psi, std::shared_ptr<Waveform> waveform);
   TFSF(TFSF&&) noexcept = default;
   virtual ~TFSF() = default;
 
@@ -77,8 +77,8 @@ class TFSF {
 
   void setEMFInstance(std::shared_ptr<EMF> emf) { _emf = std::move(emf); };
 
-  virtual void init(const GridSpace* grid_space,
-                    const FDTDBasicCoff* fdtd_basic_coff,
+  virtual void init(std::shared_ptr<const GridSpace> grid_space,
+                    std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
                     std::shared_ptr<EMF> emf) = 0;
 
   virtual void updateIncidentField(size_t current_time_step) = 0;
@@ -98,10 +98,9 @@ class TFSF {
   getIncidentWaveFastFourierTransform() const;
 
  protected:
-  void defaultInitTFSF(const GridSpace* grid_space,
-                       const FDTDBasicCoff* fdtd_basic_coff,
-                       std::shared_ptr<EMF> emf,
-                       std::unique_ptr<GridBox> tfsf_grid_box);
+  void defaultInitTFSF(std::shared_ptr<const GridSpace> grid_space,
+                       std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
+                       std::shared_ptr<EMF> emf);
 
   inline double getIncidentSinTheta() const { return _sin_theta_inc; }
   inline double getIncidentCosTheta() const { return _cos_theta_inc; }
@@ -109,10 +108,13 @@ class TFSF {
   inline double getIncidentCosPhi() const { return _cos_phi_inc; }
   inline double getIncidentSinPsi() const { return _sin_psi; }
   inline double getIncidentCosPsi() const { return _cos_psi; }
-  inline double getDt() const { return _dt; }
-  inline double getDx() const { return _dx; }
-  inline double getDy() const { return _dy; }
-  inline double getDz() const { return _dz; }
+  inline double getDt() const { return _fdtd_basic_coff->getDt(); }
+  inline double getDx() const { return _grid_space->getGridBaseSizeX(); }
+  inline double getDy() const { return _grid_space->getGridBaseSizeY(); }
+  inline double getDz() const { return _grid_space->getGridBaseSizeZ(); }
+  size_t getTotalTimeStep() const {
+    return _fdtd_basic_coff->getTotalTimeStep();
+  }
 
   inline double& getEx(SpatialIndex i, SpatialIndex j, SpatialIndex k) {
     return _emf->getEx(i, j, k);
@@ -158,13 +160,10 @@ class TFSF {
   PointVector _k;
   std::shared_ptr<Waveform> _waveform;
 
-  double _dt;
-  double _dx;
-  double _dy;
-  double _dz;
-  size_t _total_time_steps;
-  std::unique_ptr<GridBox> _tfsf_grid_box;
+  std::shared_ptr<const GridSpace> _grid_space;
+  std::shared_ptr<const FDTDBasicCoff> _fdtd_basic_coff;
   std::shared_ptr<EMF> _emf;
+  std::unique_ptr<GridBox> _tfsf_grid_box;
 };
 }  // namespace xfdtd
 

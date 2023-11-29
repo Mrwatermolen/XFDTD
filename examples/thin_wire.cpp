@@ -1,9 +1,12 @@
+#include "object/thin_wire.h"
+
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "boundary/perfect_match_layer.h"
+#include "helper.h"
 #include "lumped_element/lumped_element.h"
 #include "lumped_element/voltage_source.h"
 #include "material/material.h"
@@ -13,7 +16,6 @@
 #include "network/port.h"
 #include "nffft/nffft_fd.h"
 #include "object/object.h"
-#include "object/thin_wire.h"
 #include "shape/cube.h"
 #include "shape/cylinder.h"
 #include "simulation/simulation.h"
@@ -21,12 +23,16 @@
 #include "util/type_define.h"
 #include "waveform/gaussian_waveform.h"
 
+using xfdtd::Boundary;
+using xfdtd::Monitor;
+using xfdtd::Object;
+
 /**
  * @brief This is a example for simulating a half wave dipole antenna with thin
  * wire model.
  *
  */
-void testHalfWaveDipole() {
+void halfWaveDipole() {
   using namespace xfdtd;
 
   constexpr double cell_size{2.5e-4};
@@ -56,7 +62,7 @@ void testHalfWaveDipole() {
   auto thin_wire_1{std::make_unique<ThinWire>(
       "arm_1", std::make_unique<Cylinder>(Axis::Z, PointVector{0, 0, -5.125e-3},
                                           5e-5, arm_length))};
-  std::vector<std::shared_ptr<Object>>objects;
+  std::vector<std::shared_ptr<Object>> objects;
   objects.emplace_back(std::move(domain));
   objects.emplace_back(std::move(thin_wire_0));
   objects.emplace_back(std::move(thin_wire_1));
@@ -103,6 +109,14 @@ void testHalfWaveDipole() {
 }
 
 int main() {
-  testHalfWaveDipole();
+  auto duration{xfdtd_example::timeSomething(halfWaveDipole)};
+  auto duration_in_seconds{
+      std::chrono::duration_cast<std::chrono::seconds>(duration)};
+  auto duration_in_milliseconds{
+      std::chrono::duration_cast<std::chrono::seconds>(duration)};
+  std::cout << "It costs " << duration_in_seconds.count() << " seconds or "
+            << duration_in_milliseconds.count()
+            << " milliseconds to run the Half Wave Dipole simulation."
+            << "\n";
   return 0;
 }

@@ -7,6 +7,7 @@
 
 #include "electromagnetic_field/electromagnetic_field.h"
 #include "nffft/nffft.h"
+#include "util/constant.h"
 #include "util/type_define.h"
 
 namespace xfdtd {
@@ -53,10 +54,12 @@ class NffftFd : public NFFFT {
   NffftFd &operator=(NffftFd &&) = default;
   ~NffftFd() override = default;
 
-  void init(std::unique_ptr<GridBox> output_box, std::shared_ptr<EMF> emf,
-            size_t total_time_steps, double dt, double dx, double dy,
-            double dz) override;
-  void update(size_t current_time_step) override;
+  void init(std::shared_ptr<const GridSpace> grid_space,
+            std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
+            std::shared_ptr<const EMF> emf) override;
+
+  void update() override;
+
   void outputData() override;
 
  private:

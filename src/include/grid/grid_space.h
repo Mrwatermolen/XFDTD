@@ -16,7 +16,21 @@ namespace xfdtd {
 class GridSpace {
  public:
   GridSpace(double dx, double dy, double dz);
+
   ~GridSpace() = default;
+
+  enum class Dimension {
+    UNDEFINED_DIMENSION,
+    ONE_DIMENSION,
+    TWO_DIMENSION,
+    THREE_DIMENSION
+  };
+
+  enum class Type { UNIFORM_GRID_SPACE, NONUNIFORM_GRID_SPACE };
+
+  static std::string toString(Dimension dimension);
+
+  Dimension getDimension() const;
 
   size_t getGridNumX() const;
 
@@ -96,8 +110,9 @@ class GridSpace {
 
   size_t getGridIndexK(double z) const;
 
-  Grid getGridIndex(double x, double y, double z) const;
+  Grid getGridContainPoint(double x, double y, double z) const;
 
+  // remove it later
   int getGridMaterialIndex(size_t i, size_t j, size_t k) const;
 
   PointVector getGridCenterPoint(size_t i, size_t j, size_t k) const;
@@ -130,7 +145,7 @@ class GridSpace {
 
   auto getGridView(const Shape* shape) const;
 
-  void calculateSpaceSize(const std::vector<std::unique_ptr<Shape>>& shapes);
+  void calculateSpaceSize(const Shape* shape);
 
   void extendBoundaryXN(double size);
 
@@ -150,17 +165,20 @@ class GridSpace {
 
   bool isUniformGridSpace() const;
 
+  void tellMeOk();
+
  private:
   // double _dx, _dy, _dz;
   double _min_x, _min_y, _min_z;
   double _max_x, _max_y, _max_z;
   double _size_x, _size_y, _size_z;
   size_t _nx{0}, _ny{0}, _nz{0};
-  bool _extended_x{false}, _extended_y{false}, _extended_z{false};
-  bool _1d_space, _2d_space, _3d_space;
+  Dimension _dimension{Dimension::UNDEFINED_DIMENSION};
   xt::xarray<std::shared_ptr<Grid>> _grids;
   int _material_counter{0};
   bool _is_uniform_grid_space{true};
+  bool _ready{false};  // whether the grid space is ready to use. If true,
+                       // disenable to modify the grid space.
 
   double _base_grid_size_x, _base_grid_size_y, _base_grid_size_z;
   double _min_grid_size_x, _min_grid_size_y, _min_grid_size_z;
@@ -180,11 +198,7 @@ class GridSpace {
 
   void calculateSpaceSize(Cube* cube);
 
-  void generateGridSpace3D();
-
-  void generateGridSpace2D();
-
-  void generateGridSpace1D();
+  void generateUniformCoordinateSystem();
 
   void correctGridSpaceWithSubRegion(const Subregion* subregion, double base_dl,
                                      xt::xarray<double>& e_node_coord,
@@ -193,11 +207,12 @@ class GridSpace {
                                      xt::xarray<double>& h_node_size,
                                      size_t& n);
 
-  void correctGridSpaceCoordinate(const xt::xarray<double>& e_node_coord,
-                                  xt::xarray<double>& h_node_coord,
-                                  double base_dl,
-                                  xt::xarray<double>& e_node_size,
-                                  xt::xarray<double>& h_node_size, size_t& n);
+  void correctGridSpaceCoordinateSystem(const xt::xarray<double>& e_node_coord,
+                                        xt::xarray<double>& h_node_coord,
+                                        double base_dl,
+                                        xt::xarray<double>& e_node_size,
+                                        xt::xarray<double>& h_node_size,
+                                        size_t& n);
 
   auto calculateTransitionRegion(double transition_start_position,
                                  double subgrid_edge_position, double base_dl,
@@ -206,7 +221,7 @@ class GridSpace {
       -> std::tuple<size_t, double, double, xt::xarray<double>>;
 
   xt::xarray<double> calculateHNodeCoord(
-      const xt::xarray<double>& e_node_coord);
+      const xt::xarray<double>& e_node_coord) const;
 
   xt::xarray<double> calculateGridSizeEArray(
       const xt::xarray<double>& e_node_coord) const;

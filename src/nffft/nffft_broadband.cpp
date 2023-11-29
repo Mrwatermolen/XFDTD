@@ -10,6 +10,7 @@
 #include <xtensor/xadapt.hpp>
 #include <xtensor/xnpy.hpp>
 
+#include "grid/grid_space.h"
 #include "nffft/nffft.h"
 #include "util/constant.h"
 #include "util/type_define.h"
@@ -25,11 +26,12 @@ NffftBroadBand::NffftBroadBand(SpatialIndex distance_x, SpatialIndex distance_y,
       _fairfield_vector{sin(theta) * cos(phi), sin(theta) * sin(phi),
                         cos(theta)} {}
 
-void NffftBroadBand::init(std::unique_ptr<GridBox> output_box,
-                          std::shared_ptr<EMF> emf, size_t total_time_steps,
-                          double dt, double dx, double dy, double dz) {
-  defaultInit(std::move(output_box), std::move(emf), total_time_steps, dt, dx,
-              dy, dz);
+void NffftBroadBand::init(std::shared_ptr<const GridSpace> grid_space,
+                          std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
+                          std::shared_ptr<const EMF> emf) {
+  defaultInit(std::move(grid_space), std::move(fdtd_basic_coff),
+              std::move(emf));
+
   _number_samples = getTotalTimeSteps() * 2 - 1;  // make sure it is odd number
   _sample_rate = 1 / getDt();
 
@@ -88,13 +90,67 @@ void NffftBroadBand::init(std::unique_ptr<GridBox> output_box,
                  static_cast<size_t>(getNy()), 1});
 }
 
-void NffftBroadBand::update(size_t current_time_step) {
-  updateXN(current_time_step);
-  updateXP(current_time_step);
-  updateYN(current_time_step);
-  updateYP(current_time_step);
-  updateZN(current_time_step);
-  updateZP(current_time_step);
+void NffftBroadBand::update() {
+  // auto current_time_step{getCurrentTimeStep()};
+  // updateXN(current_time_step);
+  // updateXP(current_time_step);
+  // updateYN(current_time_step);
+  // updateYP(current_time_step);
+  // updateZN(current_time_step);
+  // updateZP(current_time_step);
+
+  const auto li{getStartIndexX()};
+  const auto lj{getStartIndexY()};
+  const auto lk{getStartIndexZ()};
+  const auto ri{getEndIndexX()};
+  const auto rj{getEndIndexY()};
+  const auto rk{getEndIndexZ()};
+  const auto nt{getCurrentTimeStep()};
+  auto emf{getEMFInstance()};
+
+  for (SpatialIndex j{lj}; j < rj; ++j) {
+    for (auto k{lk}; k < rk; ++k) {
+      _my_xn(nt, 0, j - lj, k - lk) = -1.0 * emf->getEzFaceXCenter(li, j, k);
+      _mz_xn(nt, 0, j - lj, k - lk) = emf->getEyFaceXCenter(li, j, k);
+      _jy_xn(nt, 0, j - lj, k - lk) = emf->getHzFaceXCenter(li, j, k);
+      _jz_xn(nt, 0, j - lj, k - lk) = -1.0 * emf->getHyFaceXCenter(li, j, k);
+
+      _my_xp(nt, 0, j - lj, k - lk) = emf->getEzFaceXCenter(ri, j, k);
+      _mz_xp(nt, 0, j - lj, k - lk) = -1.0 * emf->getEyFaceXCenter(ri, j, k);
+      _jy_xp(nt, 0, j - lj, k - lk) = -1.0 * emf->getHzFaceXCenter(ri, j, k);
+      _jz_xp(nt, 0, j - lj, k - lk) = emf->getHyFaceXCenter(ri, j, k);
+    }
+  }
+
+  // Y
+  for (SpatialIndex k{lk}; k < rk; ++k) {
+    for (SpatialIndex i{li}; i < ri; ++i) {
+      _mz_yn(nt, i - li, 0, k - lk) = -1.0 * emf->getExFaceYCenter(i, lj, k);
+      _mx_yn(nt, i - li, 0, k - lk) = emf->getEzFaceYCenter(i, lj, k);
+      _jz_yn(nt, i - li, 0, k - lk) = emf->getHxFaceYCenter(i, lj, k);
+      _jx_yn(nt, i - li, 0, k - lk) = -1.0 * emf->getHzFaceYCenter(i, lj, k);
+
+      _mz_yp(nt, i - li, 0, k - lk) = emf->getExFaceYCenter(i, rj, k);
+      _mx_yp(nt, i - li, 0, k - lk) = -1.0 * emf->getEzFaceYCenter(i, rj, k);
+      _jz_yp(nt, i - li, 0, k - lk) = -1.0 * emf->getHxFaceYCenter(i, rj, k);
+      _jx_yp(nt, i - li, 0, k - lk) = emf->getHzFaceYCenter(i, rj, k);
+    }
+  }
+
+  // Z
+  for (SpatialIndex i{li}; i < ri; ++i) {
+    for (SpatialIndex j{lj}; j < rj; ++j) {
+      _mx_zn(nt, i - li, j - lj, 0) = -1.0 * emf->getEyFaceZCenter(i, j, lk);
+      _my_zn(nt, i - li, j - lj, 0) = emf->getExFaceZCenter(i, j, lk);
+      _jx_zn(nt, i - li, j - lj, 0) = emf->getHyFaceZCenter(i, j, lk);
+      _jy_zn(nt, i - li, j - lj, 0) = -1.0 * emf->getHxFaceZCenter(i, j, lk);
+
+      _mx_zp(nt, i - li, j - lj, 0) = emf->getEyFaceZCenter(i, j, rk);
+      _my_zp(nt, i - li, j - lj, 0) = -1.0 * emf->getExFaceZCenter(i, j, rk);
+      _jx_zp(nt, i - li, j - lj, 0) = -1.0 * emf->getHyFaceZCenter(i, j, rk);
+      _jy_zp(nt, i - li, j - lj, 0) = emf->getHxFaceZCenter(i, j, rk);
+    }
+  }
 }
 
 void NffftBroadBand::outputData() {
@@ -113,7 +169,7 @@ void NffftBroadBand::outputData() {
 
   outputFarFieldParameters();
   using namespace std::complex_literals;
-  if (getNz() == 1) {
+  if (getGridSpace()->getDimension() == GridSpace::Dimension::TWO_DIMENSION) {
     // Debug
     auto far_ez{0.5 * xt::sqrt(1i * _wave_number) *
                 (_l_phi + constant::ETA_0 * _n_theta)};

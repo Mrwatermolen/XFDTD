@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "boundary/boundary.h"
 #include "lumped_element/capacitor.h"
 #include "lumped_element/current_source.h"
 #include "lumped_element/inductor.h"
@@ -21,6 +22,7 @@
 #include "lumped_element/voltage_source.h"
 #include "material/material.h"
 #include "monitor/current_monitor.h"
+#include "monitor/monitor.h"
 #include "monitor/voltage_monitor.h"
 #include "object/object.h"
 #include "object/object_plane.h"
@@ -30,6 +32,10 @@
 #include "waveform/cosine_modulated_gaussian_waveform.h"
 #include "waveform/custom_waveform.h"
 #include "waveform/sinusoidal_waveform.h"
+
+using xfdtd::Boundary;
+using xfdtd::Monitor;
+using xfdtd::Object;
 
 void testBasicLumpedElementFDTD() {
   constexpr double size{1e-3};
@@ -92,7 +98,7 @@ void testBasicLumpedElementFDTD() {
       "circuit_current.npy"}};
 
   // add objects to simulation
-  xfdtd::ObjectArray objects;
+  std::vector<std::shared_ptr<Object>> objects;
   objects.emplace_back(std::make_shared<xfdtd::Object>(std::move(domain)));
   objects.emplace_back(
       std::make_shared<xfdtd::ObjectPlane>(std::move(pec_plane_zn)));
@@ -109,7 +115,7 @@ void testBasicLumpedElementFDTD() {
       std::make_shared<xfdtd::Resistor>(std::move(resistance)));
 
   // add monitors to simulation
-  xfdtd::MonitorArray monitors;
+  std::vector<std::shared_ptr<Monitor>> monitors;
   monitors.emplace_back(std::make_shared<xfdtd::VoltageMonitor>(
       std::move(circuit_voltage_monitor)));
   monitors.emplace_back(std::make_shared<xfdtd::CurrentMonitor>(
@@ -173,7 +179,7 @@ void testCapacitor() {
       xfdtd::Orientation::ZP, "./visualizing_data/data/capacitor/",
       "circuit_voltage.npy"}};
 
-  auto objects{xfdtd::ObjectArray{}};
+  auto objects{std::vector<std::shared_ptr<Object>>{}};
   objects.emplace_back(std::make_shared<xfdtd::Object>(std::move(domain)));
   objects.emplace_back(std::make_shared<xfdtd::ObjectPlane>(std::move(pec_zn)));
   objects.emplace_back(std::make_shared<xfdtd::ObjectPlane>(std::move(pec_zp)));
@@ -184,7 +190,7 @@ void testCapacitor() {
   lumped_elements.emplace_back(
       std::make_shared<xfdtd::Capacitor>(std::move(capacitor)));
 
-  auto monitors{xfdtd::MonitorArray{}};
+  auto monitors{std::vector<std::shared_ptr<Monitor>>{}};
   monitors.emplace_back(
       std::make_shared<xfdtd::VoltageMonitor>(std::move(voltage_monitor)));
 
@@ -248,7 +254,7 @@ void testInductor() {
       xfdtd::Orientation::XP, "./visualizing_data/data/inductor/",
       "current.npy"}};
 
-  auto objects{xfdtd::ObjectArray{}};
+  auto objects{std::vector<std::shared_ptr<Object>>{}};
   objects.emplace_back(std::make_shared<xfdtd::Object>(std::move(domain)));
   objects.emplace_back(std::make_shared<xfdtd::ObjectPlane>(std::move(pec_zn)));
   objects.emplace_back(std::make_shared<xfdtd::ObjectPlane>(std::move(pec_zp)));
@@ -260,7 +266,7 @@ void testInductor() {
   lumped_elements.emplace_back(
       std::make_shared<xfdtd::Inductor>(std::move(inductor)));
 
-  auto monitors{xfdtd::MonitorArray{}};
+  auto monitors{std::vector<std::shared_ptr<Monitor>>{}};
   monitors.emplace_back(
       std::make_shared<xfdtd::CurrentMonitor>(std::move(current_monitor)));
 
@@ -328,7 +334,7 @@ void testRLCCircuitFDTD() {
       xfdtd::Orientation::ZP, "./visualizing_data/data/rlc_circuit/",
       "circuit_voltage.npy"}};
 
-  auto objects{xfdtd::ObjectArray{}};
+  auto objects{std::vector<std::shared_ptr<Object>>{}};
   objects.emplace_back(std::make_shared<xfdtd::Object>(std::move(domain)));
   objects.emplace_back(std::make_shared<xfdtd::ObjectPlane>(std::move(pec_zn)));
   objects.emplace_back(std::make_shared<xfdtd::ObjectPlane>(std::move(pec_zp)));
@@ -341,7 +347,7 @@ void testRLCCircuitFDTD() {
   lumped_elements.emplace_back(
       std::make_shared<xfdtd::Capacitor>(std::move(capacitor)));
 
-  auto monitors{xfdtd::MonitorArray{}};
+  auto monitors{std::vector<std::shared_ptr<Monitor>>{}};
   monitors.emplace_back(std::make_shared<xfdtd::VoltageMonitor>(
       std::move(circuit_voltage_monitor)));
 

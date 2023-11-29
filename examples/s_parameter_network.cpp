@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "boundary/perfect_match_layer.h"
+#include "helper.h"
 #include "lumped_element/resistor.h"
 #include "lumped_element/voltage_source.h"
 #include "material/material.h"
@@ -18,7 +19,11 @@
 #include "util/type_define.h"
 #include "waveform/gaussian_waveform.h"
 
-void testQuarterWaveTransformer() {
+using xfdtd::Boundary;
+using xfdtd::Monitor;
+using xfdtd::Object;
+
+void quarterWaveTransformer() {
   // define material
   auto air{xfdtd::Material{"air", 1, 1, 0, 0}};
   auto pec{xfdtd::Material{"pec", 1, 1, 1e10, 0}};
@@ -76,7 +81,7 @@ void testQuarterWaveTransformer() {
       std::make_unique<xfdtd::Cube>(msl_100_origin_point, msl_100_size),
       std::make_unique<xfdtd::Material>(pec)}};
 
-  auto objects{std::vector<std::shared_ptr<xfdtd::Object>>{}};
+  auto objects{std::vector<std::shared_ptr<Object>>{}};
   objects.emplace_back(std::make_unique<xfdtd::Object>(domain));
   objects.emplace_back(std::make_unique<xfdtd::Object>(substrate));
   objects.emplace_back(std::make_unique<xfdtd::ObjectPlane>(msl_50));
@@ -104,7 +109,7 @@ void testQuarterWaveTransformer() {
   lumped_elements.emplace_back(std::make_shared<xfdtd::Resistor>(resistor));
 
   // define boundary
-  auto boundaries{std::vector<std::shared_ptr<xfdtd::Boundary>>{}};
+  auto boundaries{std::vector<std::shared_ptr<Boundary>>{}};
   boundaries.emplace_back(
       std::make_shared<xfdtd::PML>(xfdtd::Orientation::XN, 8));
   boundaries.emplace_back(
@@ -139,7 +144,7 @@ void testQuarterWaveTransformer() {
           xfdtd::PointVector{2 * size, 2 * size, 1 * size}),
       xfdtd::Orientation::ZP,
       "./visualizing_data/data/quarter_wave_transformer", "c2.npy")};
-  auto monitors{std::vector<std::shared_ptr<xfdtd::Monitor>>{}};
+  auto monitors{std::vector<std::shared_ptr<Monitor>>{}};
   monitors.emplace_back(v1);
   monitors.emplace_back(v2);
   monitors.emplace_back(c1);
@@ -163,20 +168,12 @@ void testQuarterWaveTransformer() {
 }
 
 int main() {
-  auto t_0{std::chrono::high_resolution_clock::now()};
-  // try {
-  testQuarterWaveTransformer();
-  // } catch (std::exception e) {
-  //   std::cerr << e.what() << '\n';
-  // }
-  auto t_1{std::chrono::high_resolution_clock::now()};
-  std::cout << "Time: "
-            << std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0)
-                   .count()
-            << " ms\n";
-  std::cout
-      << "Time: "
-      << std::chrono::duration_cast<std::chrono::seconds>(t_1 - t_0).count()
-      << " s\n";
-  return 0;
+  auto duration{xfdtd_example::timeSomething(quarterWaveTransformer)};
+  auto duration_in_seconds{
+      std::chrono::duration_cast<std::chrono::seconds>(duration).count()};
+  auto duration_in_milliseconds{
+      std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()};
+  std::cout << "It costs " << duration_in_seconds << " seconds or "
+            << duration_in_milliseconds
+            << " milliseconds to run Quarter Wave Transformer.\n";
 }

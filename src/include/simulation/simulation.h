@@ -20,48 +20,51 @@
 
 namespace xfdtd {
 
-using ObjectArray = std::vector<std::shared_ptr<Object>>;
-using BoundaryArray = std::vector<std::shared_ptr<Boundary>>;
-using MonitorArray = std::vector<std::shared_ptr<Monitor>>;
-
 class Simulation {
  public:
   inline static constexpr float DEFAULT_CFL{0.99};
 
   explicit Simulation(double cell_size, float cfl = DEFAULT_CFL);
-  Simulation(double cell_size, ObjectArray objects, BoundaryArray boundaries,
-             std::unique_ptr<TFSF> tfsf, float cfl = DEFAULT_CFL);
-  Simulation(double cell_size, ObjectArray objects, BoundaryArray boundaries,
-             std::unique_ptr<TFSF> tfsf, std::unique_ptr<NFFFT> nffft,
+  Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
+             std::vector<std::shared_ptr<Boundary>> boundaries, std::unique_ptr<TFSF> tfsf,
              float cfl = DEFAULT_CFL);
-  Simulation(double cell_size, ObjectArray objects,
+  Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
+             std::vector<std::shared_ptr<Boundary>> boundaries, std::unique_ptr<TFSF> tfsf,
+             std::unique_ptr<NFFFT> nffft, float cfl = DEFAULT_CFL);
+  Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
              std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
-             BoundaryArray boundaries = {}, MonitorArray monitor = {},
-             float cfl = DEFAULT_CFL);
-
-  Simulation(double cell_size, ObjectArray objects,
-             std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
-             MonitorArray monitors = {}, float cfl = DEFAULT_CFL);
-
-  Simulation(double cell_size, ObjectArray objects, MonitorArray monitors = {},
+             std::vector<std::shared_ptr<Boundary>> boundaries = {}, std::vector<std::shared_ptr<Monitor>> monitor = {},
              float cfl = DEFAULT_CFL);
 
-  Simulation(double cell_size, ObjectArray objects,
+  Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
              std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
-             BoundaryArray boundaries, MonitorArray monitors,
+             std::vector<std::shared_ptr<Monitor>> monitors = {}, float cfl = DEFAULT_CFL);
+
+  Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
+             std::vector<std::shared_ptr<Monitor>> monitors = {}, float cfl = DEFAULT_CFL);
+
+  Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
+             std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
+             std::vector<std::shared_ptr<Boundary>> boundaries, std::vector<std::shared_ptr<Monitor>> monitors,
              std::unique_ptr<Network> network, float cfl = DEFAULT_CFL);
 
-  void addObject(std::unique_ptr<Object> object);
-  void addTFSFSource(std::unique_ptr<TFSF> tfsf);
-  void addNFFFT(std::unique_ptr<NFFFT> nffft);
-  void addMonitor(std::unique_ptr<Monitor> monitor);
+  void addObject(std::shared_ptr<Object> object);
+
+  void addBoundary(std::shared_ptr<Boundary> boundary);
+
+  void addLumpedElement(std::shared_ptr<LumpedElement> lumped_element);
+
+  void addTFSFSource(std::shared_ptr<TFSF> tfsf);
+
+  void addNFFFT(std::shared_ptr<NFFFT> nffft);
+
+  void addMonitor(std::shared_ptr<Monitor> monitor);
+
+  void addNetwork(std::shared_ptr<Network> network);
 
   void checkRun(size_t total_time_steps);
   void run(size_t total_time_steps);
 
-  // inline double getDx() const { return _grid_space->getDx(); }
-  // inline double getDy() const { return _grid_space->getDy(); }
-  // inline double getDz() const { return _grid_space->getDz(); }
   inline double getDt() const { return _fdtd_basic_coff->getDt(); }
   inline SpatialIndex getNx() const { return _grid_space->getGridNumX(); }
   inline SpatialIndex getNy() const { return _grid_space->getGridNumY(); }
@@ -111,16 +114,18 @@ class Simulation {
     return _emf->getHz(i, j, k);
   }
 
-  void outputTFSFIncidentWaveFastFourierTransform(const std::filesystem::path &path);
+  void outputTFSFIncidentWaveFastFourierTransform(
+      const std::filesystem::path& path);
 
  private:
-  ObjectArray _objects;
-  BoundaryArray _boundaries;
+  std::vector<std::shared_ptr<Object>> _objects;
+  std::vector<std::shared_ptr<Boundary>> _boundaries;
   std::vector<std::shared_ptr<LumpedElement>> _lumped_elements;
-  std::unique_ptr<TFSF> _tfsf;
-  std::unique_ptr<NFFFT> _nffft;
-  MonitorArray _monitors;
-  std::unique_ptr<Network> _network;
+  std::vector<std::shared_ptr<Monitor>> _monitors;
+  std::shared_ptr<TFSF> _tfsf;
+  std::shared_ptr<NFFFT> _nffft;
+  std::shared_ptr<Network> _network;
+
   std::shared_ptr<GridSpace> _grid_space;
   std::shared_ptr<EMF> _emf;
   std::shared_ptr<FDTDBasicCoff> _fdtd_basic_coff;
@@ -162,30 +167,6 @@ class Simulation {
   void correctH();
 
   void outputData();
-
-  inline void allocateEx(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
-    _emf->allocateEx(nx, ny, nz);
-  }
-
-  inline void allocateEy(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
-    _emf->allocateEy(nx, ny, nz);
-  }
-
-  inline void allocateEz(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
-    _emf->allocateEz(nx, ny, nz);
-  }
-
-  inline void allocateHx(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
-    _emf->allocateHx(nx, ny, nz);
-  }
-
-  inline void allocateHy(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
-    _emf->allocateHy(nx, ny, nz);
-  }
-
-  inline void allocateHz(SpatialIndex nx, SpatialIndex ny, SpatialIndex nz) {
-    _emf->allocateHz(nx, ny, nz);
-  }
 };
 
 }  // namespace xfdtd

@@ -9,6 +9,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+    message(FATAL_ERROR "In-source builds are not allowed")
+endif()
+
 include("cmake/FindFFTW.cmake")
 find_package(xtl REQUIRED)
 find_package(xtensor REQUIRED)
@@ -28,5 +32,8 @@ include_directories(
   src/include ${FFTW_INCLUDE_DIR} ${XFDTD_XTENSOR_LIB_INCLUDE_DIR}
   ${xtensor-fftw_INCLUDE_DIRS})
 
+enable_testing()
+
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(examples)

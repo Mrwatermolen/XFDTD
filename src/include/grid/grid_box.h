@@ -2,6 +2,7 @@
 #define _XFDTD_GRID_BOX_H_
 
 #include <cstddef>
+#include <string>
 
 namespace xfdtd {
 class GridBox {
@@ -12,6 +13,12 @@ class GridBox {
           size_t ny, size_t nz);
 
   ~GridBox() = default;
+
+  enum class Type { UNDEFINED_TYPE, POINT, LINE, FACE, CUBE };
+
+  static std::string toString(Type dimension);
+
+  Type getType() const;
 
   size_t getGridNumX() const;
 
@@ -46,6 +53,7 @@ class GridBox {
   size_t getGridCenterIndexZ() const;
 
  private:
+  Type _dimension{Type::UNDEFINED_TYPE};
   size_t _origin_i, _origin_j, _origin_k;
   size_t _nx, _ny, _nz;
 };

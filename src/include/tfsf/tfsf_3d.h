@@ -9,14 +9,15 @@ class TFSF3D : public TFSF {
  public:
   TFSF3D(SpatialIndex distance_x, SpatialIndex distance_y,
          SpatialIndex distance_z, double e_0, double theta_inc, double phi_inc,
-         double psi, std::unique_ptr<Waveform> waveform);
+         double psi, std::shared_ptr<Waveform> waveform);
   TFSF3D(const TFSF3D &) = delete;
   TFSF3D &operator=(const TFSF3D &) = delete;
   TFSF3D(TFSF3D &&) = default;
   TFSF3D &operator=(TFSF3D &&) = delete;
   ~TFSF3D() override = default;
 
-  void init(const GridSpace *grid_space, const FDTDBasicCoff *fdtd_basic_coff,
+  void init(std::shared_ptr<const GridSpace> grid_space,
+            std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
             std::shared_ptr<EMF> emf) override;
 
   void updateIncidentField(size_t current_time_step) override;

@@ -14,11 +14,11 @@
 
 namespace xfdtd {
 
-void NffftFd::init(std::unique_ptr<GridBox> output_box,
-                   std::shared_ptr<EMF> emf, size_t total_time_steps, double dt,
-                   double dx, double dy, double dz) {
-  defaultInit(std::move(output_box), std::move(emf), total_time_steps, dt, dx,
-              dy, dz);
+void NffftFd::init(std::shared_ptr<const GridSpace> grid_space,
+                   std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
+                   std::shared_ptr<const EMF> emf) {
+  defaultInit(std::move(grid_space), std::move(fdtd_basic_coff),
+              std::move(emf));
 
   _f_theta.resize({_number_frequencies, _number_theta, _number_phi});
   _f_phi.resize({_number_frequencies, _number_theta, _number_phi});
@@ -105,13 +105,101 @@ void NffftFd::initDFT() {
   }
 }
 
-void NffftFd::update(size_t current_time_step) {
-  updateXN(current_time_step);
-  updateXP(current_time_step);
-  updateYN(current_time_step);
-  updateYP(current_time_step);
-  updateZN(current_time_step);
-  updateZP(current_time_step);
+void NffftFd::update() {
+  // auto current_time_step{getCurrentTimeStep()};
+  // updateXN(current_time_step);
+  // updateXP(current_time_step);
+  // updateYN(current_time_step);
+  // updateYP(current_time_step);
+  // updateZN(current_time_step);
+  // updateZP(current_time_step);
+
+  const auto li{getStartIndexX()};
+  const auto lj{getStartIndexY()};
+  const auto lk{getStartIndexZ()};
+  const auto ri{getEndIndexX()};
+  const auto rj{getEndIndexY()};
+  const auto rk{getEndIndexZ()};
+  const auto nt{getCurrentTimeStep()};
+  auto emf{getEMFInstance()};
+
+  for (SpatialIndex j{lj}; j < rj; ++j) {
+    for (auto k{lk}; k < rk; ++k) {
+      auto my_xn = -1 * emf->getEzFaceXCenter(li, j, k);
+      auto mz_xn = emf->getEyFaceXCenter(li, j, k);
+      auto jy_xn = emf->getHzFaceXCenter(li, j, k);
+      auto jz_xn = -1 * emf->getHyFaceXCenter(li, j, k);
+
+      auto my_xp = emf->getEzFaceXCenter(ri, j, k);
+      auto mz_xp = -1 * emf->getEyFaceXCenter(ri, j, k);
+      auto jy_xp = -1 * emf->getHzFaceXCenter(ri, j, k);
+      auto jz_xp = emf->getHyFaceXCenter(ri, j, k);
+
+      for (int n{0}; n < _number_frequencies; ++n) {
+        _my_xn(n, j - lj, k - lk) += my_xn * _frequency_transform_m(n, nt);
+        _mz_xn(n, j - lj, k - lk) += mz_xn * _frequency_transform_m(n, nt);
+        _jy_xn(n, j - lj, k - lk) += jy_xn * _frequency_transform_j(n, nt);
+        _jz_xn(n, j - lj, k - lk) += jz_xn * _frequency_transform_j(n, nt);
+
+        _my_xp(n, j - lj, k - lk) += my_xp * _frequency_transform_m(n, nt);
+        _mz_xp(n, j - lj, k - lk) += mz_xp * _frequency_transform_m(n, nt);
+        _jy_xp(n, j - lj, k - lk) += jy_xp * _frequency_transform_j(n, nt);
+        _jz_xp(n, j - lj, k - lk) += jz_xp * _frequency_transform_j(n, nt);
+      }
+    }
+  }
+
+  for (auto k{lk}; k < rk; ++k) {
+    for (auto i{li}; i < ri; ++i) {
+      auto mz_yn = -1 * emf->getExFaceYCenter(i, lj, k);
+      auto mx_yn = emf->getEzFaceYCenter(i, lj, k);
+      auto jz_yn = emf->getHxFaceYCenter(i, lj, k);
+      auto jx_yn = -1 * emf->getHzFaceYCenter(i, lj, k);
+
+      auto mz_yp = emf->getExFaceYCenter(i, rj, k);
+      auto mx_yp = -1 * emf->getEzFaceYCenter(i, rj, k);
+      auto jz_yp = -1 * emf->getHxFaceYCenter(i, rj, k);
+      auto jx_yp = emf->getHzFaceYCenter(i, rj, k);
+
+      for (int n{0}; n < _number_frequencies; ++n) {
+        _mz_yn(n, k - lk, i - li) += mz_yn * _frequency_transform_m(n, nt);
+        _mx_yn(n, k - lk, i - li) += mx_yn * _frequency_transform_m(n, nt);
+        _jz_yn(n, k - lk, i - li) += jz_yn * _frequency_transform_j(n, nt);
+        _jx_yn(n, k - lk, i - li) += jx_yn * _frequency_transform_j(n, nt);
+
+        _mz_yp(n, k - lk, i - li) += mz_yp * _frequency_transform_m(n, nt);
+        _mx_yp(n, k - lk, i - li) += mx_yp * _frequency_transform_m(n, nt);
+        _jz_yp(n, k - lk, i - li) += jz_yp * _frequency_transform_j(n, nt);
+        _jx_yp(n, k - lk, i - li) += jx_yp * _frequency_transform_j(n, nt);
+      }
+    }
+  }
+
+  for (auto i{li}; i < ri; ++i) {
+    for (auto j{lj}; j < rj; ++j) {
+      auto mx_zn = -1 * emf->getEyFaceZCenter(i, j, lk);
+      auto my_zn = emf->getExFaceZCenter(i, j, lk);
+      auto jx_zn = emf->getHyFaceZCenter(i, j, lk);
+      auto jy_zn = -1 * emf->getHxFaceZCenter(i, j, lk);
+
+      auto mx_zp = emf->getEyFaceZCenter(i, j, rk);
+      auto my_zp = -1 * emf->getExFaceZCenter(i, j, rk);
+      auto jx_zp = -1 * emf->getHyFaceZCenter(i, j, rk);
+      auto jy_zp = emf->getHxFaceZCenter(i, j, rk);
+
+      for (int n{0}; n < _number_frequencies; ++n) {
+        _mx_zn(n, i - li, j - lj) += mx_zn * _frequency_transform_m(n, nt);
+        _my_zn(n, i - li, j - lj) += my_zn * _frequency_transform_m(n, nt);
+        _jx_zn(n, i - li, j - lj) += jx_zn * _frequency_transform_j(n, nt);
+        _jy_zn(n, i - li, j - lj) += jy_zn * _frequency_transform_j(n, nt);
+
+        _mx_zp(n, i - li, j - lj) += mx_zp * _frequency_transform_m(n, nt);
+        _my_zp(n, i - li, j - lj) += my_zp * _frequency_transform_m(n, nt);
+        _jx_zp(n, i - li, j - lj) += jx_zp * _frequency_transform_j(n, nt);
+        _jy_zp(n, i - li, j - lj) += jy_zp * _frequency_transform_j(n, nt);
+      }
+    }
+  }
 }
 
 void NffftFd::updateXN(size_t current_time_step) {
@@ -577,7 +665,8 @@ void NffftFd::outputData() {
 void NffftFd::outputFarFieldParameters() {
   // std::ofstream far_field_parameter_writer{getOutputDirPath() /
   //                                          "far_field_parameter.dat"};
-  // far_field_parameter_writer << "number of frequencies: " << _number_frequencies
+  // far_field_parameter_writer << "number of frequencies: " <<
+  // _number_frequencies
   //                            << "\n";
   // for (const auto& e : _frequencies) {
   //   far_field_parameter_writer << e << "\t";

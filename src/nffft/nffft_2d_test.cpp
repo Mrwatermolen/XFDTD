@@ -21,11 +21,11 @@ NFFFT2DTEST::NFFFT2DTEST(SpatialIndex distance_x, SpatialIndex distance_y,
       _farfield_theta{far_theta},
       _farfield_phi{far_phi} {}
 
-void NFFFT2DTEST::init(std::unique_ptr<GridBox> output_box,
-                       std::shared_ptr<EMF> emf, size_t total_time_steps,
-                       double dt, double dx, double dy, double dz) {
-  defaultInit(std::move(output_box), std::move(emf), total_time_steps, dt, dx,
-              dy, dz);
+void NFFFT2DTEST::init(std::shared_ptr<const GridSpace> grid_space,
+                       std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
+                       std::shared_ptr<const EMF> emf) {
+  defaultInit(std::move(grid_space), std::move(fdtd_basic_coff),
+              std::move(emf));
 
   _jy_xn.resize({getTotalTimeSteps(), static_cast<size_t>(getNy()),
                  static_cast<size_t>(getNz())});
@@ -82,7 +82,8 @@ void NFFFT2DTEST::init(std::unique_ptr<GridBox> output_box,
                  static_cast<size_t>(getNy())});
 }
 
-void NFFFT2DTEST::update(size_t current_time_step) {
+void NFFFT2DTEST::update() {
+  auto current_time_step{getCurrentTimeStep()};
   updateXN(current_time_step);
   updateXP(current_time_step);
   updateYN(current_time_step);
@@ -261,7 +262,6 @@ void NFFFT2DTEST::calculateFarfield() {
   const auto dz_dx_cosphi{dz * dx * cos_phi};
   auto num_frequency{getTotalTimeSteps() * 2 - 1};
   // TODO(franzero): refactor this
-  std::cout << xt::adapt(_jz_xn.shape()) << std::endl;
   if (_jz_xn.shape(0) < num_frequency) {
     auto size{num_frequency - _jz_xn.shape(0)};
     auto additive_shape{_jz_xn.shape()};

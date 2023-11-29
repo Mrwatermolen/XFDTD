@@ -18,23 +18,18 @@ NFFFT::NFFFT(SpatialIndex distance_x, SpatialIndex distance_y,
       _distance_z{distance_z},
       _output_dir_path{std::move(output_dir_path)} {}
 
-void NFFFT::defaultInit(std::unique_ptr<GridBox> output_box,
-                        std::shared_ptr<EMF> emf, size_t total_time_steps,
-                        double dt, double dx, double dy, double dz) {
-  if (output_box == nullptr) {
-    throw std::runtime_error("Output box instance is not set.");
-  }
-  if (emf == nullptr) {
-    throw std::runtime_error("EMF instance is not set.");
-  }
-
-  _output_box = std::move(output_box);
+void NFFFT::defaultInit(std::shared_ptr<const GridSpace> grid_space,
+                        std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,
+                        std::shared_ptr<const EMF> emf) {
+  _grid_space = std::move(grid_space);
+  _fdtd_basic_coff = std::move(fdtd_basic_coff);
   _emf = std::move(emf);
-  _total_time_steps = total_time_steps;
-  _dt = dt;
-  _dx = dx;
-  _dy = dy;
-  _dz = dz;
+
+  _output_box =
+      std::make_unique<GridBox>(_distance_x, _distance_y, _distance_z,
+                                _grid_space->getGridNumX() - 2 * _distance_x,
+                                _grid_space->getGridNumY() - 2 * _distance_y,
+                                _grid_space->getGridNumZ() - 2 * _distance_z);
 }
 
 }  // namespace xfdtd
