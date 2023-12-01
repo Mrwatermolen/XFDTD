@@ -1,6 +1,3 @@
-#ifndef _XFDTD_LINEAR_INTERPOLATION_EMF_H_
-#define _XFDTD_LINEAR_INTERPOLATION_EMF_H_
-
 #include "electromagnetic_field/electromagnetic_field.h"
 #include "util/type_define.h"
 
@@ -424,5 +421,3 @@ double EMF::getHzGridCenter(SpatialIndex i, SpatialIndex j,
 }
 
 }  // namespace xfdtd
-
-#endif  // _XFDTD_LINEAR_INTERPOLATION_EMF_H_

@@ -1,6 +1,7 @@
 #include "monitor/voltage_monitor.h"
 
 #include <filesystem>
+#include <string>
 #include <utility>
 #include <xtensor/xindex_view.hpp>
 #include <xtensor/xnpy.hpp>
@@ -11,7 +12,7 @@ namespace xfdtd {
 
 VoltageMonitor::VoltageMonitor(std::unique_ptr<Cube> shape,
                                Orientation orientation,
-                               std::filesystem::path output_dir_path,
+                               std::string output_dir_path,
                                std::string output_file_name)
     : Monitor{std::move(shape), std::move(output_dir_path),
               std::move(output_file_name)},
@@ -96,12 +97,14 @@ void VoltageMonitor::update() {
 }
 
 void VoltageMonitor::outputData() {
-  if (!std::filesystem::exists(getOutputPath()) &&
-      !std::filesystem::is_directory(getOutputPath())) {
+  auto output_path{std::filesystem::path{getOutputPath()}};
+  if (!std::filesystem::exists(output_path) &&
+      !std::filesystem::is_directory(output_path)) {
     try {
-      std::filesystem::create_directories(getOutputPath());
+      std::filesystem::create_directories(output_path);
     } catch (std::exception e) {
-      std::cerr << "Error: cannot create directory " << getOutputPath() << '\n';
+      std::cerr << "Error: cannot create directory " << output_path.string()
+                << '\n';
       return;
     }
   }
@@ -113,7 +116,7 @@ void VoltageMonitor::outputData() {
                            getFDTDBasicCoffInstance()->getTotalTimeStep())};
   auto temp{xt::stack(xt::xtuple(time_array, _value))};
 
-  xt::dump_npy(getOutputPath() / getOutputFileName(), temp);
+  xt::dump_npy(std::filesystem::path{output_path / getOutputFileName()}, temp);
 }
 
 double VoltageMonitor::getValue(size_t i) const { return _value(i); }

@@ -1,7 +1,6 @@
 #ifndef _XFDTD_MONITOR_H_
 #define _XFDTD_MONITOR_H_
 
-#include <filesystem>
 #include <memory>
 
 #include "electromagnetic_field/electromagnetic_field.h"
@@ -14,7 +13,7 @@ class Monitor {
  public:
   Monitor() = default;
 
-  Monitor(std::unique_ptr<Shape> shape, std::filesystem::path output_dir_path,
+  Monitor(std::unique_ptr<Shape> shape, std::string output_dir_path,
           std::string output_file_name);
 
   Monitor(const Monitor& other);
@@ -37,7 +36,7 @@ class Monitor {
 
   virtual void outputData() = 0;
 
-  virtual const std::filesystem::path& getOutputPath() const;
+  virtual const std::string& getOutputPath() const;
 
   virtual const std::string& getOutputFileName() const;
 
@@ -60,7 +59,7 @@ class Monitor {
 
  private:
   std::unique_ptr<Shape> _shape;
-  std::filesystem::path _output_dir_path;
+  std::string _output_dir_path;
   std::string _output_file_name;
   std::shared_ptr<const FDTDBasicCoff> _fdtd_basic_coff;
   std::shared_ptr<const GridSpace> _grid_space;

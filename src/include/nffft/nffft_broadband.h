@@ -9,7 +9,7 @@ class NffftBroadBand : public NFFFT {
  public:
   NffftBroadBand(SpatialIndex distance_x, SpatialIndex distance_y,
                  SpatialIndex distance_z, double theta, double phi,
-                 std::filesystem::path output_dir_path);
+                 std::string output_dir_path);
 
   void init(std::shared_ptr<const GridSpace> grid_space,
             std::shared_ptr<const FDTDBasicCoff> fdtd_basic_coff,

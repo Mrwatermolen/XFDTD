@@ -44,3 +44,6 @@ target_link_libraries(xfdtd_example_s_parameter_network ${THIRD_PARTY_LIB_XFDTD}
 
 add_executable(xfdtd_example_thin_wire thin_wire.cpp)
 target_link_libraries(xfdtd_example_thin_wire ${THIRD_PARTY_LIB_XFDTD})
+
+add_executable(xfdtd_example_3d_diel_sphere_scatter 3d_diel_sphere_scatter.cpp)
+target_link_libraries(xfdtd_example_3d_diel_sphere_scatter ${THIRD_PARTY_LIB_XFDTD})

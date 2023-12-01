@@ -1,7 +1,6 @@
 #ifndef _XFDTD_FIELD_MONITOR_H_
 #define _XFDTD_FIELD_MONITOR_H_
 
-#include <filesystem>
 #include <memory>
 
 #include "electromagnetic_field/electromagnetic_field.h"
@@ -15,9 +14,8 @@ namespace xfdtd {
 class TimeDomainFieldMonitor : public Monitor {
  public:
   TimeDomainFieldMonitor(std::unique_ptr<Cube> shape, PlaneType plane_type,
-                         EMComponent component,
-                         std::filesystem::path output_dir_path,
-                         std::string _output_file_name);
+                         EMComponent component, std::string output_dir_path,
+                         std::string output_file_name);
 
   ~TimeDomainFieldMonitor() override = default;
 

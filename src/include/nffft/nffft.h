@@ -1,9 +1,8 @@
 #ifndef _NFFFT_H_
 #define _NFFFT_H_
 
-#include <filesystem>
 #include <memory>
-#include <tuple>
+#include <string>
 
 #include "electromagnetic_field/electromagnetic_field.h"
 #include "fdtd_basic_coff/fdtd_basic_coff.h"
@@ -32,7 +31,7 @@ class NFFFT {
    * @param output_dir_path The path of the output directory
    */
   NFFFT(SpatialIndex distance_x, SpatialIndex distance_y,
-        SpatialIndex distance_z, std::filesystem::path output_dir_path);
+        SpatialIndex distance_z, std::string output_dir_path);
   NFFFT(const NFFFT &) = delete;
   NFFFT(NFFFT &&) = default;
   NFFFT &operator=(const NFFFT &) = delete;
@@ -67,7 +66,7 @@ class NFFFT {
   inline SpatialIndex getCenterIndexZ() {
     return _output_box->getGridCenterIndexZ();
   }
-  inline std::filesystem::path getOutputDirPath() { return _output_dir_path; }
+  inline std::string getOutputDirPath() { return _output_dir_path; }
 
   virtual void update() = 0;
   virtual void outputData() = 0;
@@ -119,7 +118,7 @@ class NFFFT {
 
  private:
   SpatialIndex _distance_x, _distance_y, _distance_z;
-  std::filesystem::path _output_dir_path;
+  std::string _output_dir_path;
 
   std::shared_ptr<const GridSpace> _grid_space;
   std::shared_ptr<const FDTDBasicCoff> _fdtd_basic_coff;

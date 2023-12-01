@@ -2,8 +2,10 @@
 
 #include <complex>
 #include <cstddef>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <xtensor-blas/xlinalg.hpp>
 #include <xtensor-fftw/basic_double.hpp>
 #include <xtensor-fftw/helper.hpp>
@@ -18,8 +20,7 @@
 namespace xfdtd {
 NffftBroadBand::NffftBroadBand(SpatialIndex distance_x, SpatialIndex distance_y,
                                SpatialIndex distance_z, double theta,
-                               double phi,
-                               std::filesystem::path output_dir_path)
+                               double phi, std::string output_dir_path)
     : NFFFT(distance_x, distance_y, distance_z, std::move(output_dir_path)),
       _theta{theta},
       _phi{phi},
@@ -155,14 +156,14 @@ void NffftBroadBand::update() {
 
 void NffftBroadBand::outputData() {
   calculateFarField();
-  const auto output_dir_path{getOutputDirPath()};
-  if (!std::filesystem::exists(output_dir_path) ||
-      !std::filesystem::is_directory(output_dir_path)) {
+  auto output_path{std::filesystem::path{getOutputDirPath()}};
+  if (!std::filesystem::exists(output_path) &&
+      !std::filesystem::is_directory(output_path)) {
     try {
-      std::filesystem::create_directories(output_dir_path);
+      std::filesystem::create_directories(output_path);
     } catch (std::exception e) {
-      std::cerr << "Error: cannot create directory " << output_dir_path
-                << "\t Error:" << e.what() << '\n';
+      std::cerr << "Error: cannot create directory " << output_path.string()
+                << '\n';
       return;
     }
   }
@@ -173,36 +174,30 @@ void NffftBroadBand::outputData() {
     // Debug
     auto far_ez{0.5 * xt::sqrt(1i * _wave_number) *
                 (_l_phi + constant::ETA_0 * _n_theta)};
-    xt::dump_npy(output_dir_path / "EZ.npy", far_ez);
+    xt::dump_npy(std::filesystem::path{output_path / "EZ.npy"}.string(),
+                 far_ez);
     return;
   }
-  // std::ofstream e_theta_data{output_dir_path / ("e_theta.dat")};
-  // std::ofstream e_phi_data{output_dir_path / ("e_phi.dat")};
-  // std::ofstream h_theta_data{output_dir_path / ("h_theta.dat")};
-  // std::ofstream h_phi_data{output_dir_path / ("h_phi_.dat")};
-  // std::ofstream power_theta_data{output_dir_path / ("power_theta.dat")};
-  // std::ofstream power_phi_data{output_dir_path / ("power_phi.dat")};
-  xt::dump_npy(output_dir_path / "e_theta.npy", _e_theta);
-  xt::dump_npy(output_dir_path / "e_phi.npy", _e_phi);
-  xt::dump_npy(output_dir_path / "h_theta.npy", _h_theta);
-  xt::dump_npy(output_dir_path / "h_phi.npy", _h_phi);
-  xt::dump_npy(output_dir_path / "power_theta.npy", _power_theta);
-  xt::dump_npy(output_dir_path / "power_phi.npy", _power_phi);
 
-  // for (size_t i{0}; i < _number_samples; ++i) {
-  //   e_theta_data << _e_theta(i) << " ";
-  //   e_phi_data << _e_phi(i) << " ";
-  //   h_theta_data << _h_theta(i) << " ";
-  //   h_phi_data << _h_phi(i) << " ";
-  //   power_theta_data << _power_theta(i) << " ";
-  //   power_phi_data << _power_phi(i) << " ";
-  // }
-  // e_theta_data << std::endl;
-  // e_phi_data << std::endl;
-  // h_theta_data << std::endl;
-  // h_phi_data << std::endl;
-  // power_theta_data << std::endl;
-  // power_phi_data << std::endl;
+  // xt::dump_npy(output_dir_path / "e_theta.npy", _e_theta);
+  // xt::dump_npy(output_dir_path / "e_phi.npy", _e_phi);
+  // xt::dump_npy(output_dir_path / "h_theta.npy", _h_theta);
+  // xt::dump_npy(output_dir_path / "h_phi.npy", _h_phi);
+  // xt::dump_npy(output_dir_path / "power_theta.npy", _power_theta);
+  // xt::dump_npy(output_dir_path / "power_phi.npy", _power_phi);
+
+  xt::dump_npy(std::filesystem::path{output_path / "e_theta.npy"}.string(),
+               _e_theta);
+  xt::dump_npy(std::filesystem::path{output_path / "e_phi.npy"}.string(),
+               _e_phi);
+  xt::dump_npy(std::filesystem::path{output_path / "h_theta.npy"}.string(),
+               _h_theta);
+  xt::dump_npy(std::filesystem::path{output_path / "h_phi.npy"}.string(),
+               _h_phi);
+  xt::dump_npy(std::filesystem::path{output_path / "power_theta.npy"}.string(),
+               _power_theta);
+  xt::dump_npy(std::filesystem::path{output_path / "power_phi.npy"}.string(),
+               _power_phi);
 }
 
 void NffftBroadBand::updateXN(size_t current_time_step) {
@@ -478,8 +473,9 @@ void NffftBroadBand::calculateAuxiliary(EFFA &n_a, EFFA &n_b, EFFA &l_a,
 }
 
 void NffftBroadBand::outputFarFieldParameters() {
-  std::ofstream far_field_parameter_writer{getOutputDirPath() /
-                                           "far_field_parameter.dat"};
+  std::ofstream far_field_parameter_writer{std::filesystem::path{
+      std::filesystem::path{getOutputDirPath()} / "far_field_parameter.dat"}
+                                               .string()};
   far_field_parameter_writer << "Fs:\t" << 1 / getDt() << '\n';
   far_field_parameter_writer << "number of samples:\t" << _number_samples
                              << '\n';

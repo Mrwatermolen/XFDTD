@@ -1,6 +1,7 @@
 #include "monitor/current_monitor.h"
 
 #include <filesystem>
+#include <string>
 #include <xtensor/xnpy.hpp>
 
 #include "util/type_define.h"
@@ -9,7 +10,7 @@ namespace xfdtd {
 
 CurrentMonitor::CurrentMonitor(std::unique_ptr<Cube> shape,
                                Orientation orientation,
-                               std::filesystem::path output_dir_path,
+                               std::string output_dir_path,
                                std::string output_file_name)
     : Monitor{std::move(shape), std::move(output_dir_path),
               std::move(output_file_name)},
@@ -101,10 +102,12 @@ void CurrentMonitor::update() {
   }
   if (_orientation == Orientation::ZN || _orientation == Orientation::ZP) {
     for (size_t i{_is}; i <= _ie; ++i) {
-      integral_x += (emf->getHx(i, _js - 1, _ks) - emf->getHx(i, _je, _ks));
+      integral_x += (emf->getHx(i, _js - 1, _ks) - emf->getHx(i, _je, _ks)) *
+                    _da(i - _is);
     }
     for (size_t j{_js}; j <= _je; ++j) {
-      integral_y += (emf->getHy(_ie, j, _ks) - emf->getHy(_is - 1, j, _ks));
+      integral_y += (emf->getHy(_ie, j, _ks) - emf->getHy(_is - 1, j, _ks)) *
+                    _db(j - _js);
     }
     _value(t) = _positive * (integral_x + integral_y);
     return;
@@ -112,12 +115,14 @@ void CurrentMonitor::update() {
 }
 
 void CurrentMonitor::outputData() {
-  if (!std::filesystem::exists(getOutputPath()) &&
-      !std::filesystem::is_directory(getOutputPath())) {
+  auto output_path{std::filesystem::path{getOutputPath()}};
+  if (!std::filesystem::exists(output_path) &&
+      !std::filesystem::is_directory(output_path)) {
     try {
-      std::filesystem::create_directories(getOutputPath());
+      std::filesystem::create_directories(output_path);
     } catch (std::exception e) {
-      std::cerr << "Error: cannot create directory " << getOutputPath() << '\n';
+      std::cerr << "Error: cannot create directory " << output_path.string()
+                << '\n';
       return;
     }
   }
@@ -129,7 +134,8 @@ void CurrentMonitor::outputData() {
       getFDTDBasicCoffInstance()->getTotalTimeStep())};
   auto temp{xt::stack(xt::xtuple(time_array, _value))};
 
-  xt::dump_npy(getOutputPath() / getOutputFileName(), temp);
+  xt::dump_npy(
+      std::filesystem::path(output_path / getOutputFileName()).string(), temp);
 }
 
 double CurrentMonitor::getValue(size_t i) const { return _value(i); }

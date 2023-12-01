@@ -1,5 +1,6 @@
 #include "nffft/nffft.h"
 
+#include <string>
 #include <utility>
 #include <xtensor-fftw/basic_double.hpp>
 #include <xtensor-fftw/helper.hpp>
@@ -12,7 +13,7 @@
 namespace xfdtd {
 
 NFFFT::NFFFT(SpatialIndex distance_x, SpatialIndex distance_y,
-             SpatialIndex distance_z, std::filesystem::path output_dir_path)
+             SpatialIndex distance_z, std::string output_dir_path)
     : _distance_x{distance_x},
       _distance_y{distance_y},
       _distance_z{distance_z},

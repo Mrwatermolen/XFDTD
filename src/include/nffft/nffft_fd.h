@@ -39,7 +39,7 @@ class NffftFd : public NFFFT {
   NffftFd(SpatialIndex distance_x, SpatialIndex distance_y,
           SpatialIndex distance_z, xt::xarray<double> frequencies,
           xt::xarray<double> theta, xt::xarray<double> phi,
-          std::filesystem::path output_dir_path)
+          std::string output_dir_path)
       : NFFFT(distance_x, distance_y, distance_z, std::move(output_dir_path)),
         _frequencies{std::move(frequencies)},
         _wave_number{2 * constant::PI * _frequencies / constant::C_0},

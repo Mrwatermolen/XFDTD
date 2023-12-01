@@ -1,10 +1,10 @@
 #include "monitor/monitor.h"
 
+#include <string>
 #include <utility>
 
 namespace xfdtd {
-Monitor::Monitor(std::unique_ptr<Shape> shape,
-                 std::filesystem::path output_dir_path,
+Monitor::Monitor(std::unique_ptr<Shape> shape, std::string output_dir_path,
                  std::string output_file_name)
     : _shape{std::move(shape)},
       _output_dir_path{std::move(output_dir_path)},
@@ -46,9 +46,7 @@ void Monitor::defaultInit(
   _emf = emf;
 }
 
-const std::filesystem::path& Monitor::getOutputPath() const {
-  return _output_dir_path;
-}
+const std::string& Monitor::getOutputPath() const { return _output_dir_path; }
 
 const std::string& Monitor::getOutputFileName() const {
   return _output_file_name;

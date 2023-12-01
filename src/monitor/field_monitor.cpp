@@ -12,11 +12,13 @@
 #include "util/type_define.h"
 
 namespace xfdtd {
-TimeDomainFieldMonitor::TimeDomainFieldMonitor(
-    std::unique_ptr<Cube> shape, PlaneType plane_type, EMComponent component,
-    std::filesystem::path output_dir_path, std::string _output_file_name)
+TimeDomainFieldMonitor::TimeDomainFieldMonitor(std::unique_ptr<Cube> shape,
+                                               PlaneType plane_type,
+                                               EMComponent component,
+                                               std::string output_dir_path,
+                                               std::string output_file_name)
     : Monitor{std::move(shape), std::move(output_dir_path),
-              std::move(_output_file_name)},
+              std::move(output_file_name)},
       _plane_type{plane_type},
       _component{component} {}
 
@@ -87,15 +89,18 @@ void TimeDomainFieldMonitor::init(
 void TimeDomainFieldMonitor::update() {}
 
 void TimeDomainFieldMonitor::outputData() {
-  if (!std::filesystem::exists(getOutputPath()) &&
-      !std::filesystem::is_directory(getOutputPath())) {
+  auto output_path{std::filesystem::path{getOutputPath()}};
+  if (!std::filesystem::exists(output_path) &&
+      !std::filesystem::is_directory(output_path)) {
     try {
-      std::filesystem::create_directories(getOutputPath());
+      std::filesystem::create_directories(output_path);
     } catch (std::exception e) {
-      std::cerr << "Error: cannot create directory " << getOutputPath() << '\n';
+      std::cerr << "Error: cannot create directory " << output_path.string()
+                << '\n';
       return;
     }
   }
+
   const auto emf{getEMFInstance()};
   const auto &data{emf->getEMComponent(_component)};
   auto is{_grid_box.getGridOriginIndexX()};
@@ -111,7 +116,9 @@ void TimeDomainFieldMonitor::outputData() {
   auto y_range{xt::range(js, js + ny)};
   auto z_range{xt::range(ks, ks + nz)};
   auto data_view{xt::view(data, x_range, y_range, z_range)};
-  xt::dump_npy(getOutputPath() / getOutputFileName(), data_view);
+  xt::dump_npy(
+      std::filesystem::path(output_path / getOutputFileName()).string(),
+      data_view);
 }
 
 }  // namespace xfdtd

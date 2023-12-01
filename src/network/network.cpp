@@ -1,13 +1,14 @@
 #include "network/network.h"
 
 #include <cstddef>
+#include <filesystem>
+#include <string>
 #include <xtensor/xnpy.hpp>
 
 namespace xfdtd {
 
 Network::Network(std::vector<std::unique_ptr<Port>> ports,
-                 xt::xarray<double> frequencies,
-                 std::filesystem::path output_path)
+                 xt::xarray<double> frequencies, std::string output_path)
     : _ports{std::move(ports)},
       _frequencies{std::move(frequencies)},
       _output_path{std::move(output_path)} {}
@@ -50,10 +51,11 @@ void Network::outputData() {
     }
   }
 
+  auto output_path{std::filesystem::path{_output_path}};
   for (const auto &e : _s_parameters) {
-    auto file{_output_path / ("s" + std::to_string(e.first) + ".npy")};
+    auto file{output_path / ("s" + std::to_string(e.first) + ".npy")};
     auto data{xt::stack(xt::xtuple(_frequencies, e.second))};
-    xt::dump_npy(file, data);
+    xt::dump_npy(file.string(), data);
   }
 }
 

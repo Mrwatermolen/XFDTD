@@ -8,8 +8,7 @@ namespace xfdtd {
 class CurrentMonitor : public Monitor {
  public:
   CurrentMonitor(std::unique_ptr<Cube> shape, Orientation orientation,
-                 std::filesystem::path output_dir_path,
-                 std::string output_file_name);
+                 std::string output_dir_path, std::string output_file_name);
   ~CurrentMonitor() override = default;
 
   std::unique_ptr<Monitor> clone() const override;

@@ -3,6 +3,7 @@
 #include <complex>
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <utility>
 #include <vector>
 #include <xtensor-fftw/basic_double.hpp>
@@ -16,7 +17,7 @@
 namespace xfdtd {
 NFFFT2DTEST::NFFFT2DTEST(SpatialIndex distance_x, SpatialIndex distance_y,
                          SpatialIndex direction_z, double far_theta,
-                         double far_phi, std::filesystem::path output_dir_path)
+                         double far_phi, std::string output_dir_path)
     : NFFFT(distance_x, distance_y, direction_z, std::move(output_dir_path)),
       _farfield_theta{far_theta},
       _farfield_phi{far_phi} {}

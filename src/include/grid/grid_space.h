@@ -141,9 +141,9 @@ class GridSpace {
 
   double getGridSpaceSizeZ() const;
 
-  auto getGridView(const xt::xarray<bool>& mask) const;
+  auto getGridView(const xt::xarray<bool>& mask);
 
-  auto getGridView(const Shape* shape) const;
+  auto getGridView(const Shape* shape);
 
   void calculateSpaceSize(const Shape* shape);
 
@@ -242,11 +242,11 @@ class GridSpace {
                             const xt::xarray<double>& insert_node_size_arr);
 };
 
-inline auto GridSpace::getGridView(const xt::xarray<bool>& mask) const {
+inline auto GridSpace::getGridView(const xt::xarray<bool>& mask) {
   return xt::filter(_grids, mask);
 }
 
-inline auto GridSpace::getGridView(const Shape* shape) const {
+inline auto GridSpace::getGridView(const Shape* shape) {
   return getGridView(getShapeMask(shape));
 }
 

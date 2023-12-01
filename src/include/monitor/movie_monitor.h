@@ -2,7 +2,6 @@
 #define _XFDTD_MOVIE_MONITOR_H_
 
 #include <cstddef>
-#include <filesystem>
 #include <memory>
 
 #include "monitor/monitor.h"
@@ -32,7 +31,7 @@ class MovieMonitor : public Monitor {
 
   void outputData() override;
 
-  const std::filesystem::path& getOutputPath() const override;
+  const std::string& getOutputPath() const override;
 
   const std::string& getOutputFileName() const override;
 

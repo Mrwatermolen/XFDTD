@@ -3,7 +3,6 @@
 
 #include <complex>
 #include <cstddef>
-#include <filesystem>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -17,7 +16,7 @@ namespace xfdtd {
 class Network {
  public:
   Network(std::vector<std::unique_ptr<Port>> ports,
-          xt::xarray<double> _frequencies, std::filesystem::path output_path);
+          xt::xarray<double> _frequencies, std::string output_path);
 
   void init(const std::shared_ptr<const FDTDBasicCoff> &fdtd_basic_coff,
             const std::shared_ptr<const GridSpace> &grid_space,
@@ -28,7 +27,7 @@ class Network {
  private:
   std::vector<std::unique_ptr<Port>> _ports;
   xt::xarray<double> _frequencies;
-  std::filesystem::path _output_path;
+  std::string _output_path;
 
   std::unordered_map<size_t, int> _port_map;
   std::unordered_map<int, xt::xarray<std::complex<double>>> _s_parameters;

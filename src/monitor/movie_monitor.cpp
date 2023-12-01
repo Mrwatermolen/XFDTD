@@ -1,5 +1,7 @@
 #include "monitor/movie_monitor.h"
 
+#include <string>
+
 namespace xfdtd {
 MovieMonitor::MovieMonitor(std::unique_ptr<Monitor> monitor,
                            size_t total_time_steps, size_t plot_step)
@@ -56,7 +58,7 @@ void MovieMonitor::update() {
   _monitor->outputData();
 }
 
-const std::filesystem::path &MovieMonitor::getOutputPath() const {
+const std::string &MovieMonitor::getOutputPath() const {
   return _monitor->getOutputPath();
 }
 const std::string &MovieMonitor::getOutputFileName() const {

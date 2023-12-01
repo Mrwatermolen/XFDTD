@@ -22,9 +22,10 @@ Simulation::Simulation(double cell_size, float cfl)
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
       _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
-Simulation::Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
-                       std::vector<std::shared_ptr<Boundary>> boundaries, std::unique_ptr<TFSF> tfsf,
-                       float cfl)
+Simulation::Simulation(double cell_size,
+                       std::vector<std::shared_ptr<Object>> objects,
+                       std::vector<std::shared_ptr<Boundary>> boundaries,
+                       std::unique_ptr<TFSF> tfsf, float cfl)
     : _objects{std::move(objects)},
       _boundaries{std::move(boundaries)},
       _tfsf{std::move(tfsf)},
@@ -32,9 +33,11 @@ Simulation::Simulation(double cell_size, std::vector<std::shared_ptr<Object>> ob
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
       _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
-Simulation::Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
-                       std::vector<std::shared_ptr<Boundary>> boundaries, std::unique_ptr<TFSF> tfsf,
-                       std::unique_ptr<NFFFT> nffft, float cfl)
+Simulation::Simulation(double cell_size,
+                       std::vector<std::shared_ptr<Object>> objects,
+                       std::vector<std::shared_ptr<Boundary>> boundaries,
+                       std::unique_ptr<TFSF> tfsf, std::unique_ptr<NFFFT> nffft,
+                       float cfl)
     : _objects{std::move(objects)},
       _boundaries{std::move(boundaries)},
       _tfsf{std::move(tfsf)},
@@ -46,7 +49,8 @@ Simulation::Simulation(double cell_size, std::vector<std::shared_ptr<Object>> ob
 Simulation::Simulation(
     double cell_size, std::vector<std::shared_ptr<Object>> objects,
     std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
-    std::vector<std::shared_ptr<Boundary>> boundaries, std::vector<std::shared_ptr<Monitor>> monitors, float cfl)
+    std::vector<std::shared_ptr<Boundary>> boundaries,
+    std::vector<std::shared_ptr<Monitor>> monitors, float cfl)
     : _objects{std::move(objects)},
       _lumped_elements{std::move(lumped_elements)},
       _boundaries{std::move(boundaries)},
@@ -55,8 +59,10 @@ Simulation::Simulation(
       _grid_space{std::make_shared<GridSpace>(cell_size, cell_size, cell_size)},
       _fdtd_basic_coff{std::make_shared<FDTDBasicCoff>(cfl)} {};
 
-Simulation::Simulation(double cell_size, std::vector<std::shared_ptr<Object>> objects,
-                       std::vector<std::shared_ptr<Monitor>> monitors, float cfl)
+Simulation::Simulation(double cell_size,
+                       std::vector<std::shared_ptr<Object>> objects,
+                       std::vector<std::shared_ptr<Monitor>> monitors,
+                       float cfl)
     : _objects{std::move(objects)},
       _monitors{std::move(monitors)},
       _emf{std::make_shared<EMF>()},
@@ -77,7 +83,8 @@ Simulation::Simulation(
 Simulation::Simulation(
     double cell_size, std::vector<std::shared_ptr<Object>> objects,
     std::vector<std::shared_ptr<LumpedElement>> lumped_elements,
-    std::vector<std::shared_ptr<Boundary>> boundaries, std::vector<std::shared_ptr<Monitor>> monitors,
+    std::vector<std::shared_ptr<Boundary>> boundaries,
+    std::vector<std::shared_ptr<Monitor>> monitors,
     std::unique_ptr<Network> network, float cfl)
     : _objects{std::move(objects)},
       _lumped_elements{std::move(lumped_elements)},
@@ -109,6 +116,15 @@ void Simulation::addObject(std::shared_ptr<Object> object) {
   _objects.push_back(std::move(object));
 }
 
+void Simulation::addBoundary(std::shared_ptr<Boundary> boundary) {
+  _boundaries.push_back(std::move(boundary));
+}
+
+void Simulation::addLumpedElement(
+    std::shared_ptr<LumpedElement> lumped_element) {
+  _lumped_elements.push_back(std::move(lumped_element));
+}
+
 void Simulation::addTFSFSource(std::shared_ptr<TFSF> tfsf) {
   _tfsf = std::move(tfsf);
 }
@@ -119,6 +135,10 @@ void Simulation::addNFFFT(std::shared_ptr<NFFFT> nffft) {
 
 void Simulation::addMonitor(std::shared_ptr<Monitor> monitor) {
   _monitors.push_back(std::move(monitor));
+}
+
+void Simulation::addNetwork(std::shared_ptr<Network> network) {
+  _network = std::move(network);
 }
 
 void Simulation::outputData() {

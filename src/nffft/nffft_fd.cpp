@@ -578,111 +578,60 @@ void NffftFd::calculateFarfield1(
 
 void NffftFd::outputData() {
   calculateFarfield();
-  const auto output_dir_path{getOutputDirPath()};
-  if (!std::filesystem::exists(output_dir_path) ||
-      !std::filesystem::is_directory(output_dir_path)) {
+  auto output_path{std::filesystem::path{getOutputDirPath()}};
+  if (!std::filesystem::exists(output_path) &&
+      !std::filesystem::is_directory(output_path)) {
     try {
-      std::filesystem::create_directory(output_dir_path);
+      std::filesystem::create_directories(output_path);
     } catch (std::exception e) {
-      std::cerr << "Error: cannot create directory " << output_dir_path
-                << "\t Error:" << e.what() << '\n';
+      std::cerr << "Error: cannot create directory " << output_path.string()
+                << '\n';
       return;
     }
   }
-  // outputFarFieldParameters();
 
-  xt::dump_npy(output_dir_path / "frequencies.npy", _frequencies);
-  xt::dump_npy(output_dir_path / "theta.npy", _theta);
-  xt::dump_npy(output_dir_path / "phi.npy", _phi);
+  // xt::dump_npy(output_dir_path / "frequencies.npy", _frequencies);
+  // xt::dump_npy(output_dir_path / "theta.npy", _theta);
+  // xt::dump_npy(output_dir_path / "phi.npy", _phi);
 
-  xt::dump_npy(output_dir_path / "e_theta.npy", _e_theta);
-  xt::dump_npy(output_dir_path / "e_phi.npy", _e_phi);
-  xt::dump_npy(output_dir_path / "h_theta.npy", _h_theta);
-  xt::dump_npy(output_dir_path / "h_phi.npy", _h_phi);
-  xt::dump_npy(output_dir_path / "n_theta.npy", _a_theta);
-  xt::dump_npy(output_dir_path / "n_phi.npy", _a_phi);
-  xt::dump_npy(output_dir_path / "l_theta.npy", _f_theta);
-  xt::dump_npy(output_dir_path / "l_phi.npy", _f_phi);
-  xt::dump_npy(output_dir_path / "power_theta.npy", _power_theta);
-  xt::dump_npy(output_dir_path / "power_phi.npy", _power_phi);
+  // xt::dump_npy(output_dir_path / "e_theta.npy", _e_theta);
+  // xt::dump_npy(output_dir_path / "e_phi.npy", _e_phi);
+  // xt::dump_npy(output_dir_path / "h_theta.npy", _h_theta);
+  // xt::dump_npy(output_dir_path / "h_phi.npy", _h_phi);
+  // xt::dump_npy(output_dir_path / "n_theta.npy", _a_theta);
+  // xt::dump_npy(output_dir_path / "n_phi.npy", _a_phi);
+  // xt::dump_npy(output_dir_path / "l_theta.npy", _f_theta);
+  // xt::dump_npy(output_dir_path / "l_phi.npy", _f_phi);
+  // xt::dump_npy(output_dir_path / "power_theta.npy", _power_theta);
+  // xt::dump_npy(output_dir_path / "power_phi.npy", _power_phi);
 
-  // for (int n{0}; n < _number_frequencies; ++n) {
-  //   auto ghz{(_frequencies(n) / 1e9)};
-  //   std::filesystem::path path{output_dir_path /
-  //                              ("far_field_" + std::to_string(ghz) + "GHz")};
-  //   try {
-  //     std::filesystem::create_directory(path);
-  //   } catch (std::exception e) {
-  //     std::cerr << "Error: cannot create directory " << path
-  //               << "\t Error:" << e.what() << '\n';
-  //     return;
-  //   }
-  //   std::ofstream e_theta_data{path / ("e_theta.dat")};
-  //   std::ofstream e_phi_data{path / ("e_phi_.dat")};
-  //   std::ofstream h_theta_data{path / ("h_theta.dat")};
-  //   std::ofstream h_phi_data{path / ("h_phi_.dat")};
-  //   std::ofstream n_theta_data{path / ("n_theta.dat")};
-  //   std::ofstream n_phi_data{path / ("n_phi_.dat")};
-  //   std::ofstream l_theta_data{path / ("l_theta.dat")};
-  //   std::ofstream l_phi_data{path / ("l_phi.dat")};
-  //   std::ofstream power_theta_data{path / ("power_theta.dat")};
-  //   std::ofstream power_phi_data{path / ("power_phi.dat")};
+  xt::dump_npy(std::filesystem::path{output_path / "frequencies.npy"}.string(),
+               _frequencies);
+  xt::dump_npy(std::filesystem::path{output_path / "theta.npy"}.string(),
+               _theta);
+  xt::dump_npy(std::filesystem::path{output_path / "phi.npy"}.string(), _phi);
 
-  //   for (int t{0}; t < _number_theta; ++t) {
-  //     for (int p{0}; p < _number_phi; ++p) {
-  //       e_theta_data << _e_theta(n, t, p) << "\t";
-  //       e_phi_data << _e_phi(n, t, p) << "\t";
-  //       h_theta_data << _h_theta(n, t, p) << "\t";
-  //       h_phi_data << _h_phi(n, t, p) << "\t";
-  //       n_theta_data << _a_theta(n, t, p) << "\t";
-  //       n_phi_data << _a_phi(n, t, p) << "\t";
-  //       l_theta_data << _f_theta(n, t, p) << "\t";
-  //       l_phi_data << _f_phi(n, t, p) << "\t";
-
-  //       power_theta_data << _power_theta(n, t, p) << "\t";
-  //       power_phi_data << _power_phi(n, t, p) << "\t";
-  //     }
-  //     e_theta_data << std::endl;
-  //     e_phi_data << std::endl;
-  //     h_theta_data << std::endl;
-  //     h_phi_data << std::endl;
-  //     n_theta_data << std::endl;
-  //     n_phi_data << std::endl;
-  //     l_theta_data << std::endl;
-  //     l_phi_data << std::endl;
-  //     power_theta_data << std::endl;
-  //     power_phi_data << std::endl;
-  //   }
-  //   e_theta_data.close();
-  //   e_phi_data.close();
-  //   h_theta_data.close();
-  //   h_phi_data.close();
-  //   power_theta_data.close();
-  //   power_phi_data.close();
-  // }
+  xt::dump_npy(std::filesystem::path{output_path / "e_theta.npy"}.string(),
+               _e_theta);
+  xt::dump_npy(std::filesystem::path{output_path / "e_phi.npy"}.string(),
+               _e_phi);
+  xt::dump_npy(std::filesystem::path{output_path / "h_theta.npy"}.string(),
+               _h_theta);
+  xt::dump_npy(std::filesystem::path{output_path / "h_phi.npy"}.string(),
+               _h_phi);
+  xt::dump_npy(std::filesystem::path{output_path / "n_theta.npy"}.string(),
+               _a_theta);
+  xt::dump_npy(std::filesystem::path{output_path / "n_phi.npy"}.string(),
+               _a_phi);
+  xt::dump_npy(std::filesystem::path{output_path / "l_theta.npy"}.string(),
+               _f_theta);
+  xt::dump_npy(std::filesystem::path{output_path / "l_phi.npy"}.string(),
+               _f_phi);
+  xt::dump_npy(std::filesystem::path{output_path / "power_theta.npy"}.string(),
+               _power_theta);
+  xt::dump_npy(std::filesystem::path{output_path / "power_phi.npy"}.string(),
+               _power_phi);
 }
 
-void NffftFd::outputFarFieldParameters() {
-  // std::ofstream far_field_parameter_writer{getOutputDirPath() /
-  //                                          "far_field_parameter.dat"};
-  // far_field_parameter_writer << "number of frequencies: " <<
-  // _number_frequencies
-  //                            << "\n";
-  // for (const auto& e : _frequencies) {
-  //   far_field_parameter_writer << e << "\t";
-  // }
-  // far_field_parameter_writer << std::endl;
-  // far_field_parameter_writer << "number of theta: " << _number_theta << "\n";
-  // for (const auto& e : _theta) {
-  //   far_field_parameter_writer << e << "\t";
-  // }
-  // far_field_parameter_writer << std::endl;
-  // far_field_parameter_writer << "number of phi: " << _number_phi << "\n";
-  // for (const auto& e : _phi) {
-  //   far_field_parameter_writer << e << "\t";
-  // }
-  // far_field_parameter_writer << "\nthe intrinsic impedance: "
-  //                            << constant::ETA_0;
-  // far_field_parameter_writer.close();
-}
+void NffftFd::outputFarFieldParameters() {}
 }  // namespace xfdtd
